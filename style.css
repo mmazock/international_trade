@@ -19,3 +19,12 @@ body {
   padding: 10px;
 }
 
+#map-container {
+  width: 700px;
+  border: 2px solid black;
+}
+
+#map-image {
+  width: 100%;
+  display: block;
+}
