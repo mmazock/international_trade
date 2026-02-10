@@ -4,8 +4,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const mapImage = document.getElementById("map-image");
 
   // ===== GRID SETTINGS =====
-  const GRID_COLUMNS = 20; // A–T
-  const GRID_ROWS = 15;    // 1–15
+const GRID_COLUMNS = 19; // A–S
+const GRID_ROWS = 13;    // 1–13
 
   // ===== CALIBRATION VALUES (LOCKED) =====
   const GRID_LEFT = 9;
