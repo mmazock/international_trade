@@ -1,7 +1,12 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Grid click system active");
+  console.log("Click-to-grid system loaded");
 
   const mapImage = document.getElementById("map-image");
+
+  if (!mapImage) {
+    console.error("Map image not found");
+    return;
+  }
 
   const GRID_COLUMNS = 20;
   const GRID_ROWS = 15;
