@@ -28,3 +28,21 @@ body {
   width: 100%;
   display: block;
 }
+
+#map-container {
+  position: relative;
+  width: 700px;
+  border: 2px solid black;
+}
+
+#map-image {
+  width: 100%;
+  display: block;
+}
+
+#grid-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none; /* clicks go through to map */
+}
