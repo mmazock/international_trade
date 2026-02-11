@@ -3,6 +3,19 @@ document.addEventListener("DOMContentLoaded", () => {
   // Firebase Database reference
   const database = firebase.database();
   const gameRef = database.ref("gameSession");
+
+  // Initialize game session if it doesn't exist
+  gameRef.once("value", snapshot => {
+    if (!snapshot.exists()) {
+      gameRef.set({
+        players: {},
+        turnOrder: [],
+        currentTurnIndex: 0
+      });
+      console.log("Game session initialized.");
+    }
+  });
+
   
   const mapImage = document.getElementById("map-image");
   const messageBox = document.getElementById("messageBox");
