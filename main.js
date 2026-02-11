@@ -175,7 +175,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
     showMessage(html);
 
-    const selected = prompt("Type the resource you want to collect:");
+   let resourcePrompt = "Available resources:\n";
+
+resources.forEach(r => {
+  resourcePrompt += "- " + r + "\n";
+});
+
+resourcePrompt += "\nType the resource you want to collect:";
+
+const selected = prompt(resourcePrompt);
+
 
     if (!selected) return;
 
