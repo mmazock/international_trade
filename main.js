@@ -11,13 +11,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const inventoryList = document.getElementById("inventoryList");
   const infraDisplay = document.getElementById("infraLevel");
+  const moneyDisplay = document.getElementById("moneyDisplay");
 
   let currentGameCode = null;
   let currentPlayerId = null;
-
-  /* =============================
-     RANDOM JOIN CODE
-     ============================= */
 
   function generateCode(length = 5) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -27,10 +24,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return result;
   }
-
-  /* =============================
-     CREATE GAME
-     ============================= */
 
   createGameBtn.addEventListener("click", async () => {
 
@@ -51,10 +44,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
-
-  /* =============================
-     JOIN GAME
-     ============================= */
 
   joinGameBtn.addEventListener("click", async () => {
 
@@ -91,10 +80,6 @@ document.addEventListener("DOMContentLoaded", () => {
     listenToPlayerData();
   });
 
-  /* =============================
-     REAL-TIME PLAYER SYNC
-     ============================= */
-
   function listenToPlayerData() {
 
     const playerRef = gamesRef.child(currentGameCode).child("players").child(currentPlayerId);
@@ -104,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = snapshot.val();
       if (!data) return;
 
+      moneyDisplay.textContent = data.money;
       infraDisplay.textContent = data.infrastructure;
 
       if (!data.inventory || Object.keys(data.inventory).length === 0) {
