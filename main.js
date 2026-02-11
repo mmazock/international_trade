@@ -16,6 +16,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentGameCode = null;
   let currentPlayerId = null;
 
+  /* =============================
+     RANDOM JOIN CODE
+     ============================= */
+
   function generateCode(length = 5) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
     let result = "";
@@ -24,6 +28,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     return result;
   }
+
+  /* =============================
+     CREATE GAME
+     ============================= */
 
   createGameBtn.addEventListener("click", async () => {
 
@@ -34,17 +42,19 @@ document.addEventListener("DOMContentLoaded", () => {
       code = generateCode();
     }
 
-await gamesRef.child(code).update({
-  players: {},
-  turnOrder: [],
-  currentTurnIndex: 0
-});
-
+    await gamesRef.child(code).set({
+      players: {},
+      turnOrder: [],
+      currentTurnIndex: 0
+    });
 
     currentGameCode = code;
-
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
+
+  /* =============================
+     JOIN GAME
+     ============================= */
 
   joinGameBtn.addEventListener("click", async () => {
 
@@ -76,35 +86,78 @@ await gamesRef.child(code).update({
 
     currentPlayerId = newPlayerRef.key;
 
+    // Add player to turn order
+    await gamesRef.child(code).child("turnOrder").transaction(order => {
+      if (!order) return [currentPlayerId];
+      return [...order, currentPlayerId];
+    });
+
     joinStatus.textContent = "Joined game: " + code;
 
-    listenToPlayerData();
+    listenToGameData();
   });
 
-  function listenToPlayerData() {
+  /* =============================
+     LISTEN TO FULL GAME DATA
+     ============================= */
 
-    const playerRef = gamesRef.child(currentGameCode).child("players").child(currentPlayerId);
+  function listenToGameData() {
 
-    playerRef.on("value", snapshot => {
-      
+    const gameRef = gamesRef.child(currentGameCode);
 
-      const data = snapshot.val();
-      if (!data) return;
+    gameRef.on("value", snapshot => {
 
-      moneyDisplay.textContent = data.money;
-      infraDisplay.textContent = data.infrastructure;
+      const gameData = snapshot.val();
+      if (!gameData) return;
 
-      if (!data.inventory || Object.keys(data.inventory).length === 0) {
-        inventoryList.innerHTML = "No resources collected yet.";
-      } else {
-        let html = "";
-        for (let resource in data.inventory) {
-          html += `${resource}: ${data.inventory[resource]}<br>`;
-        }
-        inventoryList.innerHTML = html;
-      }
+      renderLedger(gameData);
 
     });
+  }
+
+  /* =============================
+     RENDER PUBLIC LEDGER
+     ============================= */
+
+  function renderLedger(gameData) {
+
+    const players = gameData.players || {};
+    const turnOrder = gameData.turnOrder || [];
+    const currentTurnIndex = gameData.currentTurnIndex || 0;
+
+    let html = "";
+
+    turnOrder.forEach((playerId, index) => {
+
+      const player = players[playerId];
+      if (!player) return;
+
+      const isCurrentTurn = index === currentTurnIndex;
+
+      html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
+              ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
+              <strong>${player.name}</strong>
+              ${isCurrentTurn ? ' (Current Turn)' : ''}
+              <br>
+              Money: $${player.money}
+              <br>
+              Infrastructure: ${player.infrastructure}
+              <br>
+              Inventory:
+              <br>`;
+
+      if (!player.inventory || Object.keys(player.inventory).length === 0) {
+        html += `None`;
+      } else {
+        for (let resource in player.inventory) {
+          html += `${resource}: ${player.inventory[resource]}<br>`;
+        }
+      }
+
+      html += `</div>`;
+    });
+
+    inventoryList.innerHTML = html;
   }
 
 });
