@@ -1,44 +1,84 @@
 document.addEventListener("DOMContentLoaded", () => {
 
-  console.log("Multiplayer skeleton loaded");
-
-  // Firebase reference
   const database = firebase.database();
-  const gameRef = database.ref("gameSession");
+  const gamesRef = database.ref("games");
 
-  // Initialize session if it doesn't exist
-  gameRef.once("value", snapshot => {
-    if (!snapshot.exists()) {
-      gameRef.set({
-        players: {},
-        turnOrder: [],
-        currentTurnIndex: 0
-      });
-      console.log("Game session initialized.");
-    }
-  });
-
-  // DOM references
-  const joinBtn = document.getElementById("joinGameBtn");
-  const nameInput = document.getElementById("playerNameInput");
+  const createGameBtn = document.getElementById("createGameBtn");
+  const joinGameBtn = document.getElementById("joinGameBtn");
+  const joinCodeInput = document.getElementById("joinCodeInput");
+  const playerNameInput = document.getElementById("playerNameInput");
   const joinStatus = document.getElementById("joinStatus");
 
+  let currentGameCode = null;
   let currentPlayerId = null;
   let currentPlayerName = null;
 
-  // Join Game logic
-  joinBtn.addEventListener("click", () => {
+  /* =============================
+     RANDOM JOIN CODE GENERATOR
+     ============================= */
 
-    const name = nameInput.value.trim();
+  function generateCode(length = 5) {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
 
-    if (!name) {
-      joinStatus.textContent = "Please enter a name.";
+  /* =============================
+     CREATE GAME (HOST)
+     ============================= */
+
+  createGameBtn.addEventListener("click", async () => {
+
+    let code = generateCode();
+
+    const snapshot = await gamesRef.child(code).once("value");
+
+    if (snapshot.exists()) {
+      // Extremely rare collision — regenerate
+      code = generateCode();
+    }
+
+    await gamesRef.child(code).set({
+      host: true,
+      players: {},
+      turnOrder: [],
+      currentTurnIndex: 0
+    });
+
+    currentGameCode = code;
+
+    joinStatus.textContent = "Game created. Share this code: " + code;
+  });
+
+  /* =============================
+     JOIN GAME
+     ============================= */
+
+  joinGameBtn.addEventListener("click", async () => {
+
+    const code = joinCodeInput.value.trim().toUpperCase();
+    const name = playerNameInput.value.trim();
+
+    if (!code || !name) {
+      joinStatus.textContent = "Enter join code and name.";
       return;
     }
 
-    const newPlayerRef = gameRef.child("players").push();
+    const snapshot = await gamesRef.child(code).once("value");
 
-    newPlayerRef.set({
+    if (!snapshot.exists()) {
+      joinStatus.textContent = "Game code not found.";
+      return;
+    }
+
+    currentGameCode = code;
+
+    const newPlayerRef = gamesRef.child(code).child("players").push();
+
+    await newPlayerRef.set({
       name: name,
       money: 0,
       infrastructure: 0,
@@ -48,7 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentPlayerId = newPlayerRef.key;
     currentPlayerName = name;
 
-    joinStatus.textContent = "Joined as " + name;
+    joinStatus.textContent = "Joined game: " + code;
 
   });
 
