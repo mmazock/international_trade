@@ -2,13 +2,37 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mapImage = document.getElementById("map-image");
   const messageBox = document.getElementById("messageBox");
+  const inventoryList = document.getElementById("inventoryList");
+  const infraDisplay = document.getElementById("infraLevel");
+
+  /* =============================
+     PLAYER STATE
+     ============================= */
+
+  let player = {
+    infrastructure: 0,
+    inventory: {}
+  };
+
+  function updateInventoryDisplay() {
+    if (Object.keys(player.inventory).length === 0) {
+      inventoryList.innerHTML = "No resources collected yet.";
+      return;
+    }
+
+    let html = "";
+    for (let resource in player.inventory) {
+      html += `${resource}: ${player.inventory[resource]}<br>`;
+    }
+    inventoryList.innerHTML = html;
+  }
 
   function showMessage(html) {
     messageBox.innerHTML = html;
   }
 
   /* =============================
-     ZOOM-SAFE GRID SYSTEM
+     GRID SYSTEM (ZOOM SAFE)
      ============================= */
 
   const originalWidth = 275;
@@ -60,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
      ============================= */
 
   const regionResources = {
-
     "West Africa": ["Gold", "Ivory"],
     "Central Africa": ["Gold", "Ivory", "Copper"],
     "Southern Africa": ["Gold", "Ivory", "Copper", "Iron"],
@@ -77,31 +100,19 @@ document.addEventListener("DOMContentLoaded", () => {
      ============================= */
 
   const harvestSquares = {
-
     "C6": { region: "West Africa", countries: ["Liberia", "Côte d’Ivoire", "Cote D'Ivoire", "Cote DIvoire", "Cote Divoire", "Ivory Coast", "Ghana"] },
     "D6": { region: "West Africa", countries: ["Togo", "Benin", "Nigeria", "Cameroon"] },
-
     "E7": { region: "Central Africa", countries: ["Gabon", "Republic of the Congo", "Democratic Republic of the Congo", "Angola"] },
     "E8": { region: "Central Africa", countries: ["Angola", "Namibia"] },
-
     "E9": { region: "Southern Africa", countries: ["Namibia", "South Africa"] },
     "E10": { region: "Southern Africa", countries: ["South Africa"], special: "diamonds" },
     "F10": { region: "Southern Africa", countries: ["South Africa"] },
     "G9": { region: "Southern Africa", countries: ["South Africa", "Mozambique"] },
     "G8": { region: "Southern Africa", countries: ["Mozambique"] },
-
     "H7": { region: "Eastern Africa", countries: ["Kenya"] },
     "H6": { region: "Eastern Africa", countries: ["Somalia", "Kenya"] },
-
-    "H5": {
-      specialDualRegion: true,
-      eastAfrica: ["Somalia", "Ethiopia", "Eritrea"],
-      arabianPeninsula: ["Saudi Arabia", "Yemen"]
-    },
-
     "I5": { region: "Arabian Peninsula", countries: ["Yemen", "Oman"] },
     "I4": { region: "Arabian Peninsula", countries: ["Oman", "United Arab Emirates", "Qatar", "Bahrain", "Saudi Arabia", "Iran"] },
-
     "J4": { region: "Indian Subcontinent", countries: ["Iran", "Pakistan", "India"] },
     "K4": { region: "Indian Subcontinent", countries: ["India"] },
     "K5": { region: "Indian Subcontinent", countries: ["India"] },
@@ -109,14 +120,11 @@ document.addEventListener("DOMContentLoaded", () => {
     "L5": { region: "Indian Subcontinent", countries: ["India"] },
     "L4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh"] },
     "M4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh", "Myanmar"] },
-
     "M5": { region: "Southeast Asia", countries: ["Myanmar"] },
     "N5": { region: "Southeast Asia", countries: ["Thailand", "Cambodia", "Vietnam"] },
-
     "O4": { region: "China", countries: ["China"] },
     "P4": { region: "China", countries: ["China"] },
     "P3": { region: "China", countries: ["China", "North Korea", "South Korea"] },
-
     "Q3": { region: "Japan", countries: ["Japan"] },
     "R3": { region: "Japan", countries: ["Japan"] }
   };
@@ -133,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const col = findClosest(xPercent, columns);
     const row = findClosest(yPercent, rows);
-
     const coord = `${col.letter}${row.row}`;
 
     if (!harvestSquares[coord]) {
@@ -147,54 +154,52 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!answer) return;
 
     const normalizedAnswer = normalize(answer);
+    const valid = square.countries.map(normalize);
 
-    if (square.specialDualRegion) {
-
-      if (square.eastAfrica.map(normalize).includes(normalizedAnswer)) {
-        displayResources("Eastern Africa", regionResources["Eastern Africa"]);
-      }
-
-      else if (square.arabianPeninsula.map(normalize).includes(normalizedAnswer)) {
-        displayResources("Arabian Peninsula", regionResources["Arabian Peninsula"]);
-      }
-
-      else {
-        showMessage("Incorrect country for this square.");
-      }
-
+    if (!valid.includes(normalizedAnswer)) {
+      showMessage("Incorrect country for this square.");
       return;
     }
 
-    const valid = square.countries.map(normalize);
+    let resources = regionResources[square.region] || [];
 
-    if (valid.includes(normalizedAnswer)) {
-
-      let resources = regionResources[square.region] || [];
-
-      if (coord === "E10") {
-        resources = [...resources, "Diamonds"];
-      }
-
-      displayResources(square.region, resources);
+    if (coord === "E10") {
+      resources = [...resources, "Diamonds"];
     }
-
-    else {
-      showMessage("Incorrect country for this square.");
-    }
-
-  });
-
-  function displayResources(region, resources) {
 
     let html = `<strong>Correct!</strong><br>`;
-    html += `Region: ${region}<br><br>`;
-    html += `<strong>Available Resources:</strong><br>`;
+    html += `Region: ${square.region}<br><br>`;
+    html += `Select a resource to harvest:<br>`;
 
-    resources.forEach(r => {
-      html += `• ${r}<br>`;
-    });
+    resources.forEach(r => html += `• ${r}<br>`);
 
-    messageBox.innerHTML = html;
-  }
+    showMessage(html);
+
+    const selected = prompt("Type the resource you want to collect:");
+
+    if (!selected) return;
+
+    const normalizedResource = normalize(selected);
+
+    const validResources = resources.map(r => r.toLowerCase());
+
+    if (!validResources.includes(normalizedResource)) {
+      showMessage("Invalid resource selection.");
+      return;
+    }
+
+    const amount = 1 + player.infrastructure;
+
+    if (!player.inventory[selected]) {
+      player.inventory[selected] = 0;
+    }
+
+    player.inventory[selected] += amount;
+
+    updateInventoryDisplay();
+
+    showMessage(`Collected ${amount} unit(s) of ${selected}.`);
+
+  });
 
 });
