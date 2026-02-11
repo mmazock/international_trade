@@ -12,10 +12,18 @@
   <div id="game">
 
     <div id="map-container">
-      <img id="map-image" src="map.png" alt="Old World Trade Map">
+      <img id="map-image" src="map.png" alt="International Trade Map">
     </div>
 
     <div id="ledger">
+
+      <h2>Join Game</h2>
+      <input type="text" id="playerNameInput" placeholder="Enter your name">
+      <button id="joinGameBtn">Join Game</button>
+      <p id="joinStatus"></p>
+
+      <hr>
+
       <h2>Ledger</h2>
 
       <p><strong>Money:</strong> $0</p>
@@ -44,24 +52,23 @@
   </div>
 
   <!-- Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-database-compat.js"></script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyA3WsPHW64uJ5dqXpvN2A5H_ZZr4posBKs",
-    authDomain: "international-trade-game.firebaseapp.com",
-    databaseURL: "https://international-trade-game-default-rtdb.firebaseio.com",
-    projectId: "international-trade-game",
-    storageBucket: "international-trade-game.firebasestorage.app",
-    messagingSenderId: "119708825687",
-    appId: "1:119708825687:web:b7967a8e00d217f49c8b12"
-  };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3WsPHW64uJ5dqXpvN2A5H_ZZr4posBKs",
+      authDomain: "international-trade-game.firebaseapp.com",
+      databaseURL: "https://international-trade-game-default-rtdb.firebaseio.com",
+      projectId: "international-trade-game",
+      storageBucket: "international-trade-game.firebasestorage.app",
+      messagingSenderId: "119708825687",
+      appId: "1:119708825687:web:b7967a8e00d217f49c8b12"
+    };
 
-  firebase.initializeApp(firebaseConfig);
-</script>
+    firebase.initializeApp(firebaseConfig);
+  </script>
 
-  
   <script src="main.js"></script>
 
 </body>
