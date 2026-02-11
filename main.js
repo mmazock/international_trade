@@ -27,6 +27,10 @@ document.addEventListener("DOMContentLoaded", () => {
     inventoryList.innerHTML = html;
   }
 
+  function normalize(input) {
+    return input.trim().toLowerCase();
+  }
+
   function showMessage(html) {
     messageBox.innerHTML = html;
   }
@@ -73,10 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ? current
         : closest
     );
-  }
-
-  function normalize(input) {
-    return input.trim().toLowerCase();
   }
 
   /* =============================
@@ -149,39 +149,55 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const square = harvestSquares[coord];
-    const answer = prompt("Identify a country in this square:");
 
-    if (!answer) return;
-
-    const normalizedAnswer = normalize(answer);
-    const valid = square.countries.map(normalize);
-
-    if (!valid.includes(normalizedAnswer)) {
-      showMessage("Incorrect country for this square.");
-      return;
-    }
-
-    let resources = regionResources[square.region] || [];
-
-    if (coord === "E10") {
-      resources = [...resources, "Diamonds"];
-    }
-
-    displayResourceButtons(square.region, resources);
+    showCountryInput(coord, square);
 
   });
+
+  function showCountryInput(coord, square) {
+
+    let html = `
+      <strong>${coord}</strong><br><br>
+      Identify a country in this square:<br><br>
+      <input type="text" id="countryInput">
+      <button id="submitCountry">Submit</button>
+    `;
+
+    showMessage(html);
+
+    document.getElementById("submitCountry").addEventListener("click", () => {
+
+      const answer = document.getElementById("countryInput").value;
+      const normalizedAnswer = normalize(answer);
+      const valid = square.countries.map(normalize);
+
+      if (!valid.includes(normalizedAnswer)) {
+        showMessage("Incorrect country for this square.");
+        return;
+      }
+
+      let resources = regionResources[square.region] || [];
+
+      if (coord === "E10") {
+        resources = [...resources, "Diamonds"];
+      }
+
+      displayResourceButtons(square.region, resources);
+
+    });
+  }
 
   function displayResourceButtons(region, resources) {
 
     let html = `<strong>Correct!</strong><br>`;
     html += `Region: ${region}<br><br>`;
-    html += `<strong>Select a resource to harvest:</strong><br><br>`;
+    html += `Select a resource to harvest:<br><br>`;
 
     resources.forEach(resource => {
       html += `<button class="resourceBtn" data-resource="${resource}">${resource}</button><br><br>`;
     });
 
-    messageBox.innerHTML = html;
+    showMessage(html);
 
     document.querySelectorAll(".resourceBtn").forEach(button => {
       button.addEventListener("click", () => {
