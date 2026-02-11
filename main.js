@@ -1,10 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Harvest square system loaded");
+  console.log("Harvest + resource system loaded");
 
   const mapImage = document.getElementById("map-image");
 
   /* =============================
-     GRID CALIBRATION (Zoom-Safe)
+     ZOOM-SAFE GRID SYSTEM
      ============================= */
 
   const originalWidth = 275;
@@ -47,13 +47,11 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  function normalize(input) {
+    return input.trim().toLowerCase();
+  }
+
   /* =============================
-     HARVEST SQUARE DEFINITIONS
-     ============================= */
-
-  const harvestSquares = {
-
-      /* =============================
      REGION RESOURCE TABLES
      ============================= */
 
@@ -76,40 +74,38 @@ document.addEventListener("DOMContentLoaded", () => {
     "China": ["Silk", "Porcelain", "Rice", "Cotton", "Spices", "Iron"],
 
     "Japan": ["Copper", "Coal"]
-
   };
 
-    // WEST AFRICA
+  /* =============================
+     HARVEST SQUARE DEFINITIONS
+     ============================= */
+
+  const harvestSquares = {
+
     "C6": { region: "West Africa", countries: ["Liberia", "Côte d’Ivoire", "Cote D'Ivoire", "Cote DIvoire", "Cote Divoire", "Ivory Coast", "Ghana"] },
     "D6": { region: "West Africa", countries: ["Togo", "Benin", "Nigeria", "Cameroon"] },
 
-    // CENTRAL AFRICA
     "E7": { region: "Central Africa", countries: ["Gabon", "Republic of the Congo", "Democratic Republic of the Congo", "Angola"] },
     "E8": { region: "Central Africa", countries: ["Angola", "Namibia"] },
 
-    // SOUTHERN AFRICA
     "E9": { region: "Southern Africa", countries: ["Namibia", "South Africa"] },
     "E10": { region: "Southern Africa", countries: ["South Africa"], special: "diamonds" },
     "F10": { region: "Southern Africa", countries: ["South Africa"] },
     "G9": { region: "Southern Africa", countries: ["South Africa", "Mozambique"] },
     "G8": { region: "Southern Africa", countries: ["Mozambique"] },
 
-    // EAST AFRICA
-    "H7": { region: "East Africa", countries: ["Kenya"] },
-    "H6": { region: "East Africa", countries: ["Somalia", "Kenya"] },
+    "H7": { region: "Eastern Africa", countries: ["Kenya"] },
+    "H6": { region: "Eastern Africa", countries: ["Somalia", "Kenya"] },
 
-    // SPECIAL CASE H5 (Dual Region)
     "H5": {
       specialDualRegion: true,
       eastAfrica: ["Somalia", "Ethiopia", "Eritrea"],
       arabianPeninsula: ["Saudi Arabia", "Yemen"]
     },
 
-    // ARABIAN PENINSULA
     "I5": { region: "Arabian Peninsula", countries: ["Yemen", "Oman"] },
     "I4": { region: "Arabian Peninsula", countries: ["Oman", "United Arab Emirates", "Qatar", "Bahrain", "Saudi Arabia", "Iran"] },
 
-    // INDIAN SUBCONTINENT
     "J4": { region: "Indian Subcontinent", countries: ["Iran", "Pakistan", "India"] },
     "K4": { region: "Indian Subcontinent", countries: ["India"] },
     "K5": { region: "Indian Subcontinent", countries: ["India"] },
@@ -118,27 +114,24 @@ document.addEventListener("DOMContentLoaded", () => {
     "L4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh"] },
     "M4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh", "Myanmar"] },
 
-    // SOUTHEAST ASIA
     "M5": { region: "Southeast Asia", countries: ["Myanmar"] },
     "N5": { region: "Southeast Asia", countries: ["Thailand", "Cambodia", "Vietnam"] },
 
-    // CHINA REGION
     "O4": { region: "China", countries: ["China"] },
     "P4": { region: "China", countries: ["China"] },
     "P3": { region: "China", countries: ["China", "North Korea", "South Korea"] },
 
-    // JAPAN
     "Q3": { region: "Japan", countries: ["Japan"] },
     "R3": { region: "Japan", countries: ["Japan"] }
   };
 
-  function normalize(input) {
-    return input.trim().toLowerCase();
-  }
+  /* =============================
+     CLICK HANDLER
+     ============================= */
 
   mapImage.addEventListener("click", (event) => {
-    const rect = mapImage.getBoundingClientRect();
 
+    const rect = mapImage.getBoundingClientRect();
     const xPercent = (event.clientX - rect.left) / rect.width;
     const yPercent = (event.clientY - rect.top) / rect.height;
 
@@ -155,51 +148,51 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     const square = harvestSquares[coord];
-
     const answer = prompt("Identify a country in this square:");
 
     if (!answer) return;
 
     const normalizedAnswer = normalize(answer);
 
-    // Special dual-region case (H5)
+    // Special dual-region square (H5)
     if (square.specialDualRegion) {
+
       if (square.eastAfrica.map(normalize).includes(normalizedAnswer)) {
         console.log("Correct! Region: Eastern Africa");
+        regionResources["Eastern Africa"].forEach(r => console.log("- " + r));
+      }
 
-console.log("Available Resources:");
-regionResources["Eastern Africa"].forEach(r => console.log("- " + r));
-
-      } else if (square.arabianPeninsula.map(normalize).includes(normalizedAnswer)) {
+      else if (square.arabianPeninsula.map(normalize).includes(normalizedAnswer)) {
         console.log("Correct! Region: Arabian Peninsula");
+        regionResources["Arabian Peninsula"].forEach(r => console.log("- " + r));
+      }
 
-console.log("Available Resources:");
-regionResources["Arabian Peninsula"].forEach(r => console.log("- " + r));
-
-      } else {
+      else {
         console.log("Incorrect country for this square.");
       }
+
       return;
     }
 
     const valid = square.countries.map(normalize);
 
-if (valid.includes(normalizedAnswer)) {
+    if (valid.includes(normalizedAnswer)) {
 
-  console.log(`Correct! Region: ${square.region}`);
+      console.log(`Correct! Region: ${square.region}`);
 
-  let resources = regionResources[square.region] || [];
+      let resources = regionResources[square.region] || [];
 
-  // Special diamond rule
-  if (coord === "E10") {
-    resources = [...resources, "Diamonds"];
-  }
+      if (coord === "E10") {
+        resources = [...resources, "Diamonds"];
+      }
 
-  console.log("Available Resources:");
-  resources.forEach(r => console.log("- " + r));
+      resources.forEach(r => console.log("- " + r));
+    }
 
-}else {
+    else {
       console.log("Incorrect country for this square.");
     }
+
   });
+
 });
