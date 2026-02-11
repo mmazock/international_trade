@@ -1,10 +1,18 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("FINAL GRID MAPPING LOADED");
+  console.log("Zoom-safe grid system loaded");
 
   const mapImage = document.getElementById("map-image");
 
-  // ===== COLUMN CENTERS (A–S) =====
-  const columns = [
+  /* =============================
+     ORIGINAL CALIBRATION VALUES
+     (based on your map at 275x150)
+     ============================= */
+
+  const originalWidth = 275;
+  const originalHeight = 150;
+
+  // Column centers (pixels from calibration)
+  const columnPixels = [
     { letter: "A", x: 10 },
     { letter: "B", x: 23 },
     { letter: "C", x: 38 },
@@ -26,8 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
     { letter: "S", x: 267 }
   ];
 
-  // ===== ROW CENTERS (0–13) =====
-  const rows = [
+  // Row centers (pixels from calibration)
+  const rowPixels = [
     { row: 0, y: 7 },
     { row: 1, y: 18 },
     { row: 2, y: 29 },
@@ -44,22 +52,35 @@ document.addEventListener("DOMContentLoaded", () => {
     { row: 13, y: 144 }
   ];
 
-  function findClosest(value, list, key) {
-    return list.reduce((closest, current) => {
-      return Math.abs(current[key] - value) <
-        Math.abs(closest[key] - value)
+  // Convert to percentages
+  const columns = columnPixels.map(c => ({
+    letter: c.letter,
+    percent: c.x / originalWidth
+  }));
+
+  const rows = rowPixels.map(r => ({
+    row: r.row,
+    percent: r.y / originalHeight
+  }));
+
+  function findClosest(value, list) {
+    return list.reduce((closest, current) =>
+      Math.abs(current.percent - value) <
+      Math.abs(closest.percent - value)
         ? current
-        : closest;
-    });
+        : closest
+    );
   }
 
   mapImage.addEventListener("click", (event) => {
     const rect = mapImage.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const y = event.clientY - rect.top;
 
-    const col = findClosest(x, columns, "x");
-    const row = findClosest(y, rows, "y");
+    // Convert click to percentage of current display size
+    const xPercent = (event.clientX - rect.left) / rect.width;
+    const yPercent = (event.clientY - rect.top) / rect.height;
+
+    const col = findClosest(xPercent, columns);
+    const row = findClosest(yPercent, rows);
 
     console.log(`Clicked grid: ${col.letter}${row.row}`);
   });
