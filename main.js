@@ -1,7 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Harvest + resource system loaded");
 
   const mapImage = document.getElementById("map-image");
+  const messageBox = document.getElementById("messageBox");
+
+  function showMessage(html) {
+    messageBox.innerHTML = html;
+  }
 
   /* =============================
      ZOOM-SAFE GRID SYSTEM
@@ -58,26 +62,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const regionResources = {
 
     "West Africa": ["Gold", "Ivory"],
-
     "Central Africa": ["Gold", "Ivory", "Copper"],
-
     "Southern Africa": ["Gold", "Ivory", "Copper", "Iron"],
-
     "Eastern Africa": ["Spices", "Ivory"],
-
     "Arabian Peninsula": ["Oil", "Spices"],
-
     "Indian Subcontinent": ["Spices", "Coal", "Cotton", "Rice"],
-
     "Southeast Asia": ["Coal", "Rice", "Oil"],
-
     "China": ["Silk", "Porcelain", "Rice", "Cotton", "Spices", "Iron"],
-
     "Japan": ["Copper", "Coal"]
   };
 
   /* =============================
-     HARVEST SQUARE DEFINITIONS
+     HARVEST SQUARES
      ============================= */
 
   const harvestSquares = {
@@ -140,10 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const coord = `${col.letter}${row.row}`;
 
-    console.log(`Clicked grid: ${coord}`);
-
     if (!harvestSquares[coord]) {
-      console.log("Not a harvest square.");
+      showMessage(`<strong>${coord}</strong><br>Not a harvest square.`);
       return;
     }
 
@@ -154,21 +148,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const normalizedAnswer = normalize(answer);
 
-    // Special dual-region square (H5)
     if (square.specialDualRegion) {
 
       if (square.eastAfrica.map(normalize).includes(normalizedAnswer)) {
-        console.log("Correct! Region: Eastern Africa");
-        regionResources["Eastern Africa"].forEach(r => console.log("- " + r));
+        displayResources("Eastern Africa", regionResources["Eastern Africa"]);
       }
 
       else if (square.arabianPeninsula.map(normalize).includes(normalizedAnswer)) {
-        console.log("Correct! Region: Arabian Peninsula");
-        regionResources["Arabian Peninsula"].forEach(r => console.log("- " + r));
+        displayResources("Arabian Peninsula", regionResources["Arabian Peninsula"]);
       }
 
       else {
-        console.log("Incorrect country for this square.");
+        showMessage("Incorrect country for this square.");
       }
 
       return;
@@ -178,21 +169,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (valid.includes(normalizedAnswer)) {
 
-      console.log(`Correct! Region: ${square.region}`);
-
       let resources = regionResources[square.region] || [];
 
       if (coord === "E10") {
         resources = [...resources, "Diamonds"];
       }
 
-      resources.forEach(r => console.log("- " + r));
+      displayResources(square.region, resources);
     }
 
     else {
-      console.log("Incorrect country for this square.");
+      showMessage("Incorrect country for this square.");
     }
 
   });
+
+  function displayResources(region, resources) {
+
+    let html = `<strong>Correct!</strong><br>`;
+    html += `Region: ${region}<br><br>`;
+    html += `<strong>Available Resources:</strong><br>`;
+
+    resources.forEach(r => {
+      html += `• ${r}<br>`;
+    });
+
+    messageBox.innerHTML = html;
+  }
 
 });
