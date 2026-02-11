@@ -34,11 +34,12 @@ document.addEventListener("DOMContentLoaded", () => {
       code = generateCode();
     }
 
-    await gamesRef.child(code).set({
-      players: {},
-      turnOrder: [],
-      currentTurnIndex: 0
-    });
+await gamesRef.child(code).update({
+  players: {},
+  turnOrder: [],
+  currentTurnIndex: 0
+});
+
 
     currentGameCode = code;
 
