@@ -87,7 +87,6 @@ await gamesRef.child(code).update({
 
     playerRef.on("value", snapshot => {
       
-console.log("Realtime update received:", snapshot.val());
 
       const data = snapshot.val();
       if (!data) return;
