@@ -1,5 +1,9 @@
 document.addEventListener("DOMContentLoaded", () => {
 
+  // Firebase Database reference
+  const database = firebase.database();
+  const gameRef = database.ref("gameSession");
+  
   const mapImage = document.getElementById("map-image");
   const messageBox = document.getElementById("messageBox");
   const inventoryList = document.getElementById("inventoryList");
