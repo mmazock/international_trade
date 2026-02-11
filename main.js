@@ -176,9 +176,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const valid = square.countries.map(normalize);
 
-    if (valid.includes(normalizedAnswer)) {
-      console.log(`Correct! Region: ${square.region}`);
-    } else {
+if (valid.includes(normalizedAnswer)) {
+
+  console.log(`Correct! Region: ${square.region}`);
+
+  let resources = regionResources[square.region] || [];
+
+  // Special diamond rule
+  if (coord === "E10") {
+    resources = [...resources, "Diamonds"];
+  }
+
+  console.log("Available Resources:");
+  resources.forEach(r => console.log("- " + r));
+
+}else {
       console.log("Incorrect country for this square.");
     }
   });
