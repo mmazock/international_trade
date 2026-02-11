@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =============================
-     GRID SYSTEM (ZOOM SAFE)
+     ZOOM SAFE GRID
      ============================= */
 
   const originalWidth = 275;
@@ -167,48 +167,40 @@ document.addEventListener("DOMContentLoaded", () => {
       resources = [...resources, "Diamonds"];
     }
 
-    let html = `<strong>Correct!</strong><br>`;
-    html += `Region: ${square.region}<br><br>`;
-    html += `Select a resource to harvest:<br>`;
-
-    resources.forEach(r => html += `• ${r}<br>`);
-
-    showMessage(html);
-
-   let resourcePrompt = "Available resources:\n";
-
-resources.forEach(r => {
-  resourcePrompt += "- " + r + "\n";
-});
-
-resourcePrompt += "\nType the resource you want to collect:";
-
-const selected = prompt(resourcePrompt);
-
-
-    if (!selected) return;
-
-    const normalizedResource = normalize(selected);
-
-    const validResources = resources.map(r => r.toLowerCase());
-
-    if (!validResources.includes(normalizedResource)) {
-      showMessage("Invalid resource selection.");
-      return;
-    }
-
-    const amount = 1 + player.infrastructure;
-
-    if (!player.inventory[selected]) {
-      player.inventory[selected] = 0;
-    }
-
-    player.inventory[selected] += amount;
-
-    updateInventoryDisplay();
-
-    showMessage(`Collected ${amount} unit(s) of ${selected}.`);
+    displayResourceButtons(square.region, resources);
 
   });
+
+  function displayResourceButtons(region, resources) {
+
+    let html = `<strong>Correct!</strong><br>`;
+    html += `Region: ${region}<br><br>`;
+    html += `<strong>Select a resource to harvest:</strong><br><br>`;
+
+    resources.forEach(resource => {
+      html += `<button class="resourceBtn" data-resource="${resource}">${resource}</button><br><br>`;
+    });
+
+    messageBox.innerHTML = html;
+
+    document.querySelectorAll(".resourceBtn").forEach(button => {
+      button.addEventListener("click", () => {
+
+        const resource = button.dataset.resource;
+        const amount = 1 + player.infrastructure;
+
+        if (!player.inventory[resource]) {
+          player.inventory[resource] = 0;
+        }
+
+        player.inventory[resource] += amount;
+
+        updateInventoryDisplay();
+
+        showMessage(`Collected ${amount} unit(s) of ${resource}.`);
+
+      });
+    });
+  }
 
 });
