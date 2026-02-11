@@ -9,12 +9,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const playerNameInput = document.getElementById("playerNameInput");
   const joinStatus = document.getElementById("joinStatus");
 
+  const inventoryList = document.getElementById("inventoryList");
+  const infraDisplay = document.getElementById("infraLevel");
+
   let currentGameCode = null;
   let currentPlayerId = null;
-  let currentPlayerName = null;
 
   /* =============================
-     RANDOM JOIN CODE GENERATOR
+     RANDOM JOIN CODE
      ============================= */
 
   function generateCode(length = 5) {
@@ -27,22 +29,19 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =============================
-     CREATE GAME (HOST)
+     CREATE GAME
      ============================= */
 
   createGameBtn.addEventListener("click", async () => {
 
     let code = generateCode();
-
     const snapshot = await gamesRef.child(code).once("value");
 
     if (snapshot.exists()) {
-      // Extremely rare collision — regenerate
       code = generateCode();
     }
 
     await gamesRef.child(code).set({
-      host: true,
       players: {},
       turnOrder: [],
       currentTurnIndex: 0
@@ -86,10 +85,38 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     currentPlayerId = newPlayerRef.key;
-    currentPlayerName = name;
 
     joinStatus.textContent = "Joined game: " + code;
 
+    listenToPlayerData();
   });
+
+  /* =============================
+     REAL-TIME PLAYER SYNC
+     ============================= */
+
+  function listenToPlayerData() {
+
+    const playerRef = gamesRef.child(currentGameCode).child("players").child(currentPlayerId);
+
+    playerRef.on("value", snapshot => {
+
+      const data = snapshot.val();
+      if (!data) return;
+
+      infraDisplay.textContent = data.infrastructure;
+
+      if (!data.inventory || Object.keys(data.inventory).length === 0) {
+        inventoryList.innerHTML = "No resources collected yet.";
+      } else {
+        let html = "";
+        for (let resource in data.inventory) {
+          html += `${resource}: ${data.inventory[resource]}<br>`;
+        }
+        inventoryList.innerHTML = html;
+      }
+
+    });
+  }
 
 });
