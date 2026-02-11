@@ -165,9 +165,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // Special dual-region case (H5)
     if (square.specialDualRegion) {
       if (square.eastAfrica.map(normalize).includes(normalizedAnswer)) {
-        console.log("Correct! Region: East Africa");
+        console.log("Correct! Region: Eastern Africa");
+
+console.log("Available Resources:");
+regionResources["Eastern Africa"].forEach(r => console.log("- " + r));
+
       } else if (square.arabianPeninsula.map(normalize).includes(normalizedAnswer)) {
         console.log("Correct! Region: Arabian Peninsula");
+
+console.log("Available Resources:");
+regionResources["Arabian Peninsula"].forEach(r => console.log("- " + r));
+
       } else {
         console.log("Incorrect country for this square.");
       }
