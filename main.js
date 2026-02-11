@@ -53,6 +53,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const harvestSquares = {
 
+      /* =============================
+     REGION RESOURCE TABLES
+     ============================= */
+
+  const regionResources = {
+
+    "West Africa": ["Gold", "Ivory"],
+
+    "Central Africa": ["Gold", "Ivory", "Copper"],
+
+    "Southern Africa": ["Gold", "Ivory", "Copper", "Iron"],
+
+    "Eastern Africa": ["Spices", "Ivory"],
+
+    "Arabian Peninsula": ["Oil", "Spices"],
+
+    "Indian Subcontinent": ["Spices", "Coal", "Cotton", "Rice"],
+
+    "Southeast Asia": ["Coal", "Rice", "Oil"],
+
+    "China": ["Silk", "Porcelain", "Rice", "Cotton", "Spices", "Iron"],
+
+    "Japan": ["Copper", "Coal"]
+
+  };
+
     // WEST AFRICA
     "C6": { region: "West Africa", countries: ["Liberia", "Côte d’Ivoire", "Cote D'Ivoire", "Cote DIvoire", "Cote Divoire", "Ivory Coast", "Ghana"] },
     "D6": { region: "West Africa", countries: ["Togo", "Benin", "Nigeria", "Cameroon"] },
