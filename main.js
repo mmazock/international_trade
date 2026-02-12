@@ -177,58 +177,64 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function renderShips(gameData) {
+function renderShips(gameData) {
 
-    document.querySelectorAll(".ship").forEach(s => s.remove());
+  document.querySelectorAll(".ship").forEach(s => s.remove());
 
-    const players = gameData.players || {};
+  const players = gameData.players || {};
 
-    Object.keys(players).forEach(playerId => {
+  Object.keys(players).forEach(playerId => {
 
-      const player = players[playerId];
-      if (!player.shipPosition) return;
+    const player = players[playerId];
+    if (!player.shipPosition) return;
 
-      const pos = getScaledPosition(player.shipPosition);
+    const pos = getScaledPosition(player.shipPosition);
 
-      const wrapper = document.createElement("div");
-      wrapper.className = "ship";
-      wrapper.style.position = "absolute";
-      wrapper.style.left = pos.x + "px";
-      wrapper.style.top = pos.y + "px";
-      wrapper.style.width = "18px";
-      wrapper.style.height = "18px";
-      wrapper.style.transform = "translate(-50%, -50%)";
+    const wrapper = document.createElement("div");
+    wrapper.className = "ship";
+    wrapper.style.position = "absolute";
+    wrapper.style.left = pos.x + "px";
+    wrapper.style.top = pos.y + "px";
+    wrapper.style.width = "22px";
+    wrapper.style.height = "22px";
+    wrapper.style.transform = "translate(-50%, -50%)";
+    wrapper.style.display = "flex";
+    wrapper.style.flexDirection = "column";
+    wrapper.style.alignItems = "center";
+    wrapper.style.justifyContent = "center";
 
-      const circle = document.createElement("div");
-      circle.style.width = "18px";
-      circle.style.height = "18px";
-      circle.style.backgroundColor = player.color;
-      circle.style.borderRadius = "50%";
-      circle.style.position = "absolute";
+    const circle = document.createElement("div");
+    circle.style.width = "22px";
+    circle.style.height = "22px";
+    circle.style.backgroundColor = player.color;
+    circle.style.borderRadius = "50%";
+    circle.style.position = "relative";
+    circle.style.display = "flex";
+    circle.style.flexDirection = "column";
+    circle.style.alignItems = "center";
+    circle.style.justifyContent = "center";
 
-      const shipImg = document.createElement("img");
-      shipImg.src = "ship.png";
-      shipImg.style.width = "14px";
-      shipImg.style.position = "absolute";
-      shipImg.style.left = "2px";
-      shipImg.style.top = "2px";
+    const shipImg = document.createElement("img");
+    shipImg.src = "ship.png";
+    shipImg.style.width = "14px";
+    shipImg.style.pointerEvents = "none";
 
-      const label = document.createElement("div");
-      label.textContent = player.initials;
-      label.style.position = "absolute";
-      label.style.fontSize = "8px";
-      label.style.fontWeight = "bold";
-      label.style.color = player.color === "yellow" ? "black" : "white";
-      label.style.left = "3px";
-      label.style.top = "4px";
+    const label = document.createElement("div");
+    label.textContent = player.initials;
+    label.style.fontSize = "7px";
+    label.style.fontWeight = "bold";
+    label.style.marginTop = "1px";
+    label.style.color = player.color === "yellow" ? "black" : "white";
+    label.style.textShadow = "1px 1px 2px black";
 
-      wrapper.appendChild(circle);
-      wrapper.appendChild(shipImg);
-      wrapper.appendChild(label);
+    circle.appendChild(shipImg);
+    circle.appendChild(label);
+    wrapper.appendChild(circle);
 
-      mapContainer.appendChild(wrapper);
-    });
-  }
+    mapContainer.appendChild(wrapper);
+  });
+}
+
 
   function renderLedger(gameData) {
 
