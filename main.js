@@ -17,10 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentGameCode = null;
   let currentPlayerId = null;
 
-  const availableColors = [
-    "red","purple","yellow","black",
-    "blue","green","orange"
-  ];
+  const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
   const countryData = {
     Spain: { home: "C2" },
@@ -30,10 +27,6 @@ document.addEventListener("DOMContentLoaded", () => {
     Germany: { home: "D1" },
     Italy: { home: "E2" }
   };
-
-  /* =============================
-     GRID CALIBRATION (Zoom Safe)
-     ============================= */
 
   const originalWidth = 275;
   const originalHeight = 150;
@@ -77,20 +70,27 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   }
 
-  function generateCode(length = 5) {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
+  /* =============================
+     LOAD SAVED SESSION
+     ============================= */
+
+  const savedGameCode = localStorage.getItem("gameCode");
+  const savedPlayerId = localStorage.getItem("playerId");
+
+  if (savedGameCode && savedPlayerId) {
+    currentGameCode = savedGameCode;
+    currentPlayerId = savedPlayerId;
+    hideSetupUI();
+    listenToGameData();
   }
+
+  /* =============================
+     CREATE GAME
+     ============================= */
 
   createGameBtn.addEventListener("click", async () => {
 
-    let code = generateCode();
-    const snapshot = await gamesRef.child(code).once("value");
-    if (snapshot.exists()) code = generateCode();
+    const code = Math.random().toString(36).substring(2,7).toUpperCase();
 
     await gamesRef.child(code).set({
       players: {},
@@ -101,6 +101,10 @@ document.addEventListener("DOMContentLoaded", () => {
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
+
+  /* =============================
+     JOIN GAME
+     ============================= */
 
   joinGameBtn.addEventListener("click", async () => {
 
@@ -132,15 +136,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const newPlayerRef = gamesRef.child(code).child("players").push();
 
     await newPlayerRef.set({
-      name: name,
-      country: country,
+      name,
+      country,
       homePort: countryData[country].home,
       money: 0,
       infrastructure: 0,
       inventory: {},
       shipPosition: countryData[country].home,
-      color: color,
-      initials: initials
+      color,
+      initials
     });
 
     currentPlayerId = newPlayerRef.key;
@@ -149,6 +153,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!order) return [currentPlayerId];
       return [...order, currentPlayerId];
     });
+
+    localStorage.setItem("gameCode", currentGameCode);
+    localStorage.setItem("playerId", currentPlayerId);
 
     hideSetupUI();
     listenToGameData();
@@ -177,64 +184,54 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-function renderShips(gameData) {
+  function renderShips(gameData) {
 
-  document.querySelectorAll(".ship").forEach(s => s.remove());
+    document.querySelectorAll(".ship").forEach(s => s.remove());
 
-  const players = gameData.players || {};
+    const players = gameData.players || {};
 
-  Object.keys(players).forEach(playerId => {
+    Object.keys(players).forEach(playerId => {
 
-    const player = players[playerId];
-    if (!player.shipPosition) return;
+      const player = players[playerId];
+      if (!player.shipPosition) return;
 
-    const pos = getScaledPosition(player.shipPosition);
+      const pos = getScaledPosition(player.shipPosition);
 
-    const wrapper = document.createElement("div");
-    wrapper.className = "ship";
-    wrapper.style.position = "absolute";
-    wrapper.style.left = pos.x + "px";
-    wrapper.style.top = pos.y + "px";
-    wrapper.style.width = "22px";
-    wrapper.style.height = "22px";
-    wrapper.style.transform = "translate(-50%, -50%)";
-    wrapper.style.display = "flex";
-    wrapper.style.flexDirection = "column";
-    wrapper.style.alignItems = "center";
-    wrapper.style.justifyContent = "center";
+      const wrapper = document.createElement("div");
+      wrapper.className = "ship";
+      wrapper.style.position = "absolute";
+      wrapper.style.left = pos.x + "px";
+      wrapper.style.top = pos.y + "px";
+      wrapper.style.width = "22px";
+      wrapper.style.height = "22px";
+      wrapper.style.transform = "translate(-50%, -50%)";
 
-    const circle = document.createElement("div");
-    circle.style.width = "22px";
-    circle.style.height = "22px";
-    circle.style.backgroundColor = player.color;
-    circle.style.borderRadius = "50%";
-    circle.style.position = "relative";
-    circle.style.display = "flex";
-    circle.style.flexDirection = "column";
-    circle.style.alignItems = "center";
-    circle.style.justifyContent = "center";
+      const circle = document.createElement("div");
+      circle.style.width = "22px";
+      circle.style.height = "22px";
+      circle.style.backgroundColor = player.color;
+      circle.style.borderRadius = "50%";
+      circle.style.display = "flex";
+      circle.style.flexDirection = "column";
+      circle.style.alignItems = "center";
+      circle.style.justifyContent = "center";
 
-    const shipImg = document.createElement("img");
-    shipImg.src = "ship.png";
-    shipImg.style.width = "14px";
-    shipImg.style.pointerEvents = "none";
+      const shipImg = document.createElement("img");
+      shipImg.src = "ship.png";
+      shipImg.style.width = "14px";
 
-    const label = document.createElement("div");
-    label.textContent = player.initials;
-    label.style.fontSize = "7px";
-    label.style.fontWeight = "bold";
-    label.style.marginTop = "1px";
-    label.style.color = player.color === "yellow" ? "black" : "white";
-    label.style.textShadow = "1px 1px 2px black";
+      const label = document.createElement("div");
+      label.textContent = player.initials;
+      label.style.fontSize = "7px";
+      label.style.fontWeight = "bold";
+      label.style.color = player.color === "yellow" ? "black" : "white";
 
-    circle.appendChild(shipImg);
-    circle.appendChild(label);
-    wrapper.appendChild(circle);
-
-    mapContainer.appendChild(wrapper);
-  });
-}
-
+      circle.appendChild(shipImg);
+      circle.appendChild(label);
+      wrapper.appendChild(circle);
+      mapContainer.appendChild(wrapper);
+    });
+  }
 
   function renderLedger(gameData) {
 
