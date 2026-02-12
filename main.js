@@ -22,6 +22,7 @@ const diceResult = document.getElementById("diceResult");
 
   let currentGameCode = null;
   let currentPlayerId = null;
+let latestGameData = null;
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
@@ -217,11 +218,13 @@ if (playerData.movesRemaining && playerData.movesRemaining > 0) {
 
     gameRef.on("value", snapshot => {
 
-      const gameData = snapshot.val();
-      if (!gameData) return;
+const gameData = snapshot.val();
+if (!gameData) return;
 
-      renderShips(gameData);
-      renderLedger(gameData);
+latestGameData = gameData;
+
+renderShips(gameData);
+renderLedger(gameData);
     });
   }
 
@@ -385,5 +388,10 @@ if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || 
 
     inventoryList.innerHTML = html;
   }
+window.addEventListener("resize", () => {
+  if (latestGameData) {
+    renderShips(latestGameData);
+  }
+});
 
 });
