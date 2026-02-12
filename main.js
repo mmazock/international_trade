@@ -83,7 +83,7 @@ const waterSquares = new Set([
 
 const restrictedTransitions = {
   "M6": ["N6"],
-  "N6": ["N7"],
+  "N6": ["M6", "N7"],
   "N7": ["N6", "O7"]
 };
 
