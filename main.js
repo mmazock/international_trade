@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const countrySelect = document.getElementById("countrySelect");
   const joinStatus = document.getElementById("joinStatus");
   const inventoryList = document.getElementById("inventoryList");
+  const playerHeader = document.getElementById("playerHeader");
   const rollDiceBtn = document.getElementById("rollDiceBtn");
 const diceResult = document.getElementById("diceResult");
 
@@ -276,6 +277,10 @@ if (playerData.movesRemaining && playerData.movesRemaining > 0) {
   function renderLedger(gameData) {
 
     const players = gameData.players || {};
+    if (players[currentPlayerId]) {
+  const me = players[currentPlayerId];
+  playerHeader.textContent = `Player: ${me.name} (${me.country})`;
+}
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
 
