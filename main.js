@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const joinGameBtn = document.getElementById("joinGameBtn");
   const joinCodeInput = document.getElementById("joinCodeInput");
   const playerNameInput = document.getElementById("playerNameInput");
+  const countrySelect = document.getElementById("countrySelect");
   const joinStatus = document.getElementById("joinStatus");
   const inventoryList = document.getElementById("inventoryList");
 
@@ -15,14 +16,71 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPlayerId = null;
 
   const availableColors = [
-    "red",
-    "purple",
-    "yellow",
-    "black",
-    "blue",
-    "green",
-    "orange"
+    "red", "purple", "yellow", "black",
+    "blue", "green", "orange"
   ];
+
+  const countryData = {
+    Spain: {
+      home: "C2",
+      multipliers: { Gold: 1.5, Textiles: 1.5, Spices: 0.5, Automobiles: 1.5, Copper: 1 }
+    },
+    Portugal: {
+      home: "C3",
+      multipliers: { Rice: 2, Silk: 1.5, Technology: 1.5, Ivory: 0.5, Steel: 1.5 }
+    },
+    England: {
+      home: "C1",
+      multipliers: { Porcelain: 2, Silk: 2, Gold: 0.5, Copper: 0.5 }
+    },
+    France: {
+      home: "D2",
+      multipliers: { Textiles: 1.5, Rice: 1.5, Spices: 0.5, Ivory: 0.5 }
+    },
+    Italy: {
+      home: "D2",
+      multipliers: { Gold: 1.5, Textiles: 1.5, Spices: 2, Technology: 1.5, Rice: 1.5, Copper: 0.5 }
+    },
+    Germany: {
+      home: "D1",
+      multipliers: { Oil: 1.5, Technology: 2, Rice: 1.5, Ivory: 1.5, Diamonds: 1.5, Automobiles: 0.5 }
+    }
+  };
+
+  const originalWidth = 275;
+  const originalHeight = 150;
+
+  const columnPixels = [
+    { letter: "A", x: 10 }, { letter: "B", x: 23 }, { letter: "C", x: 38 },
+    { letter: "D", x: 53 }, { letter: "E", x: 67 }, { letter: "F", x: 81 },
+    { letter: "G", x: 95 }, { letter: "H", x: 110 }, { letter: "I", x: 124 },
+    { letter: "J", x: 138 }, { letter: "K", x: 153 }, { letter: "L", x: 168 },
+    { letter: "M", x: 182 }, { letter: "N", x: 196 }, { letter: "O", x: 211 },
+    { letter: "P", x: 225 }, { letter: "Q", x: 240 }, { letter: "R", x: 254 },
+    { letter: "S", x: 267 }
+  ];
+
+  const rowPixels = [
+    { row: 0, y: 7 }, { row: 1, y: 18 }, { row: 2, y: 29 },
+    { row: 3, y: 39 }, { row: 4, y: 50 }, { row: 5, y: 60 },
+    { row: 6, y: 71 }, { row: 7, y: 83 }, { row: 8, y: 92 },
+    { row: 9, y: 102 }, { row: 10, y: 113 }, { row: 11, y: 123 },
+    { row: 12, y: 134 }, { row: 13, y: 144 }
+  ];
+
+  function getGridPosition(coord) {
+    const col = coord[0];
+    const row = parseInt(coord.slice(1));
+    const colObj = columnPixels.find(c => c.letter === col);
+    const rowObj = rowPixels.find(r => r.row === row);
+
+    if (!colObj || !rowObj) return { x: 0, y: 0 };
+
+    return {
+      x: colObj.x,
+      y: rowObj.y
+    };
+  }
 
   function generateCode(length = 5) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -33,18 +91,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return result;
   }
 
-  /* =============================
-     CREATE GAME
-     ============================= */
-
   createGameBtn.addEventListener("click", async () => {
 
     let code = generateCode();
     const snapshot = await gamesRef.child(code).once("value");
 
-    if (snapshot.exists()) {
-      code = generateCode();
-    }
+    if (snapshot.exists()) code = generateCode();
 
     await gamesRef.child(code).set({
       players: {},
@@ -56,24 +108,20 @@ document.addEventListener("DOMContentLoaded", () => {
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
 
-  /* =============================
-     JOIN GAME
-     ============================= */
-
   joinGameBtn.addEventListener("click", async () => {
 
     const code = joinCodeInput.value.trim().toUpperCase();
     const name = playerNameInput.value.trim();
+    const country = countrySelect.value;
 
-    if (!code || !name) {
-      joinStatus.textContent = "Enter join code and name.";
+    if (!code || !name || !country) {
+      joinStatus.textContent = "Enter code, name, and select country.";
       return;
     }
 
     const snapshot = await gamesRef.child(code).once("value");
-
     if (!snapshot.exists()) {
-      joinStatus.textContent = "Game code not found.";
+      joinStatus.textContent = "Game not found.";
       return;
     }
 
@@ -85,20 +133,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const usedColors = Object.values(players).map(p => p.color);
     const color = availableColors.find(c => !usedColors.includes(c)) || "black";
 
-    const initials = name
-      .split(" ")
-      .map(n => n[0])
-      .join("")
-      .toUpperCase();
+    const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
 
     const newPlayerRef = gamesRef.child(code).child("players").push();
 
     await newPlayerRef.set({
       name: name,
+      country: country,
+      homePort: countryData[country].home,
+      multipliers: countryData[country].multipliers,
       money: 0,
       infrastructure: 0,
       inventory: {},
-      shipPosition: "C6",
+      shipPosition: countryData[country].home,
       color: color,
       initials: initials
     });
@@ -110,20 +157,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return [...order, currentPlayerId];
     });
 
-    joinStatus.textContent = "Joined game: " + code;
-
+    hideSetupUI();
     listenToGameData();
   });
 
-  /* =============================
-     LISTEN TO GAME DATA
-     ============================= */
+  function hideSetupUI() {
+    createGameBtn.style.display = "none";
+    joinGameBtn.style.display = "none";
+    joinCodeInput.style.display = "none";
+    playerNameInput.style.display = "none";
+    countrySelect.style.display = "none";
+    joinStatus.style.display = "none";
+  }
 
   function listenToGameData() {
 
     const gameRef = gamesRef.child(currentGameCode);
 
     gameRef.on("value", snapshot => {
+
       const gameData = snapshot.val();
       if (!gameData) return;
 
@@ -131,10 +183,6 @@ document.addEventListener("DOMContentLoaded", () => {
       renderLedger(gameData);
     });
   }
-
-  /* =============================
-     RENDER SHIPS (Improved)
-     ============================= */
 
   function renderShips(gameData) {
 
@@ -147,52 +195,30 @@ document.addEventListener("DOMContentLoaded", () => {
       const player = players[playerId];
       if (!player.shipPosition) return;
 
+      const pos = getGridPosition(player.shipPosition);
+
       const ship = document.createElement("div");
       ship.className = "ship";
 
       ship.style.position = "absolute";
-      ship.style.width = "28px";
-      ship.style.height = "28px";
-      ship.style.backgroundImage = "url('ship.png')";
-      ship.style.backgroundSize = "contain";
-      ship.style.backgroundRepeat = "no-repeat";
+      ship.style.width = "26px";
+      ship.style.height = "26px";
+      ship.style.left = pos.x + "px";
+      ship.style.top = pos.y + "px";
+      ship.style.backgroundColor = player.color;
+      ship.style.borderRadius = "50%";
+      ship.style.display = "flex";
+      ship.style.alignItems = "center";
+      ship.style.justifyContent = "center";
+      ship.style.fontSize = "10px";
+      ship.style.fontWeight = "bold";
+      ship.style.color = player.color === "yellow" ? "black" : "white";
 
-      const colorFilters = {
-        red: "invert(15%) sepia(97%) saturate(7483%) hue-rotate(0deg) brightness(100%) contrast(115%)",
-        blue: "invert(32%) sepia(99%) saturate(7483%) hue-rotate(200deg) brightness(100%) contrast(115%)",
-        green: "invert(46%) sepia(93%) saturate(7483%) hue-rotate(80deg) brightness(100%) contrast(115%)",
-        purple: "invert(26%) sepia(93%) saturate(7483%) hue-rotate(260deg) brightness(100%) contrast(115%)",
-        yellow: "invert(80%) sepia(93%) saturate(7483%) hue-rotate(0deg) brightness(100%) contrast(115%)",
-        orange: "invert(50%) sepia(93%) saturate(7483%) hue-rotate(10deg) brightness(100%) contrast(115%)",
-        black: "none"
-      };
-
-      ship.style.filter = colorFilters[player.color] || "none";
-
-      const label = document.createElement("div");
-      label.textContent = player.initials;
-
-      label.style.position = "absolute";
-      label.style.top = "7px";
-      label.style.left = "8px";
-      label.style.fontSize = "10px";
-      label.style.fontWeight = "bold";
-      label.style.color = player.color === "yellow" ? "black" : "white";
-      label.style.textShadow = "1px 1px 2px black";
-
-      ship.appendChild(label);
-
-      // TEMP random placement (movement next step)
-      ship.style.left = Math.random() * 300 + "px";
-      ship.style.top = Math.random() * 150 + "px";
+      ship.textContent = player.initials;
 
       mapContainer.appendChild(ship);
     });
   }
-
-  /* =============================
-     RENDER LEDGER
-     ============================= */
 
   function renderLedger(gameData) {
 
@@ -211,7 +237,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
               ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
-              <strong>${player.name}</strong>
+              <strong>${player.name} (${player.country})</strong>
               ${isCurrentTurn ? ' (Current Turn)' : ''}
               <br>
               Money: $${player.money}
