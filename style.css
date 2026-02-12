@@ -31,3 +31,7 @@ body {
   border: 2px solid black;
   padding: 10px;
 }
+
+#map-container {
+  position: relative;
+}
