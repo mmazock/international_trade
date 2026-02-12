@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const database = firebase.database();
   const gamesRef = database.ref("games");
 
+  const mapImage = document.getElementById("map-image");
   const mapContainer = document.getElementById("map-container");
+
   const createGameBtn = document.getElementById("createGameBtn");
   const joinGameBtn = document.getElementById("joinGameBtn");
   const joinCodeInput = document.getElementById("joinCodeInput");
@@ -16,36 +18,22 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPlayerId = null;
 
   const availableColors = [
-    "red", "purple", "yellow", "black",
-    "blue", "green", "orange"
+    "red","purple","yellow","black",
+    "blue","green","orange"
   ];
 
   const countryData = {
-    Spain: {
-      home: "C2",
-      multipliers: { Gold: 1.5, Textiles: 1.5, Spices: 0.5, Automobiles: 1.5, Copper: 1 }
-    },
-    Portugal: {
-      home: "C3",
-      multipliers: { Rice: 2, Silk: 1.5, Technology: 1.5, Ivory: 0.5, Steel: 1.5 }
-    },
-    England: {
-      home: "C1",
-      multipliers: { Porcelain: 2, Silk: 2, Gold: 0.5, Copper: 0.5 }
-    },
-    France: {
-      home: "D2",
-      multipliers: { Textiles: 1.5, Rice: 1.5, Spices: 0.5, Ivory: 0.5 }
-    },
-    Italy: {
-      home: "D2",
-      multipliers: { Gold: 1.5, Textiles: 1.5, Spices: 2, Technology: 1.5, Rice: 1.5, Copper: 0.5 }
-    },
-    Germany: {
-      home: "D1",
-      multipliers: { Oil: 1.5, Technology: 2, Rice: 1.5, Ivory: 1.5, Diamonds: 1.5, Automobiles: 0.5 }
-    }
+    Spain: { home: "C2" },
+    Portugal: { home: "C3" },
+    France: { home: "D2" },
+    England: { home: "C1" },
+    Germany: { home: "D1" },
+    Italy: { home: "E2" }
   };
+
+  /* =============================
+     GRID CALIBRATION (Zoom Safe)
+     ============================= */
 
   const originalWidth = 275;
   const originalHeight = 150;
@@ -68,17 +56,24 @@ document.addEventListener("DOMContentLoaded", () => {
     { row: 12, y: 134 }, { row: 13, y: 144 }
   ];
 
-  function getGridPosition(coord) {
+  function getScaledPosition(coord) {
+
     const col = coord[0];
     const row = parseInt(coord.slice(1));
+
     const colObj = columnPixels.find(c => c.letter === col);
     const rowObj = rowPixels.find(r => r.row === row);
 
     if (!colObj || !rowObj) return { x: 0, y: 0 };
 
+    const rect = mapImage.getBoundingClientRect();
+
+    const xPercent = colObj.x / originalWidth;
+    const yPercent = rowObj.y / originalHeight;
+
     return {
-      x: colObj.x,
-      y: rowObj.y
+      x: rect.width * xPercent,
+      y: rect.height * yPercent
     };
   }
 
@@ -95,7 +90,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let code = generateCode();
     const snapshot = await gamesRef.child(code).once("value");
-
     if (snapshot.exists()) code = generateCode();
 
     await gamesRef.child(code).set({
@@ -141,7 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
       name: name,
       country: country,
       homePort: countryData[country].home,
-      multipliers: countryData[country].multipliers,
       money: 0,
       infrastructure: 0,
       inventory: {},
@@ -195,28 +188,45 @@ document.addEventListener("DOMContentLoaded", () => {
       const player = players[playerId];
       if (!player.shipPosition) return;
 
-      const pos = getGridPosition(player.shipPosition);
+      const pos = getScaledPosition(player.shipPosition);
 
-      const ship = document.createElement("div");
-      ship.className = "ship";
+      const wrapper = document.createElement("div");
+      wrapper.className = "ship";
+      wrapper.style.position = "absolute";
+      wrapper.style.left = pos.x + "px";
+      wrapper.style.top = pos.y + "px";
+      wrapper.style.width = "18px";
+      wrapper.style.height = "18px";
+      wrapper.style.transform = "translate(-50%, -50%)";
 
-      ship.style.position = "absolute";
-      ship.style.width = "26px";
-      ship.style.height = "26px";
-      ship.style.left = pos.x + "px";
-      ship.style.top = pos.y + "px";
-      ship.style.backgroundColor = player.color;
-      ship.style.borderRadius = "50%";
-      ship.style.display = "flex";
-      ship.style.alignItems = "center";
-      ship.style.justifyContent = "center";
-      ship.style.fontSize = "10px";
-      ship.style.fontWeight = "bold";
-      ship.style.color = player.color === "yellow" ? "black" : "white";
+      const circle = document.createElement("div");
+      circle.style.width = "18px";
+      circle.style.height = "18px";
+      circle.style.backgroundColor = player.color;
+      circle.style.borderRadius = "50%";
+      circle.style.position = "absolute";
 
-      ship.textContent = player.initials;
+      const shipImg = document.createElement("img");
+      shipImg.src = "ship.png";
+      shipImg.style.width = "14px";
+      shipImg.style.position = "absolute";
+      shipImg.style.left = "2px";
+      shipImg.style.top = "2px";
 
-      mapContainer.appendChild(ship);
+      const label = document.createElement("div");
+      label.textContent = player.initials;
+      label.style.position = "absolute";
+      label.style.fontSize = "8px";
+      label.style.fontWeight = "bold";
+      label.style.color = player.color === "yellow" ? "black" : "white";
+      label.style.left = "3px";
+      label.style.top = "4px";
+
+      wrapper.appendChild(circle);
+      wrapper.appendChild(shipImg);
+      wrapper.appendChild(label);
+
+      mapContainer.appendChild(wrapper);
     });
   }
 
