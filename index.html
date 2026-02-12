@@ -26,6 +26,20 @@
       <br><br>
 
       <input type="text" id="playerNameInput" placeholder="Enter Your Name">
+      <br><br>
+
+      <select id="countrySelect">
+        <option value="">Select Country</option>
+        <option value="Spain">Spain</option>
+        <option value="Portugal">Portugal</option>
+        <option value="England">England</option>
+        <option value="France">France</option>
+        <option value="Italy">Italy</option>
+        <option value="Germany">Germany</option>
+      </select>
+
+      <br><br>
+
       <button id="joinGameBtn">Join Game</button>
 
       <p id="joinStatus"></p>
@@ -34,19 +48,7 @@
 
       <h2>Ledger</h2>
 
-      <p><strong>Money:</strong> $<span id="moneyDisplay">0</span></p>
-
-      <p>
-        <strong>Transportation Infrastructure:</strong>
-        <span id="infraLevel">0</span>
-      </p>
-
-      <hr>
-
-      <h3>Inventory</h3>
-      <div id="inventoryList">
-        No resources collected yet.
-      </div>
+      <div id="inventoryList"></div>
 
       <hr>
 
