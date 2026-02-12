@@ -273,6 +273,53 @@ if (playerData.movesRemaining && playerData.movesRemaining > 0) {
       mapContainer.appendChild(wrapper);
     });
   }
+mapImage.addEventListener("click", async function(event) {
+
+  if (!currentGameCode || !currentPlayerId) return;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  const player = gameData.players[currentPlayerId];
+
+  if (!player.movesRemaining || player.movesRemaining <= 0) return;
+
+  const rect = mapImage.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const clickY = event.clientY - rect.top;
+
+  const col = columnPixels.reduce((a,b)=>Math.abs(b.x-clickX)<Math.abs(a.x-clickX)?b:a).letter;
+  const row = rowPixels.reduce((a,b)=>Math.abs(b.y-clickY)<Math.abs(a.y-clickY)?b:a).row;
+
+  const target = col + row;
+
+  if (!waterSquares.has(target)) return;
+
+  const currentPos = player.shipPosition;
+
+  const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
+  const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+
+  const isAdjacent =
+    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+    (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+  if (!isAdjacent) return;
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      shipPosition: target,
+      movesRemaining: player.movesRemaining - 1
+    });
+
+});
 
   function renderLedger(gameData) {
 
