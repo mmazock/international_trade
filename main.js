@@ -3,34 +3,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const database = firebase.database();
   const gamesRef = database.ref("games");
 
+  const mapContainer = document.getElementById("map-container");
   const createGameBtn = document.getElementById("createGameBtn");
   const joinGameBtn = document.getElementById("joinGameBtn");
   const joinCodeInput = document.getElementById("joinCodeInput");
   const playerNameInput = document.getElementById("playerNameInput");
   const joinStatus = document.getElementById("joinStatus");
-
   const inventoryList = document.getElementById("inventoryList");
 
   let currentGameCode = null;
   let currentPlayerId = null;
 
-  /* =============================
-     LOAD SAVED SESSION
-     ============================= */
-
-  const savedGameCode = localStorage.getItem("gameCode");
-  const savedPlayerId = localStorage.getItem("playerId");
-
-  if (savedGameCode && savedPlayerId) {
-    currentGameCode = savedGameCode;
-    currentPlayerId = savedPlayerId;
-    hideSetupUI();
-    listenToGameData();
-  }
-
-  /* =============================
-     RANDOM CODE GENERATOR
-     ============================= */
+  const availableColors = [
+    "red",
+    "purple",
+    "yellow",
+    "black",
+    "blue",
+    "green",
+    "orange"
+  ];
 
   function generateCode(length = 5) {
     const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -61,7 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     currentGameCode = code;
-
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
 
@@ -88,13 +79,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentGameCode = code;
 
+    const playersSnap = await gamesRef.child(code).child("players").once("value");
+    const players = playersSnap.val() || {};
+
+    const usedColors = Object.values(players).map(p => p.color);
+    const color = availableColors.find(c => !usedColors.includes(c)) || "black";
+
+    const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
+
     const newPlayerRef = gamesRef.child(code).child("players").push();
 
     await newPlayerRef.set({
       name: name,
       money: 0,
       infrastructure: 0,
-      inventory: {}
+      inventory: {},
+      shipPosition: "C6",
+      color: color,
+      initials: initials
     });
 
     currentPlayerId = newPlayerRef.key;
@@ -104,31 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
       return [...order, currentPlayerId];
     });
 
-    localStorage.setItem("gameCode", currentGameCode);
-    localStorage.setItem("playerId", currentPlayerId);
+    joinStatus.textContent = "Joined game: " + code;
 
-    hideSetupUI();
     listenToGameData();
   });
-
-  /* =============================
-     HIDE SETUP UI
-     ============================= */
-
-  function hideSetupUI() {
-
-    createGameBtn.style.display = "none";
-    joinGameBtn.style.display = "none";
-    joinCodeInput.style.display = "none";
-    playerNameInput.style.display = "none";
-    joinStatus.style.display = "none";
-
-    const ledger = document.getElementById("ledger");
-
-    const gameIdDisplay = document.createElement("p");
-    gameIdDisplay.innerHTML = `<strong>Game ID:</strong> ${currentGameCode}`;
-    ledger.insertBefore(gameIdDisplay, ledger.firstChild);
-  }
 
   /* =============================
      LISTEN TO GAME DATA
@@ -139,12 +120,56 @@ document.addEventListener("DOMContentLoaded", () => {
     const gameRef = gamesRef.child(currentGameCode);
 
     gameRef.on("value", snapshot => {
-
       const gameData = snapshot.val();
       if (!gameData) return;
 
+      renderShips(gameData);
       renderLedger(gameData);
+    });
+  }
 
+  /* =============================
+     RENDER SHIPS
+     ============================= */
+
+  function renderShips(gameData) {
+
+    document.querySelectorAll(".ship").forEach(s => s.remove());
+
+    const players = gameData.players || {};
+
+    Object.keys(players).forEach(playerId => {
+
+      const player = players[playerId];
+      if (!player.shipPosition) return;
+
+      const ship = document.createElement("div");
+      ship.className = "ship";
+
+      ship.style.position = "absolute";
+      ship.style.width = "40px";
+      ship.style.height = "40px";
+      ship.style.backgroundImage = "url('ship.png')";
+      ship.style.backgroundSize = "contain";
+      ship.style.backgroundRepeat = "no-repeat";
+      ship.style.filter = `drop-shadow(0 0 0 ${player.color})`;
+
+      const label = document.createElement("div");
+      label.textContent = player.initials;
+      label.style.position = "absolute";
+      label.style.top = "10px";
+      label.style.left = "12px";
+      label.style.color = "white";
+      label.style.fontWeight = "bold";
+      label.style.fontSize = "12px";
+
+      ship.appendChild(label);
+
+      // TEMP: random positioning until movement system added
+      ship.style.left = Math.random() * 300 + "px";
+      ship.style.top = Math.random() * 150 + "px";
+
+      mapContainer.appendChild(ship);
     });
   }
 
@@ -187,41 +212,10 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
-      if (isCurrentTurn && playerId === currentPlayerId) {
-        html += `<br><button id="endTurnBtn">End Turn</button>`;
-      }
-
       html += `</div>`;
     });
 
     inventoryList.innerHTML = html;
-
-    const endTurnBtn = document.getElementById("endTurnBtn");
-    if (endTurnBtn) {
-      endTurnBtn.addEventListener("click", () => {
-        advanceTurn(gameData);
-      });
-    }
-  }
-
-  /* =============================
-     ADVANCE TURN
-     ============================= */
-
-  function advanceTurn(gameData) {
-
-    const turnOrder = gameData.turnOrder || [];
-    let currentTurnIndex = gameData.currentTurnIndex || 0;
-
-    currentTurnIndex++;
-
-    if (currentTurnIndex >= turnOrder.length) {
-      currentTurnIndex = 0;
-    }
-
-    gamesRef.child(currentGameCode).update({
-      currentTurnIndex: currentTurnIndex
-    });
   }
 
 });
