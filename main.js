@@ -77,6 +77,15 @@ const waterSquares = new Set([
   // S
   ...Array.from({length:12},(_,i)=>`S${i+2}`)
 ]);
+/* =============================
+   SPECIAL MOVEMENT RULES
+   ============================= */
+
+const restrictedTransitions = {
+  "M6": ["N6"],
+  "N6": ["N7"],
+  "N7": ["N6", "O7"]
+};
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
