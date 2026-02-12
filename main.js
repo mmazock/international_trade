@@ -179,6 +179,16 @@ document.addEventListener("click", async function(event) {
     const currentTurnIndex = gameData.currentTurnIndex;
 
     if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+const playerSnap = await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .once("value");
+
+const playerData = playerSnap.val();
+
+if (playerData.movesRemaining && playerData.movesRemaining > 0) {
+  return; // Already rolled
+}
 
     const roll = Math.floor(Math.random() * 6) + 1;
 
@@ -297,10 +307,14 @@ document.addEventListener("click", async function(event) {
           html += `${resource}: ${player.inventory[resource]}<br>`;
         }
       }
-if (isCurrentTurn && playerId === currentPlayerId) {
-  html += `<br>Moves Remaining: ${player.movesRemaining || 0}`;
+if (player.movesRemaining !== undefined) {
+  html += `<br>Moves Remaining: ${player.movesRemaining}`;
+}
+
+if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || player.movesRemaining === 0)) {
   html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
 }
+
 
       html += `</div>`;
     });
