@@ -85,7 +85,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const usedColors = Object.values(players).map(p => p.color);
     const color = availableColors.find(c => !usedColors.includes(c)) || "black";
 
-    const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
+    const initials = name
+      .split(" ")
+      .map(n => n[0])
+      .join("")
+      .toUpperCase();
 
     const newPlayerRef = gamesRef.child(code).child("players").push();
 
@@ -129,7 +133,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =============================
-     RENDER SHIPS
+     RENDER SHIPS (Improved)
      ============================= */
 
   function renderShips(gameData) {
@@ -147,25 +151,38 @@ document.addEventListener("DOMContentLoaded", () => {
       ship.className = "ship";
 
       ship.style.position = "absolute";
-      ship.style.width = "40px";
-      ship.style.height = "40px";
+      ship.style.width = "28px";
+      ship.style.height = "28px";
       ship.style.backgroundImage = "url('ship.png')";
       ship.style.backgroundSize = "contain";
       ship.style.backgroundRepeat = "no-repeat";
-      ship.style.filter = `drop-shadow(0 0 0 ${player.color})`;
+
+      const colorFilters = {
+        red: "invert(15%) sepia(97%) saturate(7483%) hue-rotate(0deg) brightness(100%) contrast(115%)",
+        blue: "invert(32%) sepia(99%) saturate(7483%) hue-rotate(200deg) brightness(100%) contrast(115%)",
+        green: "invert(46%) sepia(93%) saturate(7483%) hue-rotate(80deg) brightness(100%) contrast(115%)",
+        purple: "invert(26%) sepia(93%) saturate(7483%) hue-rotate(260deg) brightness(100%) contrast(115%)",
+        yellow: "invert(80%) sepia(93%) saturate(7483%) hue-rotate(0deg) brightness(100%) contrast(115%)",
+        orange: "invert(50%) sepia(93%) saturate(7483%) hue-rotate(10deg) brightness(100%) contrast(115%)",
+        black: "none"
+      };
+
+      ship.style.filter = colorFilters[player.color] || "none";
 
       const label = document.createElement("div");
       label.textContent = player.initials;
+
       label.style.position = "absolute";
-      label.style.top = "10px";
-      label.style.left = "12px";
-      label.style.color = "white";
+      label.style.top = "7px";
+      label.style.left = "8px";
+      label.style.fontSize = "10px";
       label.style.fontWeight = "bold";
-      label.style.fontSize = "12px";
+      label.style.color = player.color === "yellow" ? "black" : "white";
+      label.style.textShadow = "1px 1px 2px black";
 
       ship.appendChild(label);
 
-      // TEMP: random positioning until movement system added
+      // TEMP random placement (movement next step)
       ship.style.left = Math.random() * 300 + "px";
       ship.style.top = Math.random() * 150 + "px";
 
