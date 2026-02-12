@@ -82,9 +82,12 @@ const waterSquares = new Set([
    ============================= */
 
 const restrictedTransitions = {
-  "M6": ["N6"],
-  "N6": ["M6", "N7"],
-  "N7": ["N6", "O7"]
+    "N6": ["M6", "N7"],
+  "N7": ["N6", "O7"],
+  "M7": ["M8", "M6", "L7"],
+  "N8": ["M8", "O8", "N9"],
+  "O8": ["N8", "O9", "P8"],
+  "P8": ["O8"]
 };
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
