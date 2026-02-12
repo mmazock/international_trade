@@ -289,14 +289,23 @@ mapImage.addEventListener("click", async function(event) {
 
   if (!player.movesRemaining || player.movesRemaining <= 0) return;
 
-  const rect = mapImage.getBoundingClientRect();
-  const clickX = event.clientX - rect.left;
-  const clickY = event.clientY - rect.top;
+const rect = mapImage.getBoundingClientRect();
 
-  const col = columnPixels.reduce((a,b)=>Math.abs(b.x-clickX)<Math.abs(a.x-clickX)?b:a).letter;
-  const row = rowPixels.reduce((a,b)=>Math.abs(b.y-clickY)<Math.abs(a.y-clickY)?b:a).row;
+const xPercent = (event.clientX - rect.left) / rect.width;
+const yPercent = (event.clientY - rect.top) / rect.height;
 
-  const target = col + row;
+const colObj = columnPixels.reduce((a,b)=>
+  Math.abs((b.x/originalWidth) - xPercent) <
+  Math.abs((a.x/originalWidth) - xPercent) ? b : a
+);
+
+const rowObj = rowPixels.reduce((a,b)=>
+  Math.abs((b.y/originalHeight) - yPercent) <
+  Math.abs((a.y/originalHeight) - yPercent) ? b : a
+);
+
+const target = colObj.letter + rowObj.row;
+
 
   if (!waterSquares.has(target)) return;
 
