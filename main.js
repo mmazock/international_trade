@@ -305,6 +305,9 @@ const rowObj = rowPixels.reduce((a,b)=>
 );
 
 const target = colObj.letter + rowObj.row;
+console.log("Clicked square:", target);
+console.log("Current position:", player.shipPosition);
+console.log("Moves remaining:", player.movesRemaining);
 
 
   if (!waterSquares.has(target)) return;
