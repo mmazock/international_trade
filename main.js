@@ -378,11 +378,19 @@ console.log("Moves remaining:", player.movesRemaining);
   const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
   const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
 
-  const isAdjacent =
-    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
-    (Math.abs(rowDiff) === 1 && colDiff === 0);
+// Normal adjacency check
+const isAdjacent =
+  (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+  (Math.abs(rowDiff) === 1 && colDiff === 0);
 
-  if (!isAdjacent) return;
+if (!isAdjacent) return;
+
+// Special movement restrictions (Malacca etc.)
+if (restrictedTransitions[currentPos]) {
+  const allowed = restrictedTransitions[currentPos];
+  if (!allowed.includes(target)) return;
+}
+
 
   await gamesRef.child(currentGameCode)
     .child("players")
