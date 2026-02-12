@@ -13,6 +13,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const countrySelect = document.getElementById("countrySelect");
   const joinStatus = document.getElementById("joinStatus");
   const inventoryList = document.getElementById("inventoryList");
+  const leaveGameBtn = document.getElementById("leaveGameBtn");
+
+leaveGameBtn.addEventListener("click", () => {
+  localStorage.removeItem("gameCode");
+  localStorage.removeItem("playerId");
+  location.reload();
+});
+
 
   let currentGameCode = null;
   let currentPlayerId = null;
