@@ -13,6 +13,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const countrySelect = document.getElementById("countrySelect");
   const joinStatus = document.getElementById("joinStatus");
   const inventoryList = document.getElementById("inventoryList");
+  const rollDiceBtn = document.getElementById("rollDiceBtn");
+const diceResult = document.getElementById("diceResult");
+
 
   const leaveGameBtn = document.getElementById("leaveGameBtn");
 
@@ -165,6 +168,28 @@ document.addEventListener("DOMContentLoaded", () => {
     localStorage.removeItem("playerId");
     location.reload();
   });
+document.addEventListener("click", async function(event) {
+
+  if (event.target && event.target.id === "rollDiceBtn") {
+
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
+
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
+
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+    const roll = Math.floor(Math.random() * 6) + 1;
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({ movesRemaining: roll });
+
+  }
+
+});
 
   function hideSetupUI() {
     createGameBtn.style.display = "none";
@@ -272,6 +297,10 @@ document.addEventListener("DOMContentLoaded", () => {
           html += `${resource}: ${player.inventory[resource]}<br>`;
         }
       }
+if (isCurrentTurn && playerId === currentPlayerId) {
+  html += `<br>Moves Remaining: ${player.movesRemaining || 0}`;
+  html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
+}
 
       html += `</div>`;
     });
