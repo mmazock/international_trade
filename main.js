@@ -15,7 +15,21 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPlayerId = null;
 
   /* =============================
-     RANDOM JOIN CODE
+     LOAD SAVED SESSION
+     ============================= */
+
+  const savedGameCode = localStorage.getItem("gameCode");
+  const savedPlayerId = localStorage.getItem("playerId");
+
+  if (savedGameCode && savedPlayerId) {
+    currentGameCode = savedGameCode;
+    currentPlayerId = savedPlayerId;
+    hideSetupUI();
+    listenToGameData();
+  }
+
+  /* =============================
+     RANDOM CODE GENERATOR
      ============================= */
 
   function generateCode(length = 5) {
@@ -47,6 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     currentGameCode = code;
+
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
 
@@ -89,13 +104,34 @@ document.addEventListener("DOMContentLoaded", () => {
       return [...order, currentPlayerId];
     });
 
-    joinStatus.textContent = "Joined game: " + code;
+    localStorage.setItem("gameCode", currentGameCode);
+    localStorage.setItem("playerId", currentPlayerId);
 
+    hideSetupUI();
     listenToGameData();
   });
 
   /* =============================
-     LISTEN TO FULL GAME DATA
+     HIDE SETUP UI
+     ============================= */
+
+  function hideSetupUI() {
+
+    createGameBtn.style.display = "none";
+    joinGameBtn.style.display = "none";
+    joinCodeInput.style.display = "none";
+    playerNameInput.style.display = "none";
+    joinStatus.style.display = "none";
+
+    const ledger = document.getElementById("ledger");
+
+    const gameIdDisplay = document.createElement("p");
+    gameIdDisplay.innerHTML = `<strong>Game ID:</strong> ${currentGameCode}`;
+    ledger.insertBefore(gameIdDisplay, ledger.firstChild);
+  }
+
+  /* =============================
+     LISTEN TO GAME DATA
      ============================= */
 
   function listenToGameData() {
@@ -113,7 +149,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* =============================
-     RENDER PUBLIC LEDGER
+     RENDER LEDGER
      ============================= */
 
   function renderLedger(gameData) {
