@@ -228,23 +228,17 @@ document.addEventListener("click", async function(event) {
 
   if (event.target && event.target.id === "rollDiceBtn") {
 
-    const gameSnap = await gamesRef.child(currentGameCode).once("value");
-    const gameData = gameSnap.val();
+    const playerSnap = await gamesRef
+      .child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .once("value");
 
-    const turnOrder = gameData.turnOrder;
-    const currentTurnIndex = gameData.currentTurnIndex;
+    const playerData = playerSnap.val();
 
-    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
-const playerSnap = await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .once("value");
-
-const playerData = playerSnap.val();
-
-if (playerData.movesRemaining && playerData.movesRemaining > 0) {
-  return; // Already rolled
-}
+    if (playerData.movesRemaining && playerData.movesRemaining > 0) {
+      return;
+    }
 
     const roll = Math.floor(Math.random() * 6) + 1;
 
@@ -256,6 +250,7 @@ if (playerData.movesRemaining && playerData.movesRemaining > 0) {
   }
 
 });
+
 
   function hideSetupUI() {
     createGameBtn.style.display = "none";
