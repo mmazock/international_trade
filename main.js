@@ -10,8 +10,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const joinStatus = document.getElementById("joinStatus");
 
   const inventoryList = document.getElementById("inventoryList");
-  const infraDisplay = document.getElementById("infraLevel");
-  const moneyDisplay = document.getElementById("moneyDisplay");
 
   let currentGameCode = null;
   let currentPlayerId = null;
@@ -86,7 +84,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     currentPlayerId = newPlayerRef.key;
 
-    // Add player to turn order
     await gamesRef.child(code).child("turnOrder").transaction(order => {
       if (!order) return [currentPlayerId];
       return [...order, currentPlayerId];
@@ -154,10 +151,41 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
 
+      if (isCurrentTurn && playerId === currentPlayerId) {
+        html += `<br><button id="endTurnBtn">End Turn</button>`;
+      }
+
       html += `</div>`;
     });
 
     inventoryList.innerHTML = html;
+
+    const endTurnBtn = document.getElementById("endTurnBtn");
+    if (endTurnBtn) {
+      endTurnBtn.addEventListener("click", () => {
+        advanceTurn(gameData);
+      });
+    }
+  }
+
+  /* =============================
+     ADVANCE TURN
+     ============================= */
+
+  function advanceTurn(gameData) {
+
+    const turnOrder = gameData.turnOrder || [];
+    let currentTurnIndex = gameData.currentTurnIndex || 0;
+
+    currentTurnIndex++;
+
+    if (currentTurnIndex >= turnOrder.length) {
+      currentTurnIndex = 0;
+    }
+
+    gamesRef.child(currentGameCode).update({
+      currentTurnIndex: currentTurnIndex
+    });
   }
 
 });
