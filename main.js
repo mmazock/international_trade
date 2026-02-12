@@ -15,11 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const inventoryList = document.getElementById("inventoryList");
   const leaveGameBtn = document.getElementById("leaveGameBtn");
 
-leaveGameBtn.addEventListener("click", () => {
-  localStorage.removeItem("gameCode");
-  localStorage.removeItem("playerId");
-  location.reload();
+document.addEventListener("click", function(event) {
+  if (event.target && event.target.id === "leaveGameBtn") {
+    localStorage.removeItem("gameCode");
+    localStorage.removeItem("playerId");
+    location.reload();
+  }
 });
+
 
 
   let currentGameCode = null;
