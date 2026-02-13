@@ -476,6 +476,36 @@ if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || 
 
     inventoryList.innerHTML = html;
   }
+  document.getElementById("endPhaseBtn").addEventListener("click", async () => {
+
+  if (!currentGameCode || !currentPlayerId) return;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+  const currentPhase = gameData.currentPhase || 0;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  if (currentPhase < 2) {
+    await gamesRef.child(currentGameCode).update({
+      currentPhase: currentPhase + 1
+    });
+  } else {
+    // End turn
+    let nextTurn = currentTurnIndex + 1;
+    if (nextTurn >= turnOrder.length) nextTurn = 0;
+
+    await gamesRef.child(currentGameCode).update({
+      currentTurnIndex: nextTurn,
+      currentPhase: 0
+    });
+  }
+
+});
+
 window.addEventListener("resize", () => {
   if (latestGameData) {
     renderShips(latestGameData);
