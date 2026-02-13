@@ -479,8 +479,6 @@ if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || 
   }
   document.getElementById("endPhaseBtn").addEventListener("click", async () => {
 console.log("End Phase clicked");
-console.log("Current turn player:", turnOrder[currentTurnIndex]);
-console.log("My player ID:", currentPlayerId);
 
   if (!currentGameCode || !currentPlayerId) return;
 
