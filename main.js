@@ -261,16 +261,21 @@ document.addEventListener("click", async function(event) {
 
     const playerData = playerSnap.val();
 
-    if (playerData.movesRemaining && playerData.movesRemaining > 0) {
-      return;
-    }
+   if (playerData.hasRolledThisTurn) {
+  return;
+}
+
 
     const roll = Math.floor(Math.random() * 6) + 1;
 
     await gamesRef.child(currentGameCode)
       .child("players")
       .child(currentPlayerId)
-      .update({ movesRemaining: roll });
+      .update({
+  movesRemaining: roll,
+  hasRolledThisTurn: true
+});
+
 
   }
 
