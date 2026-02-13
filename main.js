@@ -467,9 +467,15 @@ if (player.movesRemaining !== undefined) {
   html += `<br>Moves Remaining: ${player.movesRemaining}`;
 }
 
-if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || player.movesRemaining === 0)) {
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 2 &&
+  (!player.movesRemaining || player.movesRemaining === 0)
+) {
   html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
 }
+
 
 
       html += `</div>`;
