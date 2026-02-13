@@ -477,6 +477,7 @@ if (isCurrentTurn && playerId === currentPlayerId && (!player.movesRemaining || 
     inventoryList.innerHTML = html;
   }
   document.getElementById("endPhaseBtn").addEventListener("click", async () => {
+console.log("End Phase clicked");
 
   if (!currentGameCode || !currentPlayerId) return;
 
