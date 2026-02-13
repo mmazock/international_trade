@@ -359,11 +359,12 @@ mapImage.addEventListener("click", async function(event) {
 
   const turnOrder = gameData.turnOrder;
   const currentTurnIndex = gameData.currentTurnIndex;
+if (gameData.currentPhase !== 2) return;
 
   if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
   const player = gameData.players[currentPlayerId];
-
+if (gameData.currentPhase !== 2) return;
   if (!player.movesRemaining || player.movesRemaining <= 0) return;
 
 const rect = mapImage.getBoundingClientRect();
