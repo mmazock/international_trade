@@ -173,11 +173,13 @@ const restrictedTransitions = {
 
     const code = Math.random().toString(36).substring(2,7).toUpperCase();
 
-    await gamesRef.child(code).set({
-      players: {},
-      turnOrder: [],
-      currentTurnIndex: 0
-    });
+await gamesRef.child(code).set({
+  players: {},
+  turnOrder: [],
+  currentTurnIndex: 0,
+  currentPhase: 0
+});
+
 
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
