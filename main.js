@@ -427,6 +427,12 @@ if (restrictedTransitions[currentPos]) {
 }
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
+const phaseDisplay = document.getElementById("phaseDisplay");
+
+const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
+const currentPhase = gameData.currentPhase || 0;
+
+phaseDisplay.textContent = phaseNames[currentPhase];
 
     let html = "";
 
