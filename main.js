@@ -437,6 +437,14 @@ const phaseDisplay = document.getElementById("phaseDisplay");
 
 const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
 const currentPhase = gameData.currentPhase || 0;
+    phaseDisplay.textContent = phaseNames[currentPhase];
+    console.log("DEBUG PHASE STATE:", {
+  currentPhase,
+  turnOrder,
+  currentTurnIndex,
+  currentPlayerId
+});
+
 console.log("Render check:", {
   isCurrentTurn,
   playerId,
@@ -445,7 +453,7 @@ console.log("Render check:", {
   hasRolled: player.hasRolledThisTurn
 });
 
-phaseDisplay.textContent = phaseNames[currentPhase];
+
 
     let html = "";
 
