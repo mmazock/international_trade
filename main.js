@@ -501,11 +501,26 @@ console.log("End Phase clicked");
 
   if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
-  if (currentPhase < 2) {
-    await gamesRef.child(currentGameCode).update({
-      currentPhase: currentPhase + 1
-    });
-  } else {
+if (currentPhase < 2) {
+
+  const newPhase = currentPhase + 1;
+
+  await gamesRef.child(currentGameCode).update({
+    currentPhase: newPhase
+  });
+
+  // If entering Movement Phase, reset roll state
+  if (newPhase === 2) {
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        hasRolledThisTurn: false,
+        movesRemaining: 0
+      });
+  }
+}
+ else {
     // End turn
     let nextTurn = currentTurnIndex + 1;
     if (nextTurn >= turnOrder.length) nextTurn = 0;
