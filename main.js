@@ -445,16 +445,6 @@ const currentPhase = gameData.currentPhase || 0;
   currentPlayerId
 });
 
-console.log("Render check:", {
-  isCurrentTurn,
-  playerId,
-  currentPlayerId,
-  currentPhase,
-  hasRolled: player.hasRolledThisTurn
-});
-
-
-
     let html = "";
 
     turnOrder.forEach((playerId, index) => {
