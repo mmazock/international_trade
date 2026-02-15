@@ -271,10 +271,11 @@ document.addEventListener("click", async function(event) {
     await gamesRef.child(currentGameCode)
       .child("players")
       .child(currentPlayerId)
-      .update({
+.update({
   movesRemaining: roll,
-  hasRolledThisTurn: true
+  rollValue: roll
 });
+
 
 
   }
@@ -481,8 +482,9 @@ if (
   isCurrentTurn &&
   playerId === currentPlayerId &&
   currentPhase === 2 &&
-  !player.hasRolledThisTurn
+  !player.rollValue
 )
+
 
 
 
@@ -516,13 +518,14 @@ if (currentPhase < 2) {
 
   // If entering Movement Phase, reset roll state
   if (newPhase === 2) {
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-      .update({
-        hasRolledThisTurn: false,
-        movesRemaining: 0
-      });
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    movesRemaining: 0,
+    rollValue: null
+  });
+
   }
 }
  else {
