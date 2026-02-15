@@ -476,10 +476,9 @@ if (
   isCurrentTurn &&
   playerId === currentPlayerId &&
   currentPhase === 2 &&
-  (!player.movesRemaining || player.movesRemaining === 0)
-) {
-  html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
-}
+  !player.hasRolledThisTurn
+)
+
 
 
 
