@@ -53,9 +53,23 @@ document.addEventListener("DOMContentLoaded", () => {
      ============================= */
 
   const restrictedTransitions = {
-    "M6": ["N6"],
-    "N6": ["M6", "N7"],
-    "N7": ["N6", "O7"]
+    "D1": ["D0"],
+    "C1": ["CO", "B1", "C2"],
+    "C2": ["c3", "B2", "C1"],
+    "D2": ["E2", "D3"],
+    "H5": ["G5", "I5"],
+    "H6": ["I6", "H7"],
+    "K4": ["J4", "K5"],
+    "K5": ["K6", "K4". "J5"],
+    "L5": ["L4", "M5", "L6"],
+    "L4": ["M4", "L5"],
+    "M5": ["M4", "M5", "L6"],
+    "M7": ["M6", "M8", "L7"],
+    "N5": ["N6", "O5"],
+    "N7": ["N6", "O7"],
+    "P7": ["P6", "O7", "Q7"],
+    "P8": ["O8"],
+    "Q8": ["Q7", "R8"]
   };
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
