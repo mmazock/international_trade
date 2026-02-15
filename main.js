@@ -440,6 +440,13 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!player) return;
 
       const isCurrentTurn = index === currentTurnIndex;
+console.log("ROLL CHECK:", {
+  isCurrentTurn,
+  playerId,
+  currentPlayerId,
+  currentPhase,
+  rollValue: player.rollValue
+});
 
       html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
               ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
