@@ -14,92 +14,49 @@ document.addEventListener("DOMContentLoaded", () => {
   const joinStatus = document.getElementById("joinStatus");
   const inventoryList = document.getElementById("inventoryList");
   const playerHeader = document.getElementById("playerHeader");
-  const rollDiceBtn = document.getElementById("rollDiceBtn");
-const diceResult = document.getElementById("diceResult");
-
-
   const leaveGameBtn = document.getElementById("leaveGameBtn");
+  const phaseDisplay = document.getElementById("phaseDisplay");
+  const endPhaseBtn = document.getElementById("endPhaseBtn");
 
   let currentGameCode = null;
   let currentPlayerId = null;
-let latestGameData = null;
-/* =============================
-   WATER MAP
-   ============================= */
+  let latestGameData = null;
 
-const waterSquares = new Set([
-  // A & B full
-  ...Array.from({length:14}, (_,i)=>`A${i}`),
-  ...Array.from({length:14}, (_,i)=>`B${i}`),
+  /* =============================
+     WATER MAP
+     ============================= */
 
-  // C
-  "C0","C1","C2","C3","C6","C7","C8","C9","C10","C11","C12","C13",
+  const waterSquares = new Set([
+    ...Array.from({length:14}, (_,i)=>`A${i}`),
+    ...Array.from({length:14}, (_,i)=>`B${i}`),
+    "C0","C1","C2","C3","C6","C7","C8","C9","C10","C11","C12","C13",
+    "D0","D1","D2","D3","D6","D7","D8","D9","D10","D11","D12","D13",
+    "E2","E3","E7","E8","E9","E10","E11","E12","E13",
+    "F3","F10","F11","F12","F13",
+    "G3","G4","G5","G8","G9","G10","G11","G12","G13",
+    "H5","H6","H7","H8","H9","H10","H11","H12","H13",
+    "I4","I5","I6","I7","I8","I9","I10","I11","I12","I13",
+    ...Array.from({length:10},(_,i)=>`J${i+4}`),
+    ...Array.from({length:10},(_,i)=>`K${i+4}`),
+    ...Array.from({length:10},(_,i)=>`L${i+4}`),
+    ...Array.from({length:10},(_,i)=>`M${i+4}`),
+    ...Array.from({length:9},(_,i)=>`N${i+5}`),
+    ...Array.from({length:10},(_,i)=>`O${i+4}`),
+    "P3","P4","P5","P6","P7","P8","P10","P11","P12","P13",
+    "Q3","Q4","Q5","Q6","Q7","Q8","Q10","Q11","Q12","Q13",
+    "R3","R4","R5","R6","R7","R8","R11","R12","R13",
+    ...Array.from({length:12},(_,i)=>`S${i+2}`)
+  ]);
 
-  // D
-  "D0","D1","D2","D3","D6","D7","D8","D9","D10","D11","D12","D13",
+  /* =============================
+     MALACCA RULE
+     ============================= */
 
-  // E
-  "E2","E3","E7","E8","E9","E10","E11","E12","E13",
-
-  // F
-  "F3","F10","F11","F12","F13",
-
-  // G
-  "G3","G4","G5","G8","G9","G10","G11","G12","G13",
-
-  // H
-  "H5","H6","H7","H8","H9","H10","H11","H12","H13",
-
-  // I
-  "I4","I5","I6","I7","I8","I9","I10","I11","I12","I13",
-
-  // J, K, L, M
-  ...Array.from({length:10},(_,i)=>`J${i+4}`),
-  ...Array.from({length:10},(_,i)=>`K${i+4}`),
-  ...Array.from({length:10},(_,i)=>`L${i+4}`),
-  ...Array.from({length:10},(_,i)=>`M${i+4}`),
-
-  // N
-  ...Array.from({length:9},(_,i)=>`N${i+5}`),
-
-  // O
-  ...Array.from({length:10},(_,i)=>`O${i+4}`),
-
-  // P
-  "P3","P4","P5","P6","P7","P8","P10","P11","P12","P13",
-
-  // Q
-  "Q3","Q4","Q5","Q6","Q7","Q8","Q10","Q11","Q12","Q13",
-
-  // R
-  "R3","R4","R5","R6","R7","R8","R11","R12","R13",
-
-  // S
-  ...Array.from({length:12},(_,i)=>`S${i+2}`)
-]);
-/* =============================
-   SPECIAL MOVEMENT RULES
-   ============================= */
-
-const restrictedTransitions = {
-  "C2": ["C3", "B2", "C1"],
-  "C1": ["C0", "C2", "B1"],
-  "D1": ["D0"],
-  "D2": ["E2", "D3"],
-  "H6": ["I6", "H7"],
-  "H5": ["G5", "I5"],
-  "K4": ["J4", "K5"],
-  "K5": ["J5", "K4", "K6"], 
-  "L4": ["L5", "M4"],
-  "N5": ["O5", "N6"],
-  "N6": ["M6", "N7"],
-  "N7": ["N6", "O7"],
-  "M5": ["M6", "M4", "L5"],
-  "M7": ["M8", "M6", "L7"],
-  "N8": ["M8", "O8", "N9"],
-  "O8": ["N8", "O9", "P8"],
-  "P8": ["O8"]
-};
+  const restrictedTransitions = {
+    "M6": ["N6"],
+    "N6": ["M6", "N7"],
+    "N7": ["N6", "O7"]
+  };
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
@@ -134,17 +91,11 @@ const restrictedTransitions = {
   ];
 
   function getScaledPosition(coord) {
-
     const col = coord[0];
     const row = parseInt(coord.slice(1));
-
     const colObj = columnPixels.find(c => c.letter === col);
     const rowObj = rowPixels.find(r => r.row === row);
-
-    if (!colObj || !rowObj) return { x: 0, y: 0 };
-
     const rect = mapImage.getBoundingClientRect();
-
     return {
       x: rect.width * (colObj.x / originalWidth),
       y: rect.height * (rowObj.y / originalHeight)
@@ -152,7 +103,7 @@ const restrictedTransitions = {
   }
 
   /* =============================
-     LOAD SAVED SESSION
+     SESSION LOAD
      ============================= */
 
   const savedGameCode = localStorage.getItem("gameCode");
@@ -170,17 +121,13 @@ const restrictedTransitions = {
      ============================= */
 
   createGameBtn.addEventListener("click", async () => {
-
     const code = Math.random().toString(36).substring(2,7).toUpperCase();
-
-await gamesRef.child(code).set({
-  players: {},
-  turnOrder: [],
-  currentTurnIndex: 0,
-  currentPhase: 0
-});
-
-
+    await gamesRef.child(code).set({
+      players: {},
+      turnOrder: [],
+      currentTurnIndex: 0,
+      currentPhase: 0
+    });
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
@@ -227,7 +174,9 @@ await gamesRef.child(code).set({
       inventory: {},
       shipPosition: countryData[country].home,
       color,
-      initials
+      initials,
+      movesRemaining: 0,
+      rollValue: null
     });
 
     currentPlayerId = newPlayerRef.key;
@@ -249,39 +198,6 @@ await gamesRef.child(code).set({
     localStorage.removeItem("playerId");
     location.reload();
   });
-document.addEventListener("click", async function(event) {
-
-  if (event.target && event.target.id === "rollDiceBtn") {
-
-    const playerSnap = await gamesRef
-      .child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-      .once("value");
-
-    const playerData = playerSnap.val();
-
-   if (playerData.hasRolledThisTurn) {
-  return;
-}
-
-
-    const roll = Math.floor(Math.random() * 6) + 1;
-
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-.update({
-  movesRemaining: roll,
-  rollValue: roll
-});
-
-
-
-  }
-
-});
-
 
   function hideSetupUI() {
     createGameBtn.style.display = "none";
@@ -294,19 +210,163 @@ document.addEventListener("click", async function(event) {
 
   function listenToGameData() {
 
-    const gameRef = gamesRef.child(currentGameCode);
+    gamesRef.child(currentGameCode).on("value", snapshot => {
 
-    gameRef.on("value", snapshot => {
+      const gameData = snapshot.val();
+      if (!gameData) return;
 
-const gameData = snapshot.val();
-if (!gameData) return;
+      latestGameData = gameData;
 
-latestGameData = gameData;
-
-renderShips(gameData);
-renderLedger(gameData);
+      renderShips(gameData);
+      renderLedger(gameData);
     });
   }
+
+  /* =============================
+     PHASE ENGINE
+     ============================= */
+
+  endPhaseBtn.addEventListener("click", async () => {
+
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
+
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
+    const currentPhase = gameData.currentPhase || 0;
+
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+    if (currentPhase < 2) {
+
+      const newPhase = currentPhase + 1;
+
+      await gamesRef.child(currentGameCode).update({
+        currentPhase: newPhase
+      });
+
+      if (newPhase === 2) {
+        await gamesRef.child(currentGameCode)
+          .child("players")
+          .child(currentPlayerId)
+          .update({
+            movesRemaining: 0,
+            rollValue: null
+          });
+      }
+
+    } else {
+
+      let nextTurn = currentTurnIndex + 1;
+      if (nextTurn >= turnOrder.length) nextTurn = 0;
+
+      await gamesRef.child(currentGameCode).update({
+        currentTurnIndex: nextTurn,
+        currentPhase: 0
+      });
+    }
+  });
+
+  /* =============================
+     DICE
+     ============================= */
+
+  document.addEventListener("click", async function(event) {
+
+    if (event.target && event.target.id === "rollDiceBtn") {
+
+      const gameSnap = await gamesRef.child(currentGameCode).once("value");
+      const gameData = gameSnap.val();
+
+      if (gameData.currentPhase !== 2) return;
+
+      const turnOrder = gameData.turnOrder;
+      const currentTurnIndex = gameData.currentTurnIndex;
+
+      if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+      const player = gameData.players[currentPlayerId];
+
+      if (player.rollValue) return;
+
+      const roll = Math.floor(Math.random() * 6) + 1;
+
+      await gamesRef.child(currentGameCode)
+        .child("players")
+        .child(currentPlayerId)
+        .update({
+          movesRemaining: roll,
+          rollValue: roll
+        });
+    }
+  });
+
+  /* =============================
+     MOVEMENT
+     ============================= */
+
+  mapImage.addEventListener("click", async function(event) {
+
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
+
+    if (gameData.currentPhase !== 2) return;
+
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
+
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+    const player = gameData.players[currentPlayerId];
+
+    if (!player.movesRemaining || player.movesRemaining <= 0) return;
+
+    const rect = mapImage.getBoundingClientRect();
+
+    const xPercent = (event.clientX - rect.left) / rect.width;
+    const yPercent = (event.clientY - rect.top) / rect.height;
+
+    const colObj = columnPixels.reduce((a,b)=>
+      Math.abs((b.x/originalWidth) - xPercent) <
+      Math.abs((a.x/originalWidth) - xPercent) ? b : a
+    );
+
+    const rowObj = rowPixels.reduce((a,b)=>
+      Math.abs((b.y/originalHeight) - yPercent) <
+      Math.abs((a.y/originalHeight) - yPercent) ? b : a
+    );
+
+    const target = colObj.letter + rowObj.row;
+
+    if (!waterSquares.has(target)) return;
+
+    const currentPos = player.shipPosition;
+
+    const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
+    const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+
+    const isAdjacent =
+      (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+      (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+    if (!isAdjacent) return;
+
+    if (restrictedTransitions[currentPos]) {
+      if (!restrictedTransitions[currentPos].includes(target)) return;
+    }
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        shipPosition: target,
+        movesRemaining: player.movesRemaining - 1
+      });
+  });
+
+  /* =============================
+     RENDERING
+     ============================= */
 
   function renderShips(gameData) {
 
@@ -356,95 +416,21 @@ renderLedger(gameData);
       mapContainer.appendChild(wrapper);
     });
   }
-mapImage.addEventListener("click", async function(event) {
-
-  if (!currentGameCode || !currentPlayerId) return;
-
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
-  const gameData = gameSnap.val();
-
-  const turnOrder = gameData.turnOrder;
-  const currentTurnIndex = gameData.currentTurnIndex;
-if (gameData.currentPhase !== 2) return;
-
-  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
-
-  const player = gameData.players[currentPlayerId];
-if (gameData.currentPhase !== 2) return;
-  if (!player.movesRemaining || player.movesRemaining <= 0) return;
-
-const rect = mapImage.getBoundingClientRect();
-
-const xPercent = (event.clientX - rect.left) / rect.width;
-const yPercent = (event.clientY - rect.top) / rect.height;
-
-const colObj = columnPixels.reduce((a,b)=>
-  Math.abs((b.x/originalWidth) - xPercent) <
-  Math.abs((a.x/originalWidth) - xPercent) ? b : a
-);
-
-const rowObj = rowPixels.reduce((a,b)=>
-  Math.abs((b.y/originalHeight) - yPercent) <
-  Math.abs((a.y/originalHeight) - yPercent) ? b : a
-);
-
-const target = colObj.letter + rowObj.row;
-console.log("Clicked square:", target);
-console.log("Current position:", player.shipPosition);
-console.log("Moves remaining:", player.movesRemaining);
-
-
-  if (!waterSquares.has(target)) return;
-
-  const currentPos = player.shipPosition;
-
-  const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
-  const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
-
-// Normal adjacency check
-const isAdjacent =
-  (Math.abs(colDiff) === 1 && rowDiff === 0) ||
-  (Math.abs(rowDiff) === 1 && colDiff === 0);
-
-if (!isAdjacent) return;
-
-// Special movement restrictions (Malacca etc.)
-if (restrictedTransitions[currentPos]) {
-  const allowed = restrictedTransitions[currentPos];
-  if (!allowed.includes(target)) return;
-}
-
-
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(currentPlayerId)
-    .update({
-      shipPosition: target,
-      movesRemaining: player.movesRemaining - 1
-    });
-
-});
 
   function renderLedger(gameData) {
 
     const players = gameData.players || {};
-    if (players[currentPlayerId]) {
-  const me = players[currentPlayerId];
-  playerHeader.textContent = `Player: ${me.name} (${me.country})`;
-}
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
-const phaseDisplay = document.getElementById("phaseDisplay");
+    const currentPhase = gameData.currentPhase || 0;
 
-const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
-const currentPhase = gameData.currentPhase || 0;
+    const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
     phaseDisplay.textContent = phaseNames[currentPhase];
-    console.log("DEBUG PHASE STATE:", {
-  currentPhase,
-  turnOrder,
-  currentTurnIndex,
-  currentPlayerId
-});
+
+    if (players[currentPlayerId]) {
+      const me = players[currentPlayerId];
+      playerHeader.textContent = `Player: ${me.name} (${me.country})`;
+    }
 
     let html = "";
 
@@ -474,77 +460,25 @@ const currentPhase = gameData.currentPhase || 0;
           html += `${resource}: ${player.inventory[resource]}<br>`;
         }
       }
-if (player.movesRemaining !== undefined) {
-  html += `<br>Moves Remaining: ${player.movesRemaining}`;
-}
 
-if (
-  isCurrentTurn &&
-  playerId === currentPlayerId &&
-  currentPhase === 2 &&
-  !player.rollValue
-)
+      if (isCurrentTurn && playerId === currentPlayerId && currentPhase === 2 && !player.rollValue) {
+        html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
+      }
 
-
-
-
+      if (player.movesRemaining > 0) {
+        html += `<br>Moves Remaining: ${player.movesRemaining}`;
+      }
 
       html += `</div>`;
     });
 
     inventoryList.innerHTML = html;
   }
-  document.getElementById("endPhaseBtn").addEventListener("click", async () => {
-console.log("End Phase clicked");
 
-  if (!currentGameCode || !currentPlayerId) return;
-
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
-  const gameData = gameSnap.val();
-
-  const turnOrder = gameData.turnOrder;
-  const currentTurnIndex = gameData.currentTurnIndex;
-  const currentPhase = gameData.currentPhase || 0;
-
-  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
-
-if (currentPhase < 2) {
-
-  const newPhase = currentPhase + 1;
-
-  await gamesRef.child(currentGameCode).update({
-    currentPhase: newPhase
+  window.addEventListener("resize", () => {
+    if (latestGameData) {
+      renderShips(latestGameData);
+    }
   });
-
-  // If entering Movement Phase, reset roll state
-  if (newPhase === 2) {
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .update({
-    movesRemaining: 0,
-    rollValue: null
-  });
-
-  }
-}
- else {
-    // End turn
-    let nextTurn = currentTurnIndex + 1;
-    if (nextTurn >= turnOrder.length) nextTurn = 0;
-
-    await gamesRef.child(currentGameCode).update({
-      currentTurnIndex: nextTurn,
-      currentPhase: 0
-    });
-  }
-
-});
-
-window.addEventListener("resize", () => {
-  if (latestGameData) {
-    renderShips(latestGameData);
-  }
-});
 
 });
