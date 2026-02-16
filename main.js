@@ -443,6 +443,19 @@ if (event.target && event.target.id === "harvestBtn") {
   // For now accept any non-empty guess (we will add validation next)
   showResourceSelection(region, player);
 }
+async function endTurnEarly() {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  let nextTurn = gameData.currentTurnIndex + 1;
+  if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
+
+  await gamesRef.child(currentGameCode).update({
+    currentTurnIndex: nextTurn,
+    currentPhase: 0
+  });
+}
 
 
 });
