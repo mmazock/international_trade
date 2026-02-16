@@ -362,35 +362,75 @@ const regionResources = {
      DICE
      ============================= */
 
-  document.addEventListener("click", async function(event) {
+document.addEventListener("click", async function(event) {
 
-    if (event.target && event.target.id === "rollDiceBtn") {
+  /* =============================
+     ROLL DICE
+     ============================= */
 
-      const gameSnap = await gamesRef.child(currentGameCode).once("value");
-      const gameData = gameSnap.val();
+  if (event.target && event.target.id === "rollDiceBtn") {
 
-      if (gameData.currentPhase !== 2) return;
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
 
-      const turnOrder = gameData.turnOrder;
-      const currentTurnIndex = gameData.currentTurnIndex;
+    if (!gameData || gameData.currentPhase !== 2) return;
 
-      if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
 
-      const player = gameData.players[currentPlayerId];
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
-      if (player.rollValue) return;
+    const player = gameData.players[currentPlayerId];
 
-      const roll = Math.floor(Math.random() * 6) + 1;
+    if (player.rollValue) return;
 
-      await gamesRef.child(currentGameCode)
-        .child("players")
-        .child(currentPlayerId)
-        .update({
-          movesRemaining: roll,
-          rollValue: roll
-        });
-    }
-  });
+    const roll = Math.floor(Math.random() * 6) + 1;
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        movesRemaining: roll,
+        rollValue: roll
+      });
+  }
+
+
+  /* =============================
+     HARVEST
+     ============================= */
+
+  if (event.target && event.target.id === "harvestBtn") {
+
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
+
+    if (!gameData || gameData.currentPhase !== 2) return;
+
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
+
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+    const player = gameData.players[currentPlayerId];
+
+    if (!harvestZones[player.shipPosition]) return;
+    if (player.movesRemaining < 1) return;
+
+    const region = harvestZones[player.shipPosition].region;
+
+    alert("Harvest attempt in " + region);
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        movesRemaining: player.movesRemaining - 1
+      });
+  }
+
+});
+
 
   /* =============================
      MOVEMENT
