@@ -580,6 +580,67 @@ async function endTurnEarly() {
       mapContainer.appendChild(wrapper);
     });
   }
+async function startHarvestSelection(region) {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const player = gameData.players[currentPlayerId];
+
+  const harvestCapacity = 1 + (player.infrastructure || 0);
+  let remaining = harvestCapacity;
+
+  const resources = regionResources[region];
+
+  const messageBox = document.getElementById("messageBox");
+
+  function renderSelection() {
+
+    messageBox.innerHTML = `
+      <strong>You may harvest ${remaining} resource(s).</strong><br><br>
+    `;
+
+    resources.forEach(resource => {
+      const btn = document.createElement("button");
+      btn.textContent = resource;
+      btn.onclick = async () => {
+
+        const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+        const updatedData = updatedSnap.val();
+
+        const currentInventory =
+          updatedData.players[currentPlayerId].inventory || {};
+
+        const currentAmount = currentInventory[resource] || 0;
+
+        await gamesRef.child(currentGameCode)
+          .child("players")
+          .child(currentPlayerId)
+          .update({
+            inventory: {
+              ...currentInventory,
+              [resource]: currentAmount + 1
+            }
+          });
+
+        remaining--;
+
+        if (remaining <= 0) {
+          messageBox.innerHTML = "";
+          await endTurnEarly();
+        } else {
+          renderSelection();
+        }
+      };
+
+      messageBox.appendChild(btn);
+      messageBox.appendChild(document.createElement("br"));
+      messageBox.appendChild(document.createElement("br"));
+    });
+  }
+
+  renderSelection();
+}
 
   function renderLedger(gameData) {
 
