@@ -123,6 +123,32 @@ const harvestZones = {
   "R3": { region: "Japan" }
 };
 
+  /* =============================
+   REGION RESOURCES
+   ============================= */
+
+const regionResources = {
+
+  "West Africa": ["Gold", "Ivory"],
+
+  "Central Africa": ["Gold", "Ivory", "Copper"],
+
+  "Southern Africa": ["Gold", "Ivory", "Copper", "Iron", "Diamonds"],
+
+  "Eastern Africa": ["Spices", "Ivory"],
+
+  "Arabian Peninsula": ["Oil", "Spices"],
+
+  "Indian Subcontinent": ["Spices", "Coal", "Cotton", "Rice"],
+
+  "Southeast Asia": ["Coal", "Rice", "Oil"],
+
+  "China": ["Silk", "Porcelain", "Rice", "Cotton", "Spices", "Iron"],
+
+  "Japan": ["Copper", "Coal"]
+};
+
+
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
   const countryData = {
