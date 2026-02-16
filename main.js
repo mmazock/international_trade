@@ -396,38 +396,54 @@ document.addEventListener("click", async function(event) {
   }
 
 
-  /* =============================
-     HARVEST
-     ============================= */
+/* =============================
+   HARVEST
+   ============================= */
 
-  if (event.target && event.target.id === "harvestBtn") {
+if (event.target && event.target.id === "harvestBtn") {
 
-    const gameSnap = await gamesRef.child(currentGameCode).once("value");
-    const gameData = gameSnap.val();
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
 
-    if (!gameData || gameData.currentPhase !== 2) return;
+  if (!gameData || gameData.currentPhase !== 2) return;
 
-    const turnOrder = gameData.turnOrder;
-    const currentTurnIndex = gameData.currentTurnIndex;
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
 
-    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
-    const player = gameData.players[currentPlayerId];
+  const player = gameData.players[currentPlayerId];
 
-    if (!harvestZones[player.shipPosition]) return;
-    if (player.movesRemaining < 1) return;
+  if (!harvestZones[player.shipPosition]) return;
+  if (player.movesRemaining < 1) return;
 
-    const region = harvestZones[player.shipPosition].region;
+  const region = harvestZones[player.shipPosition].region;
 
-    alert("Harvest attempt in " + region);
+  // Prompt for country with 15-second limit
+  let answered = false;
 
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-      .update({
-        movesRemaining: player.movesRemaining - 1
-      });
+  const timer = setTimeout(async () => {
+    if (!answered) {
+      alert("Time expired. Turn over.");
+      await endTurnEarly();
+    }
+  }, 15000);
+
+  const countryGuess = prompt("Name a country in " + region + ":");
+
+  answered = true;
+  clearTimeout(timer);
+
+  if (!countryGuess) {
+    alert("No answer. Turn over.");
+    await endTurnEarly();
+    return;
   }
+
+  // For now accept any non-empty guess (we will add validation next)
+  showResourceSelection(region, player);
+}
+
 
 });
 
@@ -494,6 +510,42 @@ document.addEventListener("click", async function(event) {
         movesRemaining: player.movesRemaining - 1
       });
   });
+
+  async function showResourceSelection(region, player) {
+
+  const resources = regionResources[region];
+
+  const resourceChoice = prompt(
+    "Select resource to harvest:\n" + resources.join(", ")
+  );
+
+  if (!resourceChoice) return;
+
+  const selected = resourceChoice.trim();
+
+  if (!resources.includes(selected)) {
+    alert("Invalid resource.");
+    return;
+  }
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const currentInventory = gameData.players[currentPlayerId].inventory || {};
+  const currentAmount = currentInventory[selected] || 0;
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      inventory: {
+        ...currentInventory,
+        [selected]: currentAmount + 1
+      },
+      movesRemaining: gameData.players[currentPlayerId].movesRemaining - 1
+    });
+}
+
 
   /* =============================
      RENDERING
