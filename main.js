@@ -626,9 +626,20 @@ async function startHarvestSelection(region) {
         remaining--;
 
         if (remaining <= 0) {
-          messageBox.innerHTML = "";
-          await endTurnEarly();
-        } else {
+
+  messageBox.innerHTML = "";
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      movesRemaining: 0,
+      rollValue: null
+    });
+
+  await endTurnEarly();
+}
+ else {
           renderSelection();
         }
       };
@@ -703,10 +714,12 @@ if (
   playerId === currentPlayerId &&
   currentPhase === 2 &&
   onHarvestSquare &&
-  player.movesRemaining >= 1
+  player.rollValue &&               // must have rolled
+  player.movesRemaining > 0         // must still have movement left
 ) {
   html += `<br><button id="harvestBtn">Harvest</button>`;
 }
+
 
       if (player.movesRemaining > 0) {
         html += `<br>Moves Remaining: ${player.movesRemaining}`;
