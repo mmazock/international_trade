@@ -71,6 +71,57 @@ document.addEventListener("DOMContentLoaded", () => {
     "P8": ["O8"],
     "Q8": ["Q7", "R8"]
   };
+/* =============================
+   HARVEST ZONES
+   ============================= */
+
+const harvestZones = {
+
+  // West Africa
+  "C6": { region: "West Africa" },
+  "D6": { region: "West Africa" },
+
+  // Central Africa
+  "E7": { region: "Central Africa" },
+  "E8": { region: "Central Africa" },
+
+  // Southern Africa
+  "E9": { region: "Southern Africa" },
+  "E10": { region: "Southern Africa" },
+  "F10": { region: "Southern Africa" },
+  "G9": { region: "Southern Africa" },
+  "G8": { region: "Southern Africa" },
+
+  // Eastern Africa
+  "H7": { region: "Eastern Africa" },
+  "H6": { region: "Eastern Africa" },
+
+  // Arabian Peninsula
+  "I5": { region: "Arabian Peninsula" },
+  "I4": { region: "Arabian Peninsula" },
+
+  // Indian Subcontinent
+  "J4": { region: "Indian Subcontinent" },
+  "K4": { region: "Indian Subcontinent" },
+  "K5": { region: "Indian Subcontinent" },
+  "K6": { region: "Indian Subcontinent" },
+  "L5": { region: "Indian Subcontinent" },
+  "L4": { region: "Indian Subcontinent" },
+  "M4": { region: "Indian Subcontinent" },
+
+  // Southeast Asia
+  "M5": { region: "Southeast Asia" },
+  "N5": { region: "Southeast Asia" },
+
+  // China
+  "O4": { region: "China" },
+  "P4": { region: "China" },
+  "P3": { region: "China" },
+
+  // Japan
+  "Q3": { region: "Japan" },
+  "R3": { region: "Japan" }
+};
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
