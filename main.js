@@ -531,6 +531,8 @@ const regionResources = {
       if (!player) return;
 
       const isCurrentTurn = index === currentTurnIndex;
+      const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
+
 console.log("ROLL CHECK:", {
   isCurrentTurn,
   playerId,
@@ -562,6 +564,15 @@ console.log("ROLL CHECK:", {
       if (isCurrentTurn && playerId === currentPlayerId && currentPhase === 2 && !player.rollValue) {
         html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
       }
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 2 &&
+  onHarvestSquare &&
+  player.movesRemaining >= 1
+) {
+  html += `<br><button id="harvestBtn">Harvest</button>`;
+}
 
       if (player.movesRemaining > 0) {
         html += `<br>Moves Remaining: ${player.movesRemaining}`;
