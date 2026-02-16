@@ -415,11 +415,11 @@ if (event.target && event.target.id === "harvestBtn") {
   const player = gameData.players[currentPlayerId];
 
   if (!harvestZones[player.shipPosition]) return;
-  if (player.movesRemaining < 1) return;
 
   const region = harvestZones[player.shipPosition].region;
 
-  // Prompt for country with 15-second limit
+  // --- Country Guess Phase ---
+
   let answered = false;
 
   const timer = setTimeout(async () => {
@@ -440,9 +440,10 @@ if (event.target && event.target.id === "harvestBtn") {
     return;
   }
 
-  // For now accept any non-empty guess (we will add validation next)
-  showResourceSelection(region, player);
+  // TODO: Add real validation later
+  startHarvestSelection(region);
 }
+
 async function endTurnEarly() {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
@@ -524,40 +525,7 @@ async function endTurnEarly() {
       });
   });
 
-  async function showResourceSelection(region, player) {
-
-  const resources = regionResources[region];
-
-  const resourceChoice = prompt(
-    "Select resource to harvest:\n" + resources.join(", ")
-  );
-
-  if (!resourceChoice) return;
-
-  const selected = resourceChoice.trim();
-
-  if (!resources.includes(selected)) {
-    alert("Invalid resource.");
-    return;
-  }
-
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
-  const gameData = gameSnap.val();
-
-  const currentInventory = gameData.players[currentPlayerId].inventory || {};
-  const currentAmount = currentInventory[selected] || 0;
-
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(currentPlayerId)
-    .update({
-      inventory: {
-        ...currentInventory,
-        [selected]: currentAmount + 1
-      },
-      movesRemaining: gameData.players[currentPlayerId].movesRemaining - 1
-    });
-}
+ 
 
 
   /* =============================
