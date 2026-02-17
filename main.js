@@ -504,7 +504,8 @@ const gameSnap = await gamesRef.child(currentGameCode).once("value");
 
 async function endTurnEarly() {
 
-  const gameSnap = .child(currentGameCode).once("value");
+const gameSnap = await gamesRef.child(currentGameCode).once("value");
+
   const gameData = gameSnap.val();
 
   let nextTurn = gameData.currentTurnIndex + 1;
