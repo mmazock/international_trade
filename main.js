@@ -8,16 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const snapshot = await gamesRef.once("value");
   const games = snapshot.val();
 
-  if (!games) return;
+  if (!games || typeof games !== "object") return;
 
   const now = Date.now();
   const fifteenMinutes = 15 * 60 * 1000;
 
-  for (let gameId in games) {
+  for (const gameId of Object.keys(games)) {
 
     const game = games[gameId];
 
-    if (!game.lastActive) continue;
+    if (!game || !game.lastActive) continue;
 
     if (now - game.lastActive > fifteenMinutes) {
       await gamesRef.child(gameId).remove();
@@ -26,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
 })();
+
 
   const mapImage = document.getElementById("map-image");
   const mapContainer = document.getElementById("map-container");
