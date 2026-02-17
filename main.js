@@ -97,56 +97,67 @@ document.addEventListener("DOMContentLoaded", () => {
     "Q8": ["Q7", "R8"]
   };
 /* =============================
-   HARVEST ZONES
+   HARVEST ZONES (Square Specific)
    ============================= */
 
 const harvestZones = {
 
-  // West Africa
-  "C6": { region: "West Africa" },
-  "D6": { region: "West Africa" },
+  "C6": { region: "West Africa", countries: ["Liberia", "Côte d’Ivoire", "Cote D'Ivoire", "Cote DIvoire", "Cote Divoire", "Ivory Coast", "Ghana"] },
 
-  // Central Africa
-  "E7": { region: "Central Africa" },
-  "E8": { region: "Central Africa" },
+  "D6": { region: "West Africa", countries: ["Togo", "Benin", "Nigeria", "Cameroon"] },
 
-  // Southern Africa
-  "E9": { region: "Southern Africa" },
-  "E10": { region: "Southern Africa" },
-  "F10": { region: "Southern Africa" },
-  "G9": { region: "Southern Africa" },
-  "G8": { region: "Southern Africa" },
+  "E7": { region: "Central Africa", countries: ["Gabon", "Republic of the Congo", "Democratic Republic of the Congo", "Angola"] },
 
-  // Eastern Africa
-  "H7": { region: "Eastern Africa" },
-  "H6": { region: "Eastern Africa" },
+  "E8": { region: "Central Africa", countries: ["Angola", "Namibia"] },
 
-  // Arabian Peninsula
-  "I5": { region: "Arabian Peninsula" },
-  "I4": { region: "Arabian Peninsula" },
+  "E9": { region: "Southern Africa", countries: ["Namibia", "South Africa"] },
 
-  // Indian Subcontinent
-  "J4": { region: "Indian Subcontinent" },
-  "K4": { region: "Indian Subcontinent" },
-  "K5": { region: "Indian Subcontinent" },
-  "K6": { region: "Indian Subcontinent" },
-  "L5": { region: "Indian Subcontinent" },
-  "L4": { region: "Indian Subcontinent" },
-  "M4": { region: "Indian Subcontinent" },
+  "E10": { region: "Southern Africa", countries: ["South Africa"], special: "diamonds" },
 
-  // Southeast Asia
-  "M5": { region: "Southeast Asia" },
-  "N5": { region: "Southeast Asia" },
+  "F10": { region: "Southern Africa", countries: ["South Africa"] },
 
-  // China
-  "O4": { region: "China" },
-  "P4": { region: "China" },
-  "P3": { region: "China" },
+  "G9": { region: "Southern Africa", countries: ["South Africa", "Mozambique"] },
 
-  // Japan
-  "Q3": { region: "Japan" },
-  "R3": { region: "Japan" }
+  "G8": { region: "Southern Africa", countries: ["Mozambique"] },
+
+  "H7": { region: "Eastern Africa", countries: ["Kenya"] },
+
+  "H6": { region: "Eastern Africa", countries: ["Somalia", "Kenya"] },
+
+  "I5": { region: "Arabian Peninsula", countries: ["Yemen", "Oman"] },
+
+  "I4": { region: "Arabian Peninsula", countries: ["Oman", "United Arab Emirates", "Qatar", "Bahrain", "Saudi Arabia", "Iran"] },
+
+  "J4": { region: "Indian Subcontinent", countries: ["Iran", "Pakistan", "India"] },
+
+  "K4": { region: "Indian Subcontinent", countries: ["India"] },
+
+  "K5": { region: "Indian Subcontinent", countries: ["India"] },
+
+  "K6": { region: "Indian Subcontinent", countries: ["India"] },
+
+  "L5": { region: "Indian Subcontinent", countries: ["India"] },
+
+  "L4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh"] },
+
+  "M4": { region: "Indian Subcontinent", countries: ["India", "Bangladesh", "Myanmar"] },
+
+  "M5": { region: "Southeast Asia", countries: ["Myanmar"] },
+
+  "N5": { region: "Southeast Asia", countries: ["Thailand", "Cambodia", "Vietnam"] },
+
+  "O4": { region: "China", countries: ["China"] },
+
+  "P4": { region: "China", countries: ["China"] },
+
+  "P3": { region: "China", countries: ["China", "North Korea", "South Korea"] },
+
+  "Q3": { region: "Japan", countries: ["Japan"] },
+
+  "R3": { region: "Japan", countries: ["Japan"] }
+
 };
+
 
   /* =============================
    REGION RESOURCES
