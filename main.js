@@ -504,18 +504,34 @@ document.addEventListener("click", async function(event) {
       }
     }, 15000);
 
-    const countryGuess = prompt("Name a country in " + region + ":");
+const countryGuess = prompt("Name a country in " + region + ":");
 
-    answered = true;
-    clearTimeout(timer);
+answered = true;
+clearTimeout(timer);
 
-    if (!countryGuess) {
-      alert("No answer. Turn over.");
-      await advanceTurn();
-      return;
-    }
+if (!countryGuess) {
+  alert("No answer. Turn over.");
+  await advanceTurn();
+  return;
+}
 
-    startHarvestSelection(region);
+const square = player.shipPosition;
+const validCountries = harvestZones[square].countries;
+
+const normalizedGuess = countryGuess.trim().toLowerCase();
+
+const isValid = validCountries.some(country =>
+  country.toLowerCase() === normalizedGuess
+);
+
+if (!isValid) {
+  alert("Incorrect country. Turn over.");
+  await advanceTurn();
+  return;
+}
+
+startHarvestSelection(region);
+
   }
 
 });
