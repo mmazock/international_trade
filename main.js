@@ -318,9 +318,36 @@ leaveGameBtn.addEventListener("click", async () => {
     return;
   }
 
-  // Remove this player from Firebase
-  await games
+  const gameRef = gamesRef.child(currentGameCode);
 
+  // Remove player
+  await gameRef.child("players").child(currentPlayerId).remove();
+
+  // Update turn order
+  const snap = await gameRef.once("value");
+  const gameData = snap.val();
+
+  if (gameData && gameData.turnOrder) {
+
+    const updatedOrder = gameData.turnOrder.filter(
+      id => id !== currentPlayerId
+    );
+
+    await gameRef.update({
+      turnOrder: updatedOrder
+    });
+
+    // If no players left, delete game
+    if (updatedOrder.length === 0) {
+      await gameRef.remove();
+    }
+  }
+
+  localStorage.removeItem("gameCode");
+  localStorage.removeItem("playerId");
+
+  location.reload();
+});
 
   function hideSetupUI() {
     createGameBtn.style.display = "none";
