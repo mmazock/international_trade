@@ -284,11 +284,16 @@ const regionResources = {
     listenToGameData();
   });
 
-  leaveGameBtn.addEventListener("click", () => {
-    localStorage.removeItem("gameCode");
-    localStorage.removeItem("playerId");
+leaveGameBtn.addEventListener("click", async () => {
+
+  if (!currentGameCode || !currentPlayerId) {
     location.reload();
-  });
+    return;
+  }
+
+  // Remove this player from Firebase
+  await games
+
 
   function hideSetupUI() {
     createGameBtn.style.display = "none";
