@@ -398,11 +398,13 @@ await gamesRef.child(currentGameCode).update({
      DICE
      ============================= */
 
+/* =============================
+   CLICK HANDLER
+   ============================= */
+
 document.addEventListener("click", async function(event) {
 
-  /* =============================
-     ROLL DICE
-     ============================= */
+  /* ===== ROLL DICE ===== */
 
   if (event.target && event.target.id === "rollDiceBtn") {
 
@@ -422,117 +424,78 @@ document.addEventListener("click", async function(event) {
 
     const roll = Math.floor(Math.random() * 6) + 1;
 
-const newMoves = player.movesRemaining - 1;
+    await gamesRef.child(currentGameCode).update({
+      lastActive: Date.now()
+    });
 
-await gamesRef
-  .child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .update({
-    shipPosition: target,
-    movesRemaining: newMoves
-  });
-
-
-if (newMoves === 0) {
-
-const updatedSnap = await gamesRef.child(currentGameCode).once("value");
-
-  const updatedData = updatedSnap.val();
-
-  let nextTurn = updatedData.currentTurnIndex + 1;
-  if (nextTurn >= updatedData.turnOrder.length) nextTurn = 0;
-
-await gamesRef.child(currentGameCode).update({
-
-    currentTurnIndex: nextTurn,
-    currentPhase: 0
-  });
-}
-
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        movesRemaining: roll,
+        rollValue: roll
+      });
   }
 
+  /* ===== HARVEST ===== */
 
-/* =============================
-   HARVEST
-   ============================= */
+  if (event.target && event.target.id === "harvestBtn") {
 
-if (event.target && event.target.id === "harvestBtn") {
+    const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    const gameData = gameSnap.val();
 
-const gameSnap = await gamesRef.child(currentGameCode).once("value");
+    if (!gameData || gameData.currentPhase !== 2) return;
 
-  const gameData = gameSnap.val();
+    const turnOrder = gameData.turnOrder;
+    const currentTurnIndex = gameData.currentTurnIndex;
 
-  if (!gameData || gameData.currentPhase !== 2) return;
+    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
-  const turnOrder = gameData.turnOrder;
-  const currentTurnIndex = gameData.currentTurnIndex;
+    const player = gameData.players[currentPlayerId];
 
-  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+    if (!harvestZones[player.shipPosition]) return;
 
-  const player = gameData.players[currentPlayerId];
+    const region = harvestZones[player.shipPosition].region;
 
-  if (!harvestZones[player.shipPosition]) return;
+    let answered = false;
 
-  const region = harvestZones[player.shipPosition].region;
+    const timer = setTimeout(async () => {
+      if (!answered) {
+        alert("Time expired. Turn over.");
+        await advanceTurn();
+      }
+    }, 15000);
 
-  // --- Country Guess Phase ---
+    const countryGuess = prompt("Name a country in " + region + ":");
 
-  let answered = false;
+    answered = true;
+    clearTimeout(timer);
 
-  const timer = setTimeout(async () => {
-    if (!answered) {
-      alert("Time expired. Turn over.");
-      await endTurnEarly();
+    if (!countryGuess) {
+      alert("No answer. Turn over.");
+      await advanceTurn();
+      return;
     }
-  }, 15000);
 
-  const countryGuess = prompt("Name a country in " + region + ":");
-
-  answered = true;
-  clearTimeout(timer);
-
-  if (!countryGuess) {
-    alert("No answer. Turn over.");
-    await endTurnEarly();
-    return;
+    startHarvestSelection(region);
   }
 
-  // TODO: Add real validation later
-  startHarvestSelection(region);
-}
+});
 
-async function endTurnEarly() {
+async function advanceTurn() {
 
-const gameSnap = await gamesRef.child(currentGameCode).once("value");
-
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
   let nextTurn = gameData.currentTurnIndex + 1;
   if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
 
-await gamesRef.child(currentGameCode).update({
-  lastActive: Date.now()
-});
-
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .update({
-    movesRemaining: roll,
-    rollValue: roll
+  await gamesRef.child(currentGameCode).update({
+    currentTurnIndex: nextTurn,
+    currentPhase: 0,
+    lastActive: Date.now()
   });
-
-
-await gamesRef.child(currentGameCode).update({
-  currentTurnIndex: nextTurn,
-  currentPhase: 0
-});
-
 }
-
-
-});
 
 
   /* =============================
