@@ -2,6 +2,30 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const database = firebase.database();
   const gamesRef = database.ref("games");
+// Cleanup inactive games (older than 15 minutes)
+(async function cleanupOldGames() {
+
+  const snapshot = await gamesRef.once("value");
+  const games = snapshot.val();
+
+  if (!games) return;
+
+  const now = Date.now();
+  const fifteenMinutes = 15 * 60 * 1000;
+
+  for (let gameId in games) {
+
+    const game = games[gameId];
+
+    if (!game.lastActive) continue;
+
+    if (now - game.lastActive > fifteenMinutes) {
+      await gamesRef.child(gameId).remove();
+      console.log("Deleted inactive game:", gameId);
+    }
+  }
+
+})();
 
   const mapImage = document.getElementById("map-image");
   const mapContainer = document.getElementById("map-container");
@@ -213,12 +237,14 @@ const regionResources = {
 
   createGameBtn.addEventListener("click", async () => {
     const code = Math.random().toString(36).substring(2,7).toUpperCase();
-    await gamesRef.child(code).set({
-      players: {},
-      turnOrder: [],
-      currentTurnIndex: 0,
-      currentPhase: 0
-    });
+   await gamesRef.child(code).set({
+  players: {},
+  turnOrder: [],
+  currentTurnIndex: 0,
+  currentPhase: 0,
+  lastActive: Date.now()
+});
+
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
@@ -337,9 +363,11 @@ leaveGameBtn.addEventListener("click", async () => {
 
       const newPhase = currentPhase + 1;
 
-      await gamesRef.child(currentGameCode).update({
-        currentPhase: newPhase
-      });
+await gamesRef.child(currentGameCode).update({
+  currentPhase: newPhase,
+  lastActive: Date.now()
+});
+
 
       if (newPhase === 2) {
         await gamesRef.child(currentGameCode)
@@ -356,10 +384,12 @@ leaveGameBtn.addEventListener("click", async () => {
       let nextTurn = currentTurnIndex + 1;
       if (nextTurn >= turnOrder.length) nextTurn = 0;
 
-      await gamesRef.child(currentGameCode).update({
-        currentTurnIndex: nextTurn,
-        currentPhase: 0
-      });
+await gamesRef.child(currentGameCode).update({
+  currentTurnIndex: nextTurn,
+  currentPhase: 0,
+  lastActive: Date.now()
+});
+
     }
   });
 
@@ -393,7 +423,7 @@ document.addEventListener("click", async function(event) {
 
 const newMoves = player.movesRemaining - 1;
 
-await gamesRef.child(currentGameCode)
+.child(currentGameCode)
   .child("players")
   .child(currentPlayerId)
   .update({
@@ -403,13 +433,13 @@ await gamesRef.child(currentGameCode)
 
 if (newMoves === 0) {
 
-  const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+  const updatedSnap = .child(currentGameCode).once("value");
   const updatedData = updatedSnap.val();
 
   let nextTurn = updatedData.currentTurnIndex + 1;
   if (nextTurn >= updatedData.turnOrder.length) nextTurn = 0;
 
-  await gamesRef.child(currentGameCode).update({
+  .child(currentGameCode).update({
     currentTurnIndex: nextTurn,
     currentPhase: 0
   });
@@ -424,7 +454,7 @@ if (newMoves === 0) {
 
 if (event.target && event.target.id === "harvestBtn") {
 
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameSnap = .child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
   if (!gameData || gameData.currentPhase !== 2) return;
@@ -468,19 +498,24 @@ if (event.target && event.target.id === "harvestBtn") {
 
 async function endTurnEarly() {
 
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameSnap = .child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
   let nextTurn = gameData.currentTurnIndex + 1;
   if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
 
+await gamesRef.child(currentGameCode).update({
+  lastActive: Date.now()
+});
+
 await gamesRef.child(currentGameCode)
   .child("players")
   .child(currentPlayerId)
   .update({
-    movesRemaining: 0,
-    rollValue: null
+    movesRemaining: roll,
+    rollValue: roll
   });
+
 
 await gamesRef.child(currentGameCode).update({
   currentTurnIndex: nextTurn,
@@ -547,13 +582,18 @@ await gamesRef.child(currentGameCode).update({
       if (!restrictedTransitions[currentPos].includes(target)) return;
     }
 
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-      .update({
-        shipPosition: target,
-        movesRemaining: player.movesRemaining - 1
-      });
+await gamesRef.child(currentGameCode).update({
+  lastActive: Date.now()
+});
+
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    shipPosition: target,
+    movesRemaining: newMoves
+  });
+
   });
 
  
@@ -667,9 +707,11 @@ if (remaining <= 0) {
   if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
 
   await gamesRef.child(currentGameCode).update({
-    currentTurnIndex: nextTurn,
-    currentPhase: 0
-  });
+  currentTurnIndex: nextTurn,
+  currentPhase: 0,
+  lastActive: Date.now()
+});
+
 }
 
  else {
