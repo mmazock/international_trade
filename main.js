@@ -625,20 +625,22 @@ async function startHarvestSelection(region) {
 
         remaining--;
 
-        if (remaining <= 0) {
+if (remaining <= 0) {
 
   messageBox.innerHTML = "";
 
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(currentPlayerId)
-    .update({
-      movesRemaining: 0,
-      rollValue: null
-    });
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
 
-  await endTurnEarly();
+  let nextTurn = gameData.currentTurnIndex + 1;
+  if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
+
+  await gamesRef.child(currentGameCode).update({
+    currentTurnIndex: nextTurn,
+    currentPhase: 0
+  });
 }
+
  else {
           renderSelection();
         }
