@@ -583,6 +583,12 @@ await gamesRef.child(currentGameCode).update({
   lastActive: Date.now()
 });
 
+const newMoves = player.movesRemaining - 1;
+
+await gamesRef.child(currentGameCode).update({
+  lastActive: Date.now()
+});
+
 await gamesRef.child(currentGameCode)
   .child("players")
   .child(currentPlayerId)
@@ -590,6 +596,11 @@ await gamesRef.child(currentGameCode)
     shipPosition: target,
     movesRemaining: newMoves
   });
+
+if (newMoves === 0) {
+  await advanceTurn();
+}
+
 
   });
 
