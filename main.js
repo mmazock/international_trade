@@ -424,7 +424,8 @@ document.addEventListener("click", async function(event) {
 
 const newMoves = player.movesRemaining - 1;
 
-.child(currentGameCode)
+await gamesRef
+  .child(currentGameCode)
   .child("players")
   .child(currentPlayerId)
   .update({
@@ -432,15 +433,18 @@ const newMoves = player.movesRemaining - 1;
     movesRemaining: newMoves
   });
 
+
 if (newMoves === 0) {
 
-  const updatedSnap = .child(currentGameCode).once("value");
+const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+
   const updatedData = updatedSnap.val();
 
   let nextTurn = updatedData.currentTurnIndex + 1;
   if (nextTurn >= updatedData.turnOrder.length) nextTurn = 0;
 
-  .child(currentGameCode).update({
+await gamesRef.child(currentGameCode).update({
+
     currentTurnIndex: nextTurn,
     currentPhase: 0
   });
