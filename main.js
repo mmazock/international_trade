@@ -459,7 +459,8 @@ await gamesRef.child(currentGameCode).update({
 
 if (event.target && event.target.id === "harvestBtn") {
 
-  const gameSnap = .child(currentGameCode).once("value");
+const gameSnap = await gamesRef.child(currentGameCode).once("value");
+
   const gameData = gameSnap.val();
 
   if (!gameData || gameData.currentPhase !== 2) return;
