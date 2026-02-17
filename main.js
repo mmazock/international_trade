@@ -386,13 +386,30 @@ document.addEventListener("click", async function(event) {
 
     const roll = Math.floor(Math.random() * 6) + 1;
 
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(currentPlayerId)
-      .update({
-        movesRemaining: roll,
-        rollValue: roll
-      });
+const newMoves = player.movesRemaining - 1;
+
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    shipPosition: target,
+    movesRemaining: newMoves
+  });
+
+if (newMoves === 0) {
+
+  const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+  const updatedData = updatedSnap.val();
+
+  let nextTurn = updatedData.currentTurnIndex + 1;
+  if (nextTurn >= updatedData.turnOrder.length) nextTurn = 0;
+
+  await gamesRef.child(currentGameCode).update({
+    currentTurnIndex: nextTurn,
+    currentPhase: 0
+  });
+}
+
   }
 
 
@@ -452,10 +469,19 @@ async function endTurnEarly() {
   let nextTurn = gameData.currentTurnIndex + 1;
   if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
 
-  await gamesRef.child(currentGameCode).update({
-    currentTurnIndex: nextTurn,
-    currentPhase: 0
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    movesRemaining: 0,
+    rollValue: null
   });
+
+await gamesRef.child(currentGameCode).update({
+  currentTurnIndex: nextTurn,
+  currentPhase: 0
+});
+
 }
 
 
