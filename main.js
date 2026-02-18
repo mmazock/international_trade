@@ -511,6 +511,17 @@ await gamesRef.child(currentGameCode).update({
 
     }
   });
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 1
+) {
+  html += `
+    <br><strong>Would you like to make an upgrade?</strong><br>
+    <button id="upgradeYesBtn">Yes</button>
+    <button id="upgradeNoBtn">No</button>
+  `;
+}
 
   /* =============================
      DICE
