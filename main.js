@@ -505,11 +505,22 @@ await gamesRef.child(currentGameCode).update({
       let nextTurn = currentTurnIndex + 1;
       if (nextTurn >= turnOrder.length) nextTurn = 0;
 
+const nextPlayerId = gameData.turnOrder[nextTurn];
+
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(nextPlayerId)
+  .update({
+    movesRemaining: 0,
+    rollValue: null
+  });
+
 await gamesRef.child(currentGameCode).update({
   currentTurnIndex: nextTurn,
   currentPhase: 0,
   lastActive: Date.now()
 });
+
 
     }
   });
