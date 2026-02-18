@@ -844,6 +844,20 @@ if (newMoves === 0) {
       mapContainer.appendChild(wrapper);
     });
   }
+  function showUpgradeOptions() {
+
+  const messageBox = document.getElementById("messageBox");
+
+  messageBox.innerHTML = `
+    <strong>Select Upgrade:</strong><br><br>
+    <button id="upgradeTransport">Transport ($150)</button><br><br>
+    <button id="upgradeNavigation">Navigation ($100)</button><br><br>
+    <button id="upgradeWeapons">Weapons ($100)</button><br><br>
+    <button id="upgradeSuez">Construct Suez ($150)</button><br><br>
+    <button id="upgradeDictatorship">Fund Dictatorship ($200)</button><br><br>
+  `;
+}
+
 async function startHarvestSelection(region) {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
