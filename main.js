@@ -616,7 +616,61 @@ if (event.target && event.target.id === "upgradeTransport") {
 
   return;
 }
- 
+ /* ===== NAVIGATION UPGRADE ===== */
+
+if (event.target && event.target.id === "upgradeNavigation") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  if (!gameData || gameData.currentPhase !== 1) return;
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  const player = gameData.players[currentPlayerId];
+
+  if ((player.upgrades?.navigation || 0) >= 3) {
+    alert("Navigation is already at maximum level.");
+    return;
+  }
+
+  if (player.money < 100) {
+    alert("Not enough money. Cost is $100.");
+    return;
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: player.money - 100
+    });
+
+  const success = Math.random() < 0.75;
+
+  if (success) {
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        "upgrades/navigation": (player.upgrades?.navigation || 0) + 1
+      });
+
+    alert("Navigation upgrade successful!");
+  } else {
+    alert("Navigation upgrade failed. Investment lost.");
+  }
+
+  await gamesRef.child(currentGameCode).update({
+    lastActive: Date.now()
+  });
+
+  return;
+}
+
 
   /* ===== ROLL DICE ===== */
 
