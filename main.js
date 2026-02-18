@@ -1098,9 +1098,10 @@ console.log("ROLL CHECK:", {
 });
 
       html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
-              ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
-              <strong>${player.name} (${player.country})</strong>
-              ${isCurrentTurn ? ' (Current Turn)' : ''}
+${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
+<strong>${player.name} (${player.country})</strong>
+${isCurrentTurn ? ' (Current Turn)' : ''}`;
+
 html += `<br>
 Money: $${player.money}
 <br>
