@@ -1101,13 +1101,18 @@ console.log("ROLL CHECK:", {
               ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
               <strong>${player.name} (${player.country})</strong>
               ${isCurrentTurn ? ' (Current Turn)' : ''}
-              <br>
-              Money: $${player.money}
-              <br>
-              Infrastructure: ${player.upgrades.transport}
-              <br>
-              Inventory:
-              <br>`;
+html += `<br>
+Money: $${player.money}
+<br>
+Transport: ${player.upgrades?.transport || 0}
+<br>
+Navigation: ${player.upgrades?.navigation || 0}
+<br>
+Weapons: ${player.upgrades?.weapons || 0}
+<br>
+Inventory:
+<br>`;
+
 
       if (!player.inventory || Object.keys(player.inventory).length === 0) {
         html += `None`;
