@@ -917,7 +917,20 @@ if (remaining <= 0) {
       const player = players[playerId];
       if (!player) return;
 
-      const isCurrentTurn = index === currentTurnIndex;
+     const isCurrentTurn = index === currentTurnIndex;
+
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 1
+) {
+  html += `
+    <br><strong>Would you like to make an upgrade?</strong><br>
+    <button id="upgradeYesBtn">Yes</button>
+    <button id="upgradeNoBtn">No</button>
+  `;
+}
+
       const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
 
 console.log("ROLL CHECK:", {
