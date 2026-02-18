@@ -699,6 +699,44 @@ await gamesRef.child(currentGameCode)
     movesRemaining: newMoves
   });
 
+    // === CASH IN CHECK ===
+
+const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+const updatedData = updatedSnap.val();
+const updatedPlayer = updatedData.players[currentPlayerId];
+
+if (
+  updatedPlayer.shipPosition === updatedPlayer.homePort &&
+  updatedPlayer.inventory &&
+  Object.keys(updatedPlayer.inventory).length > 0
+) {
+
+  let totalValue = 0;
+
+  for (let resource in updatedPlayer.inventory) {
+
+    const quantity = updatedPlayer.inventory[resource];
+    const baseValue = baseResourceValues[resource] || 0;
+    const multiplier = updatedPlayer.multipliers?.[resource] || 1;
+
+    totalValue += quantity * baseValue * multiplier;
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: (updatedPlayer.money || 0) + totalValue,
+      inventory: {},
+      movesRemaining: 0,
+      rollValue: null
+    });
+
+  await advanceTurn();
+  return;
+}
+
+
 if (newMoves === 0) {
   await advanceTurn();
 }
