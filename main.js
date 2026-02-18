@@ -373,7 +373,11 @@ await newPlayerRef.set({
   homePort: countryData[country].home,
   multipliers: countryData[country].multipliers,
   money: 0,
-  infrastructure: 0,
+  upgrades: {
+    transport: 0,
+    navigation: 0,
+    weapons: 0
+  },
   inventory: {},
   shipPosition: countryData[country].home,
   color,
@@ -381,6 +385,7 @@ await newPlayerRef.set({
   movesRemaining: 0,
   rollValue: null
 });
+
 
 
     currentPlayerId = newPlayerRef.key;
@@ -535,7 +540,9 @@ document.addEventListener("click", async function(event) {
 
     if (player.rollValue) return;
 
-    const roll = Math.floor(Math.random() * 6) + 1;
+    const maxRoll = 6 + ((player.upgrades?.navigation || 0) * 3);
+const roll = Math.floor(Math.random() * maxRoll) + 1;
+
 
     await gamesRef.child(currentGameCode).update({
       lastActive: Date.now()
@@ -806,7 +813,8 @@ async function startHarvestSelection(region) {
 
   const player = gameData.players[currentPlayerId];
 
-  const harvestCapacity = 1 + (player.infrastructure || 0);
+  const harvestCapacity = 1 + (player.upgrades?.transport || 0);
+
   let remaining = harvestCapacity;
 
   const resources = regionResources[region];
@@ -916,7 +924,7 @@ console.log("ROLL CHECK:", {
               <br>
               Money: $${player.money}
               <br>
-              Infrastructure: ${player.infrastructure}
+              Infrastructure: ${player.upgrades.transport}
               <br>
               Inventory:
               <br>`;
