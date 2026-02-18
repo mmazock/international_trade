@@ -482,6 +482,8 @@ leaveGameBtn.addEventListener("click", async () => {
 
       const newPhase = currentPhase + 1;
 
+      document.getElementById("messageBox").innerHTML = "";
+
 await gamesRef.child(currentGameCode).update({
   currentPhase: newPhase,
   lastActive: Date.now()
@@ -536,6 +538,10 @@ if (event.target && event.target.id === "upgradeNoBtn") {
 
   if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
 
+  // Clear upgrade UI
+  const messageBox = document.getElementById("messageBox");
+  messageBox.innerHTML = "";
+
   await gamesRef.child(currentGameCode).update({
     currentPhase: 2,
     lastActive: Date.now()
@@ -543,6 +549,7 @@ if (event.target && event.target.id === "upgradeNoBtn") {
 
   return;
 }
+
 
 if (event.target && event.target.id === "upgradeYesBtn") {
 
