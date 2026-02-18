@@ -184,6 +184,25 @@ const regionResources = {
   "Japan": ["Copper", "Coal"]
 };
 
+  /* =============================
+   BASE RESOURCE VALUES
+   ============================= */
+
+const baseResourceValues = {
+  "Diamonds": 70,
+  "Gold": 20,
+  "Ivory": 20,
+  "Oil": 70,
+  "Spices": 50,
+  "Cotton": 40,
+  "Rice": 60,
+  "Coal": 40,
+  "Iron": 20,
+  "Copper": 20,
+  "Silk": 80,
+  "Porcelain": 80
+};
+
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
