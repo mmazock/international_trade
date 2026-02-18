@@ -1104,11 +1104,11 @@ console.log("ROLL CHECK:", {
 html += `<br>
 Money: $${player.money}
 <br>
-Transport: ${player.upgrades?.transport || 0}
+Transport: ${(player.upgrades && player.upgrades.transport) || 0}
 <br>
-Navigation: ${player.upgrades?.navigation || 0}
+Navigation: ${(player.upgrades && player.upgrades.navigation) || 0}
 <br>
-Weapons: ${player.upgrades?.weapons || 0}
+Weapons: ${(player.upgrades && player.upgrades.weapons) || 0}
 <br>
 Inventory:
 <br>`;
