@@ -931,6 +931,9 @@ if (
   `;
 }
 
+
+
+
       const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
 
 console.log("ROLL CHECK:", {
