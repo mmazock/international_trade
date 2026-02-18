@@ -522,6 +522,43 @@ await gamesRef.child(currentGameCode).update({
    ============================= */
 
 document.addEventListener("click", async function(event) {
+/* ===== UPGRADE PHASE PROMPT ===== */
+
+if (event.target && event.target.id === "upgradeNoBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  if (!gameData || gameData.currentPhase !== 1) return;
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  await gamesRef.child(currentGameCode).update({
+    currentPhase: 2,
+    lastActive: Date.now()
+  });
+
+  return;
+}
+
+if (event.target && event.target.id === "upgradeYesBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  if (!gameData || gameData.currentPhase !== 1) return;
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  showUpgradeOptions();
+  return;
+}
 
   /* ===== ROLL DICE ===== */
 
