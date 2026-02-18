@@ -206,14 +206,68 @@ const baseResourceValues = {
 
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
-  const countryData = {
-    Spain: { home: "C2" },
-    Portugal: { home: "C3" },
-    France: { home: "D2" },
-    England: { home: "C1" },
-    Germany: { home: "D1" },
-    Italy: { home: "E2" }
-  };
+const countryData = {
+
+  Spain: {
+    home: "C2",
+    multipliers: {
+      "Gold": 1.5,
+      "Ivory": 1,
+      "Spices": 0.5,
+      "Copper": 1
+    }
+  },
+
+  Portugal: {
+    home: "C3",
+    multipliers: {
+      "Rice": 2,
+      "Silk": 1.5,
+      "Ivory": 0.5
+    }
+  },
+
+  England: {
+    home: "C1",
+    multipliers: {
+      "Porcelain": 2,
+      "Silk": 2,
+      "Gold": 0.5,
+      "Copper": 0.5
+    }
+  },
+
+  France: {
+    home: "D2",
+    multipliers: {
+      "Cotton": 1.5,
+      "Rice": 1.5,
+      "Spices": 0.5,
+      "Ivory": 0.5
+    }
+  },
+
+  Italy: {
+    home: "E2",
+    multipliers: {
+      "Gold": 1.5,
+      "Spices": 2,
+      "Silk": 1.5,
+      "Rice": 1.5
+    }
+  },
+
+  Germany: {
+    home: "D1",
+    multipliers: {
+      "Oil": 1.5,
+      "Coal": 1.5,
+      "Diamonds": 1.5
+    }
+  }
+
+};
+
 
   const originalWidth = 275;
   const originalHeight = 150;
@@ -313,19 +367,21 @@ const baseResourceValues = {
 
     const newPlayerRef = gamesRef.child(code).child("players").push();
 
-    await newPlayerRef.set({
-      name,
-      country,
-      homePort: countryData[country].home,
-      money: 0,
-      infrastructure: 0,
-      inventory: {},
-      shipPosition: countryData[country].home,
-      color,
-      initials,
-      movesRemaining: 0,
-      rollValue: null
-    });
+await newPlayerRef.set({
+  name,
+  country,
+  homePort: countryData[country].home,
+  multipliers: countryData[country].multipliers,
+  money: 0,
+  infrastructure: 0,
+  inventory: {},
+  shipPosition: countryData[country].home,
+  color,
+  initials,
+  movesRemaining: 0,
+  rollValue: null
+});
+
 
     currentPlayerId = newPlayerRef.key;
 
