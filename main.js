@@ -740,7 +740,8 @@ const roll = Math.floor(Math.random() * maxRoll) + 1;
       }
     }, 15000);
 
-const countryGuess = prompt("Name a country in " + region + ":");
+const countryGuess = prompt("Name a country at this location:");
+
 
 answered = true;
 clearTimeout(timer);
@@ -777,16 +778,28 @@ async function advanceTurn() {
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
+  const oldPlayerId = gameData.turnOrder[gameData.currentTurnIndex];
+
   let nextTurn = gameData.currentTurnIndex + 1;
   let newRound = gameData.round || 1;
 
   if (nextTurn >= gameData.turnOrder.length) {
     nextTurn = 0;
-    newRound += 1;   // Full cycle complete
+    newRound += 1;
   }
 
   const nextPlayerId = gameData.turnOrder[nextTurn];
 
+  // Reset old player movement state
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(oldPlayerId)
+    .update({
+      movesRemaining: 0,
+      rollValue: null
+    });
+
+  // Switch turn + phase + round
   await gamesRef.child(currentGameCode).update({
     currentTurnIndex: nextTurn,
     currentPhase: 0,
@@ -794,6 +807,7 @@ async function advanceTurn() {
     lastActive: Date.now()
   });
 
+  // Initialize next player movement state
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(nextPlayerId)
@@ -802,6 +816,7 @@ async function advanceTurn() {
       rollValue: null
     });
 }
+
 
 
 
