@@ -490,15 +490,6 @@ await gamesRef.child(currentGameCode).update({
 });
 
 
-      if (newPhase === 2) {
-        await gamesRef.child(currentGameCode)
-          .child("players")
-          .child(currentPlayerId)
-          .update({
-            movesRemaining: 0,
-            rollValue: null
-          });
-      }
 
     } else {
 
@@ -787,12 +778,17 @@ async function advanceTurn() {
   let nextTurn = gameData.currentTurnIndex + 1;
   if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
 
+  const nextPlayerId = gameData.turnOrder[nextTurn];
+
   await gamesRef.child(currentGameCode).update({
     currentTurnIndex: nextTurn,
     currentPhase: 0,
     lastActive: Date.now()
   });
+
+
 }
+
 
 
   /* =============================
@@ -896,8 +892,6 @@ if (
     .update({
       money: (updatedPlayer.money || 0) + totalValue,
       inventory: {},
-      movesRemaining: 0,
-      rollValue: null
     });
 
   await advanceTurn();
