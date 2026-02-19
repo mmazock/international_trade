@@ -322,13 +322,15 @@ const countryData = {
 
   createGameBtn.addEventListener("click", async () => {
     const code = Math.random().toString(36).substring(2,7).toUpperCase();
-   await gamesRef.child(code).set({
+await gamesRef.child(code).set({
   players: {},
   turnOrder: [],
   currentTurnIndex: 0,
   currentPhase: 0,
+  round: 1,
   lastActive: Date.now()
 });
+
 
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
@@ -776,18 +778,22 @@ async function advanceTurn() {
   const gameData = gameSnap.val();
 
   let nextTurn = gameData.currentTurnIndex + 1;
-  if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
+  let newRound = gameData.round || 1;
+
+  if (nextTurn >= gameData.turnOrder.length) {
+    nextTurn = 0;
+    newRound += 1;   // Full cycle complete
+  }
 
   const nextPlayerId = gameData.turnOrder[nextTurn];
 
-  // Switch turn + phase
   await gamesRef.child(currentGameCode).update({
     currentTurnIndex: nextTurn,
     currentPhase: 0,
+    round: newRound,
     lastActive: Date.now()
   });
 
-  // Reset the NEXT player's movement state
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(nextPlayerId)
@@ -796,6 +802,7 @@ async function advanceTurn() {
       rollValue: null
     });
 }
+
 
 
 
@@ -1068,9 +1075,12 @@ if (remaining <= 0) {
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
     const currentPhase = gameData.currentPhase || 0;
+    const roundNumber = gameData.round || 1;
+
 
     const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
-    phaseDisplay.textContent = phaseNames[currentPhase];
+    phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
+
 
     if (players[currentPlayerId]) {
       const me = players[currentPlayerId];
