@@ -780,14 +780,23 @@ async function advanceTurn() {
 
   const nextPlayerId = gameData.turnOrder[nextTurn];
 
+  // Switch turn + phase
   await gamesRef.child(currentGameCode).update({
     currentTurnIndex: nextTurn,
     currentPhase: 0,
     lastActive: Date.now()
   });
 
-
+  // Reset the NEXT player's movement state
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(nextPlayerId)
+    .update({
+      movesRemaining: 0,
+      rollValue: null
+    });
 }
+
 
 
 
