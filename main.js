@@ -1294,4 +1294,60 @@ function resolveBattle(attackerId, defenderId, gameData) {
     };
   }
 }
+/* =============================
+   BATTLE ANIMATION ENGINE
+   ============================= */
+
+function runBattleAnimation(gameData) {
+
+  const battle = gameData.battle;
+  const stageDiv = document.getElementById("battleStage");
+  if (!stageDiv) return;
+
+  if (battle.stage === "start") {
+
+    stageDiv.innerHTML = "<p>Rolling for attacker...</p>";
+
+    setTimeout(async () => {
+      await gamesRef.child(currentGameCode).child("battle").update({
+        stage: "attackerRevealed"
+      });
+    }, 1000);
+
+  }
+
+  else if (battle.stage === "attackerRevealed") {
+
+    stageDiv.innerHTML = `
+      <p>Attacker rolled: <strong>${battle.attackerRoll}</strong></p>
+      <p>Rolling for defender...</p>
+    `;
+
+    setTimeout(async () => {
+      await gamesRef.child(currentGameCode).child("battle").update({
+        stage: "defenderRevealed"
+      });
+    }, 1000);
+
+  }
+
+  else if (battle.stage === "defenderRevealed") {
+
+    stageDiv.innerHTML = `
+      <p>Attacker rolled: <strong>${battle.attackerRoll}</strong></p>
+      <p>Defender rolled: <strong>${battle.defenderRoll}</strong></p>
+      <p><strong>${gameData.players[battle.winnerId].name} wins!</strong></p>
+    `;
+
+    if (battle.winnerId === currentPlayerId) {
+
+      stageDiv.innerHTML += `
+        <br>
+        <button id="battleDestroy">Destroy Ship</button><br><br>
+        <button id="battlePlunder">Plunder Cargo</button><br><br>
+        <button id="battleMoveOn">Move On</button>
+      `;
+    }
+  }
+}  
 });
