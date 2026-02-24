@@ -888,19 +888,22 @@ if (defendingPlayerId) {
   }
 
   // Resolve battle
-  const battleResult = resolveBattle(currentPlayerId, defendingPlayerId, gameData);
+// Resolve battle but store in Firebase instead of alerting
+const battleResult = resolveBattle(currentPlayerId, defendingPlayerId, gameData);
 
-  alert(
-    `Battle Result:\n` +
-    `Attacker rolled ${battleResult.attackerRoll}\n` +
-    `Defender rolled ${battleResult.defenderRoll}\n\n` +
-    `Winner: ${players[battleResult.winner].name}`
-  );
+await gamesRef.child(currentGameCode).update({
+  battle: {
+    attackerId: currentPlayerId,
+    defenderId: defendingPlayerId,
+    attackerRoll: battleResult.attackerRoll,
+    defenderRoll: battleResult.defenderRoll,
+    winnerId: battleResult.winner,
+    stage: "start"
+  },
+  lastActive: Date.now()
+});
 
-  // For now, stop here.
-  // We will implement consequences next.
-
-  return;
+return;
 }
     if (!waterSquares.has(target)) return;
 
