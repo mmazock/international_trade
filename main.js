@@ -858,6 +858,7 @@ async function advanceTurn() {
     );
 
     const target = colObj.letter + rowObj.row;
+    console.log("Clicked target:", target);
 // === CHECK FOR BATTLE ===
 
 const players = gameData.players || {};
