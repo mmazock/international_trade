@@ -858,7 +858,49 @@ async function advanceTurn() {
     );
 
     const target = colObj.letter + rowObj.row;
+// === CHECK FOR BATTLE ===
 
+const players = gameData.players || {};
+let defendingPlayerId = null;
+
+for (let id in players) {
+  if (id !== currentPlayerId && players[id].shipPosition === target) {
+    defendingPlayerId = id;
+    break;
+  }
+}
+
+if (defendingPlayerId) {
+
+  const defender = players[defendingPlayerId];
+
+  // Cannot attack in defender's home port
+  if (target === defender.homePort) {
+    alert("This player is in their home waters and cannot be attacked.");
+    return;
+  }
+
+  const proceed = confirm(`Warning: this move will initiate a battle with ${defender.color} team. Proceed?`);
+
+  if (!proceed) {
+    return;
+  }
+
+  // Resolve battle
+  const battleResult = resolveBattle(currentPlayerId, defendingPlayerId, gameData);
+
+  alert(
+    `Battle Result:\n` +
+    `Attacker rolled ${battleResult.attackerRoll}\n` +
+    `Defender rolled ${battleResult.defenderRoll}\n\n` +
+    `Winner: ${players[battleResult.winner].name}`
+  );
+
+  // For now, stop here.
+  // We will implement consequences next.
+
+  return;
+}
     if (!waterSquares.has(target)) return;
 
     const currentPos = player.shipPosition;
