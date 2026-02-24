@@ -1192,5 +1192,42 @@ if (
       renderShips(latestGameData);
     }
   });
+/* =============================
+   BATTLE ENGINE CORE
+   ============================= */
 
+function resolveBattle(attackerId, defenderId, gameData) {
+
+  const attacker = gameData.players[attackerId];
+  const defender = gameData.players[defenderId];
+
+  const baseMax = 5;
+
+  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
+  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
+
+  const attackerRoll = Math.floor(Math.random() * attackerMax) + 1;
+  const defenderRoll = Math.floor(Math.random() * defenderMax) + 1;
+
+  console.log("BATTLE RESULT:");
+  console.log("Attacker rolled:", attackerRoll, " / max:", attackerMax);
+  console.log("Defender rolled:", defenderRoll, " / max:", defenderMax);
+
+  if (attackerRoll > defenderRoll) {
+    return {
+      winner: attackerId,
+      loser: defenderId,
+      attackerRoll,
+      defenderRoll
+    };
+  } else {
+    // Defender wins ties
+    return {
+      winner: defenderId,
+      loser: attackerId,
+      attackerRoll,
+      defenderRoll
+    };
+  }
+}
 });
