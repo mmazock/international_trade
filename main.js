@@ -1131,7 +1131,25 @@ if (remaining <= 0) {
 }
 
   function renderLedger(gameData) {
+  // === BATTLE MODE OVERRIDE ===
+  if (gameData.battle) {
 
+    const battle = gameData.battle;
+    const attacker = gameData.players[battle.attackerId];
+    const defender = gameData.players[battle.defenderId];
+
+    inventoryList.innerHTML = `
+      <div style="text-align:center;">
+        <h2>BATTLE</h2>
+        <p><strong>${attacker.name}</strong> vs <strong>${defender.name}</strong></p>
+        <div id="battleStage"></div>
+      </div>
+    `;
+
+    runBattleAnimation(gameData);
+
+    return;
+  }
     const players = gameData.players || {};
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
