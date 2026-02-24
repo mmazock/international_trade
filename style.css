@@ -35,3 +35,8 @@ body {
 #map-container {
   position: relative;
 }
+
+.ship {
+  pointer-events: none;
+  user-select: none;
+}
