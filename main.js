@@ -1219,33 +1219,7 @@ if (remaining <= 0) {
       </div>
     `;
 
-   function runBattleAnimation(gameData) {
 
-  const overlay = document.getElementById("battleOverlay");
-  const battle = gameData.battle;
-  if (!overlay) return;
-
-  overlay.style.display = "flex";
-
-  const attacker = gameData.players[battle.attackerId];
-  const defender = gameData.players[battle.defenderId];
-
-  const baseMax = 5;
-  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
-  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
-
-  // === AWAITING ATTACKER ROLL ===
-  if (battle.stage === "awaitingAttackerRoll") {
-
-    overlay.innerHTML = `
-      <h1>BATTLE</h1>
-      <h2>${attacker.name} (ATTACK)</h2>
-      ${currentPlayerId === battle.attackerId
-        ? `<button id="rollAttackBtn">ROLL ATTACK</button>`
-        : `<p>Waiting for attacker to roll...</p>`}
-    `;
-
-  }
 
   // === AWAITING DEFENDER ROLL ===
   else if (battle.stage === "awaitingDefenderRoll") {
@@ -1356,7 +1330,33 @@ if (
 /* =============================
    BATTLE ENGINE CORE
    ============================= */
+   function runBattleAnimation(gameData) {
 
+  const overlay = document.getElementById("battleOverlay");
+  const battle = gameData.battle;
+  if (!overlay) return;
+
+  overlay.style.display = "flex";
+
+  const attacker = gameData.players[battle.attackerId];
+  const defender = gameData.players[battle.defenderId];
+
+  const baseMax = 5;
+  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
+  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
+
+  // === AWAITING ATTACKER ROLL ===
+  if (battle.stage === "awaitingAttackerRoll") {
+
+    overlay.innerHTML = `
+      <h1>BATTLE</h1>
+      <h2>${attacker.name} (ATTACK)</h2>
+      ${currentPlayerId === battle.attackerId
+        ? `<button id="rollAttackBtn">ROLL ATTACK</button>`
+        : `<p>Waiting for attacker to roll...</p>`}
+    `;
+
+  }
 function resolveBattle(attackerId, defenderId, gameData) {
 
   const attacker = gameData.players[attackerId];
