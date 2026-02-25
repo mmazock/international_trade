@@ -1204,37 +1204,31 @@ if (remaining <= 0) {
 }
 
   function renderLedger(gameData) {
+
   // === BATTLE MODE OVERRIDE ===
   if (gameData.battle) {
-
-
-
-    overlay.innerHTML = `
-      <h1>BATTLE RESULT</h1>
-      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
-      <h2>${defender.name}: ${battle.defenderRoll}</h2>
-      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
-    `;
-
-    if (currentPlayerId === battle.attackerId) {
-      setTimeout(async () => {
-        await gamesRef.child(currentGameCode).child("battle").update({
-          stage: "decision"
-        });
-      }, 2000);
-    }
+    runBattleAnimation(gameData);
+    return;
   }
 
-  else if (battle.stage === "decision") {
-    overlay.style.display = "none";
-  }
-}
+  const players = gameData.players || {};
+  const turnOrder = gameData.turnOrder || [];
+  const currentTurnIndex = gameData.currentTurnIndex || 0;
+  const currentPhase = gameData.currentPhase || 0;
+  const roundNumber = gameData.round || 1;
 
+  const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
+  phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
 
+  let html = "";
 
+  turnOrder.forEach((playerId, index) => {
 
-      const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
+    const player = players[playerId];
+    if (!player) return;
 
+    const isCurrentTurn = index === currentTurnIndex;
+    const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
 console.log("ROLL CHECK:", {
   isCurrentTurn,
   playerId,
