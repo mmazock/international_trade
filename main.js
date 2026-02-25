@@ -635,16 +635,6 @@ if (event.target && event.target.id === "battleDestroy") {
 // === MOVE ON ===
 if (event.target && event.target.id === "battleMoveOn") {
 
-  await gamesRef.child(currentGameCode).update({
-    battle: null
-  });
-
-  await advanceTurn();
-}
-
-// === PLUNDER ===
-if (event.target && event.target.id === "battlePlunder") {
-
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
   const battle = gameData.battle;
@@ -654,24 +644,15 @@ if (event.target && event.target.id === "battlePlunder") {
     ? battle.defenderId
     : battle.attackerId;
 
-  const winner = gameData.players[winnerId];
-  const loser = gameData.players[loserId];
-
-  const loserInventory = loser.inventory || {};
-  const winnerInventory = winner.inventory || {};
-
-  // Transfer all cargo
-  for (let resource in loserInventory) {
-    winnerInventory[resource] =
-      (winnerInventory[resource] || 0) + loserInventory[resource];
-  }
-
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(winnerId)
-    .update({
-      inventory: winnerInventory
-    });
+  await gamesRef.child(currentGameCode).update({
+    battle: {
+      ...battle,
+      stage: "displacement",
+      displacedPlayerId: loserId,
+      originSquare: gameData.players[winnerId].shipPosition
+    }
+  });
+}
 
   await gamesRef.child(currentGameCode)
     .child("players")
@@ -986,37 +967,58 @@ async function advanceTurn() {
 
   mapImage.addEventListener("click", async function(event) {
 
-    const gameSnap = await gamesRef.child(currentGameCode).once("value");
-    const gameData = gameSnap.val();
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
 
-    if (gameData.currentPhase !== 2) return;
+  const rect = mapImage.getBoundingClientRect();
+  const xPercent = (event.clientX - rect.left) / rect.width;
+  const yPercent = (event.clientY - rect.top) / rect.height;
 
-    const turnOrder = gameData.turnOrder;
-    const currentTurnIndex = gameData.currentTurnIndex;
+  const colObj = columnPixels.reduce((a,b)=>
+    Math.abs((b.x/originalWidth) - xPercent) <
+    Math.abs((a.x/originalWidth) - xPercent) ? b : a
+  );
 
-    if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+  const rowObj = rowPixels.reduce((a,b)=>
+    Math.abs((b.y/originalHeight) - yPercent) <
+    Math.abs((a.y/originalHeight) - yPercent) ? b : a
+  );
 
-    const player = gameData.players[currentPlayerId];
+  const target = colObj.letter + rowObj.row;
 
-    if (!player.movesRemaining || player.movesRemaining <= 0) return;
+  // === DISPLACEMENT MODE ===
+  if (gameData.battle && gameData.battle.stage === "displacement") {
 
-    const rect = mapImage.getBoundingClientRect();
+    const battle = gameData.battle;
 
-    const xPercent = (event.clientX - rect.left) / rect.width;
-    const yPercent = (event.clientY - rect.top) / rect.height;
+    if (battle.winnerId !== currentPlayerId) return;
 
-    const colObj = columnPixels.reduce((a,b)=>
-      Math.abs((b.x/originalWidth) - xPercent) <
-      Math.abs((a.x/originalWidth) - xPercent) ? b : a
-    );
+    const origin = battle.originSquare;
 
-    const rowObj = rowPixels.reduce((a,b)=>
-      Math.abs((b.y/originalHeight) - yPercent) <
-      Math.abs((a.y/originalHeight) - yPercent) ? b : a
-    );
+    const colDiff = target.charCodeAt(0) - origin.charCodeAt(0);
+    const rowDiff = parseInt(target.slice(1)) - parseInt(origin.slice(1));
 
-    const target = colObj.letter + rowObj.row;
-    console.log("Clicked target:", target);
+    const isAdjacent =
+      (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+      (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+    if (!isAdjacent) return;
+    if (!waterSquares.has(target)) return;
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(battle.displacedPlayerId)
+      .update({ shipPosition: target });
+
+    await gamesRef.child(currentGameCode).update({
+      battle: null
+    });
+
+    await advanceTurn();
+    return;
+  }
+
+  // --- NORMAL MOVEMENT CONTINUES BELOW ---
 // === CHECK FOR BATTLE ===
 
 const players = gameData.players || {};
@@ -1433,8 +1435,6 @@ async function runBattleAnimation(gameData) {
   const defender = gameData.players[battle.defenderId];
 
   const baseMax = 5;
-  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
-  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
 
   // === AWAITING ATTACKER ROLL ===
   if (battle.stage === "awaitingAttackerRoll") {
@@ -1462,38 +1462,44 @@ async function runBattleAnimation(gameData) {
   }
 
   // === RESULT ===
-else if (battle.stage === "result") {
+  else if (battle.stage === "result") {
 
-  overlay.innerHTML = `
-    <h1>BATTLE RESULT</h1>
-    <h2>${attacker.name}: ${battle.attackerRoll}</h2>
-    <h2>${defender.name}: ${battle.defenderRoll}</h2>
-    <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
-  `;
+    overlay.innerHTML = `
+      <h1>BATTLE RESULT</h1>
+      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+      <h2>${defender.name}: ${battle.defenderRoll}</h2>
+      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
+    `;
 
-  // End attacker movement immediately
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(battle.attackerId)
-    .update({
-      movesRemaining: 0
-    });
+    // End attacker movement
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(battle.attackerId)
+      .update({ movesRemaining: 0 });
 
-  if (currentPlayerId === battle.attackerId) {
-    setTimeout(async () => {
-      await gamesRef.child(currentGameCode).child("battle").update({
-        stage: "decision"
-      });
-    }, 2000);
+    if (currentPlayerId === battle.attackerId) {
+      setTimeout(async () => {
+        await gamesRef.child(currentGameCode).child("battle").update({
+          stage: "decision"
+        });
+      }, 2000);
+    }
   }
-}
 
   // === DECISION ===
   else if (battle.stage === "decision") {
     overlay.style.display = "none";
   }
-}
 
+  // === DISPLACEMENT ===
+  else if (battle.stage === "displacement") {
+
+    overlay.innerHTML = `
+      <h1>DISPLACEMENT</h1>
+      <h2>Select adjacent water square for defeated ship.</h2>
+    `;
+  }
+}
 /* =============================
    BATTLE RESOLUTION (UTILITY)
    ============================= */
