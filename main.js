@@ -1299,6 +1299,7 @@ function resolveBattle(attackerId, defenderId, gameData) {
    ============================= */
 
 function runBattleAnimation(gameData) {
+
   const overlay = document.getElementById("battleOverlay");
   const battle = gameData.battle;
 
@@ -1309,13 +1310,10 @@ function runBattleAnimation(gameData) {
   const attacker = gameData.players[battle.attackerId];
   const defender = gameData.players[battle.defenderId];
 
-  // STAGE: BATTLE TITLE
   if (battle.stage === "start") {
 
     overlay.innerHTML = `
-      <h1 style="font-size:60px; animation: fadeIn 1s ease-in-out;">
-        BATTLE!
-      </h1>
+      <h1 style="font-size:60px;">BATTLE!</h1>
     `;
 
     if (currentPlayerId === battle.attackerId) {
@@ -1327,7 +1325,6 @@ function runBattleAnimation(gameData) {
     }
   }
 
-  // STAGE: ATTACKER REVEAL
   else if (battle.stage === "attackerReveal") {
 
     overlay.innerHTML = `
@@ -1354,7 +1351,6 @@ function runBattleAnimation(gameData) {
     }
   }
 
-  // STAGE: DEFENDER REVEAL
   else if (battle.stage === "defenderReveal") {
 
     overlay.innerHTML = `
@@ -1384,44 +1380,8 @@ function runBattleAnimation(gameData) {
     }
   }
 
-  // STAGE: DECISION (hide overlay, return to ledger)
   else if (battle.stage === "decision") {
     overlay.style.display = "none";
   }
-  }
-
-  else if (battle.stage === "attackerRevealed") {
-
-    stageDiv.innerHTML = `
-      <p>Attacker rolled: <strong>${battle.attackerRoll}</strong></p>
-      <p>Rolling for defender...</p>
-    `;
-
-    setTimeout(async () => {
-      await gamesRef.child(currentGameCode).child("battle").update({
-        stage: "defenderRevealed"
-      });
-    }, 1000);
-
-  }
-
-  else if (battle.stage === "defenderRevealed") {
-
-    stageDiv.innerHTML = `
-      <p>Attacker rolled: <strong>${battle.attackerRoll}</strong></p>
-      <p>Defender rolled: <strong>${battle.defenderRoll}</strong></p>
-      <p><strong>${gameData.players[battle.winnerId].name} wins!</strong></p>
-    `;
-
-    if (battle.winnerId === currentPlayerId) {
-
-      stageDiv.innerHTML += `
-        <br>
-        <button id="battleDestroy">Destroy Ship</button><br><br>
-        <button id="battlePlunder">Plunder Cargo</button><br><br>
-        <button id="battleMoveOn">Move On</button>
-      `;
-    }
-  }
-}  
+}
 });
