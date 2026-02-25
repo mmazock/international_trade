@@ -1207,35 +1207,7 @@ if (remaining <= 0) {
   // === BATTLE MODE OVERRIDE ===
   if (gameData.battle) {
 
-    const battle = gameData.battle;
-    const attacker = gameData.players[battle.attackerId];
-    const defender = gameData.players[battle.defenderId];
 
-    inventoryList.innerHTML = `
-      <div style="text-align:center;">
-        <h2>BATTLE</h2>
-        <p><strong>${attacker.name}</strong> vs <strong>${defender.name}</strong></p>
-        <div id="battleStage"></div>
-      </div>
-    `;
-
-
-
-  // === AWAITING DEFENDER ROLL ===
-  else if (battle.stage === "awaitingDefenderRoll") {
-
-    overlay.innerHTML = `
-      <h1>BATTLE</h1>
-      <h2>Attacker rolled: ${battle.attackerRoll}</h2>
-      <h2>${defender.name} (DEFENSE)</h2>
-      ${currentPlayerId === battle.defenderId
-        ? `<button id="rollDefenseBtn">ROLL DEFENSE</button>`
-        : `<p>Waiting for defender to roll...</p>`}
-    `;
-  }
-
-  // === RESULT STAGE ===
-  else if (battle.stage === "result") {
 
     overlay.innerHTML = `
       <h1>BATTLE RESULT</h1>
