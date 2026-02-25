@@ -1299,21 +1299,95 @@ function resolveBattle(attackerId, defenderId, gameData) {
    ============================= */
 
 function runBattleAnimation(gameData) {
-
+  const overlay = document.getElementById("battleOverlay");
   const battle = gameData.battle;
-  const stageDiv = document.getElementById("battleStage");
-  if (!stageDiv) return;
 
+  if (!overlay) return;
+
+  overlay.style.display = "flex";
+
+  const attacker = gameData.players[battle.attackerId];
+  const defender = gameData.players[battle.defenderId];
+
+  // STAGE: BATTLE TITLE
   if (battle.stage === "start") {
 
-    stageDiv.innerHTML = "<p>Rolling for attacker...</p>";
+    overlay.innerHTML = `
+      <h1 style="font-size:60px; animation: fadeIn 1s ease-in-out;">
+        BATTLE!
+      </h1>
+    `;
 
-    setTimeout(async () => {
-      await gamesRef.child(currentGameCode).child("battle").update({
-        stage: "attackerRevealed"
-      });
-    }, 1000);
+    if (currentPlayerId === battle.attackerId) {
+      setTimeout(async () => {
+        await gamesRef.child(currentGameCode).child("battle").update({
+          stage: "attackerReveal"
+        });
+      }, 2000);
+    }
+  }
 
+  // STAGE: ATTACKER REVEAL
+  else if (battle.stage === "attackerReveal") {
+
+    overlay.innerHTML = `
+      <div style="display:flex; width:80%; justify-content:space-between;">
+        <div style="width:45%; text-align:center;">
+          <h2>ATTACK</h2>
+          <p style="font-size:40px;">${attacker.name}</p>
+          <p style="font-size:50px;">${battle.attackerRoll}</p>
+        </div>
+        <div style="width:45%; text-align:center;">
+          <h2>DEFENSE</h2>
+          <p style="font-size:40px;">${defender.name}</p>
+          <p style="font-size:50px;">?</p>
+        </div>
+      </div>
+    `;
+
+    if (currentPlayerId === battle.attackerId) {
+      setTimeout(async () => {
+        await gamesRef.child(currentGameCode).child("battle").update({
+          stage: "defenderReveal"
+        });
+      }, 2000);
+    }
+  }
+
+  // STAGE: DEFENDER REVEAL
+  else if (battle.stage === "defenderReveal") {
+
+    overlay.innerHTML = `
+      <div style="display:flex; width:80%; justify-content:space-between;">
+        <div style="width:45%; text-align:center;">
+          <h2>ATTACK</h2>
+          <p style="font-size:40px;">${attacker.name}</p>
+          <p style="font-size:50px;">${battle.attackerRoll}</p>
+        </div>
+        <div style="width:45%; text-align:center;">
+          <h2>DEFENSE</h2>
+          <p style="font-size:40px;">${defender.name}</p>
+          <p style="font-size:50px;">${battle.defenderRoll}</p>
+        </div>
+      </div>
+      <h2 style="margin-top:40px;">
+        ${gameData.players[battle.winnerId].name} WINS!
+      </h2>
+    `;
+
+    if (currentPlayerId === battle.attackerId) {
+      setTimeout(async () => {
+        await gamesRef.child(currentGameCode).child("battle").update({
+          stage: "decision"
+        });
+      }, 2000);
+    }
+  }
+
+  // STAGE: DECISION (hide overlay, return to ledger)
+  else if (battle.stage === "decision") {
+    overlay.style.display = "none";
+  }
   }
 
   else if (battle.stage === "attackerRevealed") {
