@@ -1291,7 +1291,7 @@ if (
       html += `</div>`;
     });
 
-    inventoryList.innerHTML = html;
+       inventoryList.innerHTML = html;
   }
 
   window.addEventListener("resize", () => {
@@ -1299,10 +1299,12 @@ if (
       renderShips(latestGameData);
     }
   });
+
 /* =============================
-   BATTLE ENGINE CORE
+   BATTLE ANIMATION ENGINE
    ============================= */
-   function runBattleAnimation(gameData) {
+
+function runBattleAnimation(gameData) {
 
   const overlay = document.getElementById("battleOverlay");
   const battle = gameData.battle;
@@ -1327,120 +1329,29 @@ if (
         ? `<button id="rollAttackBtn">ROLL ATTACK</button>`
         : `<p>Waiting for attacker to roll...</p>`}
     `;
-
   }
-   }
-function resolveBattle(attackerId, defenderId, gameData) {
 
-  const attacker = gameData.players[attackerId];
-  const defender = gameData.players[defenderId];
-
-  const baseMax = 5;
-
-  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
-  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
-
-  const attackerRoll = Math.floor(Math.random() * attackerMax) + 1;
-  const defenderRoll = Math.floor(Math.random() * defenderMax) + 1;
-
-  console.log("BATTLE RESULT:");
-  console.log("Attacker rolled:", attackerRoll, " / max:", attackerMax);
-  console.log("Defender rolled:", defenderRoll, " / max:", defenderMax);
-
-  if (attackerRoll > defenderRoll) {
-    return {
-      winner: attackerId,
-      loser: defenderId,
-      attackerRoll,
-      defenderRoll
-    };
-  } else {
-    // Defender wins ties
-    return {
-      winner: defenderId,
-      loser: attackerId,
-      attackerRoll,
-      defenderRoll
-    };
-  }
-}
-/* =============================
-   BATTLE ANIMATION ENGINE
-   ============================= */
-
-function runBattleAnimation(gameData) {
-
-  const overlay = document.getElementById("battleOverlay");
-  const battle = gameData.battle;
-
-console.log("Battle stage:", battle.stage);
-  
-  if (!overlay) return;
-
-  overlay.style.display = "flex";
-
-  const attacker = gameData.players[battle.attackerId];
-  const defender = gameData.players[battle.defenderId];
-
-  if (battle.stage === "start") {
+  // === AWAITING DEFENDER ROLL ===
+  else if (battle.stage === "awaitingDefenderRoll") {
 
     overlay.innerHTML = `
-      <h1 style="font-size:60px;">BATTLE!</h1>
+      <h1>BATTLE</h1>
+      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+      <h2>${defender.name} (DEFENSE)</h2>
+      ${currentPlayerId === battle.defenderId
+        ? `<button id="rollDefenseBtn">ROLL DEFENSE</button>`
+        : `<p>Waiting for defender to roll...</p>`}
     `;
-
-    if (currentPlayerId === battle.attackerId) {
-      setTimeout(async () => {
-        await gamesRef.child(currentGameCode).child("battle").update({
-          stage: "attackerReveal"
-        });
-      }, 2000);
-    }
   }
 
-  else if (battle.stage === "attackerReveal") {
+  // === RESULT ===
+  else if (battle.stage === "result") {
 
     overlay.innerHTML = `
-      <div style="display:flex; width:80%; justify-content:space-between;">
-        <div style="width:45%; text-align:center;">
-          <h2>ATTACK</h2>
-          <p style="font-size:40px;">${attacker.name}</p>
-          <p style="font-size:50px;">${battle.attackerRoll}</p>
-        </div>
-        <div style="width:45%; text-align:center;">
-          <h2>DEFENSE</h2>
-          <p style="font-size:40px;">${defender.name}</p>
-          <p style="font-size:50px;">?</p>
-        </div>
-      </div>
-    `;
-
-    if (currentPlayerId === battle.attackerId) {
-      setTimeout(async () => {
-        await gamesRef.child(currentGameCode).child("battle").update({
-          stage: "defenderReveal"
-        });
-      }, 2000);
-    }
-  }
-
-  else if (battle.stage === "defenderReveal") {
-
-    overlay.innerHTML = `
-      <div style="display:flex; width:80%; justify-content:space-between;">
-        <div style="width:45%; text-align:center;">
-          <h2>ATTACK</h2>
-          <p style="font-size:40px;">${attacker.name}</p>
-          <p style="font-size:50px;">${battle.attackerRoll}</p>
-        </div>
-        <div style="width:45%; text-align:center;">
-          <h2>DEFENSE</h2>
-          <p style="font-size:40px;">${defender.name}</p>
-          <p style="font-size:50px;">${battle.defenderRoll}</p>
-        </div>
-      </div>
-      <h2 style="margin-top:40px;">
-        ${gameData.players[battle.winnerId].name} WINS!
-      </h2>
+      <h1>BATTLE RESULT</h1>
+      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+      <h2>${defender.name}: ${battle.defenderRoll}</h2>
+      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
     `;
 
     if (currentPlayerId === battle.attackerId) {
@@ -1452,8 +1363,33 @@ console.log("Battle stage:", battle.stage);
     }
   }
 
+  // === DECISION ===
   else if (battle.stage === "decision") {
     overlay.style.display = "none";
   }
 }
+
+/* =============================
+   BATTLE RESOLUTION (UTILITY)
+   ============================= */
+
+function resolveBattle(attackerId, defenderId, gameData) {
+
+  const attacker = gameData.players[attackerId];
+  const defender = gameData.players[defenderId];
+
+  const baseMax = 5;
+  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
+  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
+
+  const attackerRoll = Math.floor(Math.random() * attackerMax) + 1;
+  const defenderRoll = Math.floor(Math.random() * defenderMax) + 1;
+
+  if (attackerRoll > defenderRoll) {
+    return { winner: attackerId, loser: defenderId, attackerRoll, defenderRoll };
+  } else {
+    return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
+  }
+}
+
 });
