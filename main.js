@@ -528,6 +528,79 @@ await gamesRef.child(currentGameCode).update({
    ============================= */
 
 document.addEventListener("click", async function(event) {
+  // === ROLL ATTACK ===
+if (event.target && event.target.id === "rollAttackBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const battle = gameData.battle;
+  const attacker = gameData.players[battle.attackerId];
+
+  const baseMax = 5;
+  const maxRoll = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
+
+  let roll = 0;
+  const interval = setInterval(() => {
+    roll = Math.floor(Math.random() * maxRoll) + 1;
+    document.getElementById("battleOverlay").innerHTML = `
+      <h1>Rolling...</h1>
+      <h2>${roll}</h2>
+    `;
+  }, 100);
+
+  setTimeout(async () => {
+    clearInterval(interval);
+
+    await gamesRef.child(currentGameCode).child("battle").update({
+      attackerRoll: roll,
+      stage: "awaitingDefenderRoll"
+    });
+
+  }, 2000);
+}
+
+// === ROLL DEFENSE ===
+if (event.target && event.target.id === "rollDefenseBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const battle = gameData.battle;
+  const defender = gameData.players[battle.defenderId];
+
+  const baseMax = 5;
+  const maxRoll = baseMax + ((defender.upgrades?.weapons || 0) * 3);
+
+  let roll = 0;
+  const interval = setInterval(() => {
+    roll = Math.floor(Math.random() * maxRoll) + 1;
+    document.getElementById("battleOverlay").innerHTML = `
+      <h1>Rolling...</h1>
+      <h2>${roll}</h2>
+    `;
+  }, 100);
+
+  setTimeout(async () => {
+    clearInterval(interval);
+
+    const attackerRoll = battle.attackerRoll;
+
+    let winnerId;
+    if (roll > attackerRoll) {
+      winnerId = battle.defenderId;
+    } else if (roll < attackerRoll) {
+      winnerId = battle.attackerId;
+    } else {
+      winnerId = battle.defenderId; // defender wins ties
+    }
+
+    await gamesRef.child(currentGameCode).child("battle").update({
+      defenderRoll: roll,
+      winnerId: winnerId,
+      stage: "result"
+    });
+
+  }, 2000);
+}
 /* ===== UPGRADE PHASE PROMPT ===== */
 
 if (event.target && event.target.id === "upgradeNoBtn") {
@@ -895,10 +968,10 @@ await gamesRef.child(currentGameCode).update({
   battle: {
     attackerId: currentPlayerId,
     defenderId: defendingPlayerId,
-    attackerRoll: battleResult.attackerRoll,
-    defenderRoll: battleResult.defenderRoll,
-    winnerId: battleResult.winner,
-    stage: "start"
+    attackerRoll: null,
+    defenderRoll: null,
+    winnerId: null,
+    stage: "awaitingAttackerRoll"
   },
   lastActive: Date.now()
 });
@@ -1146,44 +1219,69 @@ if (remaining <= 0) {
       </div>
     `;
 
-    runBattleAnimation(gameData);
-    return;
+   function runBattleAnimation(gameData) {
+
+  const overlay = document.getElementById("battleOverlay");
+  const battle = gameData.battle;
+  if (!overlay) return;
+
+  overlay.style.display = "flex";
+
+  const attacker = gameData.players[battle.attackerId];
+  const defender = gameData.players[battle.defenderId];
+
+  const baseMax = 5;
+  const attackerMax = baseMax + ((attacker.upgrades?.weapons || 0) * 3);
+  const defenderMax = baseMax + ((defender.upgrades?.weapons || 0) * 3);
+
+  // === AWAITING ATTACKER ROLL ===
+  if (battle.stage === "awaitingAttackerRoll") {
+
+    overlay.innerHTML = `
+      <h1>BATTLE</h1>
+      <h2>${attacker.name} (ATTACK)</h2>
+      ${currentPlayerId === battle.attackerId
+        ? `<button id="rollAttackBtn">ROLL ATTACK</button>`
+        : `<p>Waiting for attacker to roll...</p>`}
+    `;
+
   }
-    const players = gameData.players || {};
-    const turnOrder = gameData.turnOrder || [];
-    const currentTurnIndex = gameData.currentTurnIndex || 0;
-    const currentPhase = gameData.currentPhase || 0;
-    const roundNumber = gameData.round || 1;
 
+  // === AWAITING DEFENDER ROLL ===
+  else if (battle.stage === "awaitingDefenderRoll") {
 
-    const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
-    phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
+    overlay.innerHTML = `
+      <h1>BATTLE</h1>
+      <h2>Attacker rolled: ${battle.attackerRoll}</h2>
+      <h2>${defender.name} (DEFENSE)</h2>
+      ${currentPlayerId === battle.defenderId
+        ? `<button id="rollDefenseBtn">ROLL DEFENSE</button>`
+        : `<p>Waiting for defender to roll...</p>`}
+    `;
+  }
 
+  // === RESULT STAGE ===
+  else if (battle.stage === "result") {
 
-    if (players[currentPlayerId]) {
-      const me = players[currentPlayerId];
-      playerHeader.textContent = `Player: ${me.name} (${me.country})`;
+    overlay.innerHTML = `
+      <h1>BATTLE RESULT</h1>
+      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+      <h2>${defender.name}: ${battle.defenderRoll}</h2>
+      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
+    `;
+
+    if (currentPlayerId === battle.attackerId) {
+      setTimeout(async () => {
+        await gamesRef.child(currentGameCode).child("battle").update({
+          stage: "decision"
+        });
+      }, 2000);
     }
+  }
 
-    let html = "";
-
-    turnOrder.forEach((playerId, index) => {
-
-      const player = players[playerId];
-      if (!player) return;
-
-     const isCurrentTurn = index === currentTurnIndex;
-
-if (
-  isCurrentTurn &&
-  playerId === currentPlayerId &&
-  currentPhase === 1
-) {
-  html += `
-    <br><strong>Would you like to make an upgrade?</strong><br>
-    <button id="upgradeYesBtn">Yes</button>
-    <button id="upgradeNoBtn">No</button>
-  `;
+  else if (battle.stage === "decision") {
+    overlay.style.display = "none";
+  }
 }
 
 
