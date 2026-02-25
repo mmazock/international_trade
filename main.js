@@ -1329,6 +1329,7 @@ if (
     `;
 
   }
+   }
 function resolveBattle(attackerId, defenderId, gameData) {
 
   const attacker = gameData.players[attackerId];
