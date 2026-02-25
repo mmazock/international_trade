@@ -1147,7 +1147,6 @@ if (remaining <= 0) {
     `;
 
     runBattleAnimation(gameData);
-
     return;
   }
     const players = gameData.players || {};
@@ -1303,6 +1302,8 @@ function runBattleAnimation(gameData) {
   const overlay = document.getElementById("battleOverlay");
   const battle = gameData.battle;
 
+console.log("Battle stage:", battle.stage);
+  
   if (!overlay) return;
 
   overlay.style.display = "flex";
