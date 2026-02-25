@@ -601,6 +601,91 @@ if (event.target && event.target.id === "rollDefenseBtn") {
 
   }, 2000);
 }
+  // === DESTROY SHIP ===
+if (event.target && event.target.id === "battleDestroy") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const battle = gameData.battle;
+
+  const loserId = battle.winnerId === battle.attackerId
+    ? battle.defenderId
+    : battle.attackerId;
+
+  const loser = gameData.players[loserId];
+
+  // Reset loser to home port and clear cargo
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(loserId)
+    .update({
+      shipPosition: loser.homePort,
+      inventory: {},
+      movesRemaining: 0
+    });
+
+  // Clear battle and advance turn
+  await gamesRef.child(currentGameCode).update({
+    battle: null
+  });
+
+  await advanceTurn();
+}
+
+// === MOVE ON ===
+if (event.target && event.target.id === "battleMoveOn") {
+
+  await gamesRef.child(currentGameCode).update({
+    battle: null
+  });
+
+  await advanceTurn();
+}
+
+// === PLUNDER ===
+if (event.target && event.target.id === "battlePlunder") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const battle = gameData.battle;
+
+  const winnerId = battle.winnerId;
+  const loserId = winnerId === battle.attackerId
+    ? battle.defenderId
+    : battle.attackerId;
+
+  const winner = gameData.players[winnerId];
+  const loser = gameData.players[loserId];
+
+  const loserInventory = loser.inventory || {};
+  const winnerInventory = winner.inventory || {};
+
+  // Transfer all cargo
+  for (let resource in loserInventory) {
+    winnerInventory[resource] =
+      (winnerInventory[resource] || 0) + loserInventory[resource];
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(winnerId)
+    .update({
+      inventory: winnerInventory
+    });
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(loserId)
+    .update({
+      inventory: {}
+    });
+
+  await gamesRef.child(currentGameCode).update({
+    battle: null
+  });
+
+  await advanceTurn();
+}
 /* ===== UPGRADE PHASE PROMPT ===== */
 
 if (event.target && event.target.id === "upgradeNoBtn") {
@@ -1210,7 +1295,32 @@ function renderLedger(gameData) {
     runBattleAnimation(gameData);
     return;
   }
+if (gameData.battle) {
 
+  if (gameData.battle.stage === "decision") {
+
+    const battle = gameData.battle;
+
+    if (battle.winnerId === currentPlayerId) {
+
+      inventoryList.innerHTML = `
+        <h2>Battle Victory</h2>
+        <button id="battleDestroy">Destroy Ship</button><br><br>
+        <button id="battlePlunder">Plunder Cargo</button><br><br>
+        <button id="battleMoveOn">Move On</button>
+      `;
+
+      return;
+    }
+
+    // Non-winners see nothing during decision
+    inventoryList.innerHTML = `<h2>Battle Resolved</h2>`;
+    return;
+  }
+
+  runBattleAnimation(gameData);
+  return;
+}
   const players = gameData.players || {};
   const turnOrder = gameData.turnOrder || [];
   const currentTurnIndex = gameData.currentTurnIndex || 0;
