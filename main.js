@@ -1311,7 +1311,7 @@ function renderLedger(gameData) {
    BATTLE ANIMATION ENGINE
    ============================= */
 
-function runBattleAnimation(gameData) {
+async function runBattleAnimation(gameData) {
 
   const overlay = document.getElementById("battleOverlay");
   const battle = gameData.battle;
@@ -1352,23 +1352,31 @@ function runBattleAnimation(gameData) {
   }
 
   // === RESULT ===
-  else if (battle.stage === "result") {
+else if (battle.stage === "result") {
 
-    overlay.innerHTML = `
-      <h1>BATTLE RESULT</h1>
-      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
-      <h2>${defender.name}: ${battle.defenderRoll}</h2>
-      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
-    `;
+  overlay.innerHTML = `
+    <h1>BATTLE RESULT</h1>
+    <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+    <h2>${defender.name}: ${battle.defenderRoll}</h2>
+    <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
+  `;
 
-    if (currentPlayerId === battle.attackerId) {
-      setTimeout(async () => {
-        await gamesRef.child(currentGameCode).child("battle").update({
-          stage: "decision"
-        });
-      }, 2000);
-    }
+  // End attacker movement immediately
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(battle.attackerId)
+    .update({
+      movesRemaining: 0
+    });
+
+  if (currentPlayerId === battle.attackerId) {
+    setTimeout(async () => {
+      await gamesRef.child(currentGameCode).child("battle").update({
+        stage: "decision"
+      });
+    }, 2000);
   }
+}
 
   // === DECISION ===
   else if (battle.stage === "decision") {
