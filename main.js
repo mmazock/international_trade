@@ -1203,7 +1203,7 @@ if (remaining <= 0) {
   renderSelection();
 }
 
-  function renderLedger(gameData) {
+function renderLedger(gameData) {
 
   // === BATTLE MODE OVERRIDE ===
   if (gameData.battle) {
@@ -1220,6 +1220,12 @@ if (remaining <= 0) {
   const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
   phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
 
+  // === PLAYER HEADER RESTORE ===
+  if (players[currentPlayerId]) {
+    const me = players[currentPlayerId];
+    playerHeader.textContent = `Player: ${me.name} (${me.country})`;
+  }
+
   let html = "";
 
   turnOrder.forEach((playerId, index) => {
@@ -1229,64 +1235,71 @@ if (remaining <= 0) {
 
     const isCurrentTurn = index === currentTurnIndex;
     const onHarvestSquare = harvestZones[player.shipPosition] !== undefined;
-console.log("ROLL CHECK:", {
-  isCurrentTurn,
-  playerId,
-  currentPlayerId,
-  currentPhase,
-  rollValue: player.rollValue
-});
 
-      html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
-${isCurrentTurn ? 'background-color:#d4edda;' : ''}">
-<strong>${player.name} (${player.country})</strong>
-${isCurrentTurn ? ' (Current Turn)' : ''}`;
+    html += `<div style="border:1px solid #333; padding:8px; margin-bottom:10px;
+    ${isCurrentTurn ? 'background-color:#d4edda;' : ''}">`;
 
-html += `<br>
-Money: $${player.money}
-<br>
-Transport: ${(player.upgrades && player.upgrades.transport) || 0}
-<br>
-Navigation: ${(player.upgrades && player.upgrades.navigation) || 0}
-<br>
-Weapons: ${(player.upgrades && player.upgrades.weapons) || 0}
-<br>
-Inventory:
-<br>`;
+    html += `<strong>${player.name} (${player.country})</strong>`;
+    if (isCurrentTurn) html += ` (Current Turn)`;
 
+    html += `<br>Money: $${player.money}`;
+    html += `<br>Transport: ${(player.upgrades?.transport) || 0}`;
+    html += `<br>Navigation: ${(player.upgrades?.navigation) || 0}`;
+    html += `<br>Weapons: ${(player.upgrades?.weapons) || 0}`;
+    html += `<br>Inventory:<br>`;
 
-      if (!player.inventory || Object.keys(player.inventory).length === 0) {
-        html += `None`;
-      } else {
-        for (let resource in player.inventory) {
-          html += `${resource}: ${player.inventory[resource]}<br>`;
-        }
+    if (!player.inventory || Object.keys(player.inventory).length === 0) {
+      html += `None`;
+    } else {
+      for (let resource in player.inventory) {
+        html += `${resource}: ${player.inventory[resource]}<br>`;
       }
+    }
 
-      if (isCurrentTurn && playerId === currentPlayerId && currentPhase === 2 && !player.rollValue) {
-        html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
-      }
-if (
-  isCurrentTurn &&
-  playerId === currentPlayerId &&
-  currentPhase === 2 &&
-  onHarvestSquare &&
-  player.rollValue &&               // must have rolled
-  player.movesRemaining > 0         // must still have movement left
-) {
-  html += `<br><button id="harvestBtn">Harvest</button>`;
+    // === UPGRADE PHASE PROMPT RESTORED ===
+    if (
+      isCurrentTurn &&
+      playerId === currentPlayerId &&
+      currentPhase === 1
+    ) {
+      html += `
+        <br><strong>Would you like to make an upgrade?</strong><br>
+        <button id="upgradeYesBtn">Yes</button>
+        <button id="upgradeNoBtn">No</button>
+      `;
+    }
+
+    // === ROLL DICE BUTTON ===
+    if (
+      isCurrentTurn &&
+      playerId === currentPlayerId &&
+      currentPhase === 2 &&
+      !player.rollValue
+    ) {
+      html += `<br><button id="rollDiceBtn">Roll Dice</button>`;
+    }
+
+    // === HARVEST BUTTON ===
+    if (
+      isCurrentTurn &&
+      playerId === currentPlayerId &&
+      currentPhase === 2 &&
+      onHarvestSquare &&
+      player.rollValue &&
+      player.movesRemaining > 0
+    ) {
+      html += `<br><button id="harvestBtn">Harvest</button>`;
+    }
+
+    if (player.movesRemaining > 0) {
+      html += `<br>Moves Remaining: ${player.movesRemaining}`;
+    }
+
+    html += `</div>`;
+  });
+
+  inventoryList.innerHTML = html;
 }
-
-
-      if (player.movesRemaining > 0) {
-        html += `<br>Moves Remaining: ${player.movesRemaining}`;
-      }
-
-      html += `</div>`;
-    });
-
-       inventoryList.innerHTML = html;
-  }
 
   window.addEventListener("resize", () => {
     if (latestGameData) {
