@@ -18,24 +18,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const game = games[gameId];
 
     if (!game || !game.lastActive) continue;
-if (gameData.battle) {
 
-  if (gameData.battle.stage === "decision") {
-
-    const battle = gameData.battle;
-
-    if (battle.winnerId === currentPlayerId) {
-       // show buttons
-       return;
-    }
-
-    inventoryList.innerHTML = `<h2>Battle Resolved</h2>`;
-    return;
-  }
-
-  runBattleAnimation(gameData);
-  return;
-}
     if (now - game.lastActive > fifteenMinutes) {
       await gamesRef.child(gameId).remove();
       console.log("Deleted inactive game:", gameId);
