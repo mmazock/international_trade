@@ -1304,7 +1304,10 @@ if (remaining <= 0) {
 function renderLedger(gameData) {
 
   // === BATTLE MODE OVERRIDE ===
-
+const overlay = document.getElementById("battleOverlay");
+if (!gameData.battle && overlay) {
+  overlay.style.display = "none";
+}
 if (gameData.battle) {
 
   if (gameData.battle.stage === "decision") {
