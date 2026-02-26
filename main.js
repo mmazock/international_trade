@@ -697,6 +697,8 @@ if (event.target && event.target.id === "battleMoveOn") {
   // === CONTINUE AFTER RESULT ===
 if (event.target && event.target.id === "battleContinueBtn") {
 
+  console.log("Continue clicked");
+  
   document.getElementById("battleOverlay").style.display = "none";
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
