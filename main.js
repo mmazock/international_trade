@@ -624,14 +624,6 @@ if (event.target && event.target.id === "battleDestroy") {
       movesRemaining: 0
     });
 
-  // Clear battle and advance turn
-  await gamesRef.child(currentGameCode).update({
-    battle: null
-  });
-
-  await advanceTurn();
-}
-
 // === MOVE ON ===
 if (event.target && event.target.id === "battleMoveOn") {
 
