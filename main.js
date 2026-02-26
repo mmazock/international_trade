@@ -618,8 +618,10 @@ if (event.target && event.target.id === "rollDefenseBtn") {
 
   }, 2000);
 }
-  // === DESTROY SHIP ===
+// === DESTROY SHIP ===
 if (event.target && event.target.id === "battleDestroy") {
+
+  document.getElementById("battleOverlay").style.display = "none";
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
@@ -631,7 +633,6 @@ if (event.target && event.target.id === "battleDestroy") {
 
   const loser = gameData.players[loserId];
 
-  // Reset loser to home port and clear cargo
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(loserId)
@@ -641,8 +642,62 @@ if (event.target && event.target.id === "battleDestroy") {
       movesRemaining: 0
     });
 
+  await gamesRef.child(currentGameCode).update({
+    battle: null
+  });
+
+  await advanceTurn();
+}
+
+// === PLUNDER ===
+if (event.target && event.target.id === "battlePlunder") {
+
+  document.getElementById("battleOverlay").style.display = "none";
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const battle = gameData.battle;
+
+  const winnerId = battle.winnerId;
+  const loserId = winnerId === battle.attackerId
+    ? battle.defenderId
+    : battle.attackerId;
+
+  const winner = gameData.players[winnerId];
+  const loser = gameData.players[loserId];
+
+  const winnerInventory = winner.inventory || {};
+  const loserInventory = loser.inventory || {};
+
+  for (let resource in loserInventory) {
+    winnerInventory[resource] =
+      (winnerInventory[resource] || 0) + loserInventory[resource];
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(winnerId)
+    .update({ inventory: winnerInventory });
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(loserId)
+    .update({ inventory: {} });
+
+  await gamesRef.child(currentGameCode).update({
+    battle: {
+      ...battle,
+      stage: "displacement",
+      displacedPlayerId: loserId,
+      originSquare: winner.shipPosition
+    }
+  });
+}
+
 // === MOVE ON ===
 if (event.target && event.target.id === "battleMoveOn") {
+
+  document.getElementById("battleOverlay").style.display = "none";
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
@@ -661,20 +716,6 @@ if (event.target && event.target.id === "battleMoveOn") {
       originSquare: gameData.players[winnerId].shipPosition
     }
   });
-}
-
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(loserId)
-    .update({
-      inventory: {}
-    });
-
-  await gamesRef.child(currentGameCode).update({
-    battle: null
-  });
-
-  await advanceTurn();
 }
 /* ===== UPGRADE PHASE PROMPT ===== */
 
