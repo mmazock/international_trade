@@ -1473,7 +1473,8 @@ async function runBattleAnimation(gameData) {
   if (!overlay) return;
 
   overlay.style.display = "flex";
-
+overlay.style.pointerEvents = "none";
+  
   const attacker = gameData.players[battle.attackerId];
   const defender = gameData.players[battle.defenderId];
 
@@ -1507,6 +1508,8 @@ async function runBattleAnimation(gameData) {
 // === RESULT ===
 else if (battle.stage === "result") {
 
+overlay.style.pointerEvents = "auto";
+  
   // End attacker movement
   await gamesRef.child(currentGameCode)
     .child("players")
@@ -1531,6 +1534,8 @@ else if (battle.stage === "result") {
   // === DISPLACEMENT ===
   else if (battle.stage === "displacement") {
 
+overlay.style.pointerEvents = "none";
+    
     overlay.innerHTML = `
       <h1>DISPLACEMENT</h1>
       <h2>Select adjacent water square for defeated ship.</h2>
