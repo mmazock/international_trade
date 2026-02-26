@@ -1526,10 +1526,7 @@ else if (battle.stage === "result") {
   `;
 }
 
-  // === DECISION ===
-  else if (battle.stage === "decision") {
-    overlay.style.display = "none";
-  }
+
 
   // === DISPLACEMENT ===
   else if (battle.stage === "displacement") {
