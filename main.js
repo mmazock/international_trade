@@ -621,8 +621,6 @@ if (event.target && event.target.id === "rollDefenseBtn") {
 // === DESTROY SHIP ===
 if (event.target && event.target.id === "battleDestroy") {
 
-  document.getElementById("battleOverlay").style.display = "none";
-
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
   const battle = gameData.battle;
@@ -651,8 +649,6 @@ if (event.target && event.target.id === "battleDestroy") {
 
 // === PLUNDER ===
 if (event.target && event.target.id === "battlePlunder") {
-
-  document.getElementById("battleOverlay").style.display = "none";
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
@@ -697,8 +693,6 @@ if (event.target && event.target.id === "battlePlunder") {
 // === MOVE ON ===
 if (event.target && event.target.id === "battleMoveOn") {
 
-  document.getElementById("battleOverlay").style.display = "none";
-
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
   const battle = gameData.battle;
@@ -715,6 +709,16 @@ if (event.target && event.target.id === "battleMoveOn") {
       displacedPlayerId: loserId,
       originSquare: gameData.players[winnerId].shipPosition
     }
+  });
+}
+  // === CONTINUE AFTER RESULT ===
+if (event.target && event.target.id === "battleContinueBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  await gamesRef.child(currentGameCode).child("battle").update({
+    stage: "decision"
   });
 }
 /* ===== UPGRADE PHASE PROMPT ===== */
@@ -1513,30 +1517,27 @@ async function runBattleAnimation(gameData) {
     `;
   }
 
-  // === RESULT ===
-  else if (battle.stage === "result") {
+// === RESULT ===
+else if (battle.stage === "result") {
 
-    overlay.innerHTML = `
-      <h1>BATTLE RESULT</h1>
-      <h2>${attacker.name}: ${battle.attackerRoll}</h2>
-      <h2>${defender.name}: ${battle.defenderRoll}</h2>
-      <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
-    `;
+  // End attacker movement
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(battle.attackerId)
+    .update({ movesRemaining: 0 });
 
-    // End attacker movement
-    await gamesRef.child(currentGameCode)
-      .child("players")
-      .child(battle.attackerId)
-      .update({ movesRemaining: 0 });
-
-    if (currentPlayerId === battle.attackerId) {
-      setTimeout(async () => {
-        await gamesRef.child(currentGameCode).child("battle").update({
-          stage: "decision"
-        });
-      }, 2000);
+  overlay.innerHTML = `
+    <h1>BATTLE RESULT</h1>
+    <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+    <h2>${defender.name}: ${battle.defenderRoll}</h2>
+    <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
+    ${
+      currentPlayerId === battle.winnerId
+        ? `<br><br><button id="battleContinueBtn">Continue</button>`
+        : `<p>Waiting for winner...</p>`
     }
-  }
+  `;
+}
 
   // === DECISION ===
   else if (battle.stage === "decision") {
