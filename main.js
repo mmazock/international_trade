@@ -962,6 +962,8 @@ async function advanceTurn() {
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
+    const player = gameData.players[currentPlayerId];
+
   const rect = mapImage.getBoundingClientRect();
   const xPercent = (event.clientX - rect.left) / rect.width;
   const yPercent = (event.clientY - rect.top) / rect.height;
