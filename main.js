@@ -1483,6 +1483,8 @@ overlay.style.pointerEvents = "none";
   // === AWAITING ATTACKER ROLL ===
   if (battle.stage === "awaitingAttackerRoll") {
 
+overlay.style.pointerEvents = "auto";
+    
     overlay.innerHTML = `
       <h1>BATTLE</h1>
       <h2>${attacker.name} (ATTACK)</h2>
@@ -1495,6 +1497,8 @@ overlay.style.pointerEvents = "none";
   // === AWAITING DEFENDER ROLL ===
   else if (battle.stage === "awaitingDefenderRoll") {
 
+overlay.style.pointerEvents = "auto";
+    
     overlay.innerHTML = `
       <h1>BATTLE</h1>
       <h2>${attacker.name}: ${battle.attackerRoll}</h2>
