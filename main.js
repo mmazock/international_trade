@@ -442,16 +442,12 @@ leaveGameBtn.addEventListener("click", async () => {
   location.reload();
 });
 
-  function hideSetupUI() {
-    createGameBtn.style.display = "none";
-    joinGameBtn.style.display = "none";
-    joinCodeInput.style.display = "none";
-    playerNameInput.style.display = "none";
-    countrySelect.style.display = "none";
-    joinStatus.style.display = "none";
-  
-  document.querySelector("#ledger h2").style.display = "none";
+function hideSetupUI() {
+  const setupSection = document.getElementById("setupSection");
+  if (setupSection) {
+    setupSection.style.display = "none";
   }
+}
 
   function listenToGameData() {
 
