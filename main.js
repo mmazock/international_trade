@@ -1530,7 +1530,22 @@ if (remaining <= 0) {
 }
 
 function renderLedger(gameData) {
+// === PERMISSION REQUEST HANDLER ===
+if (
+  gameData.permissionRequest &&
+  gameData.permissionRequest.ownerId === currentPlayerId
+) {
+  const request = gameData.permissionRequest;
 
+  inventoryList.innerHTML = `
+    <h2>Access Request</h2>
+    <p>${gameData.players[request.requesterId].name} wants access to ${request.square}</p>
+    <button id="grantAccessBtn">Grant</button>
+    <button id="denyAccessBtn">Deny</button>
+  `;
+
+  return;
+}
   // === BATTLE MODE OVERRIDE ===
 const overlay = document.getElementById("battleOverlay");
 if (!gameData.battle && overlay) {
