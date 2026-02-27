@@ -1573,4 +1573,5 @@ function resolveBattle(attackerId, defenderId, gameData) {
     return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
   }
 
+}
 });
