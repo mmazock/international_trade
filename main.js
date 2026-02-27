@@ -1012,8 +1012,14 @@ async function advanceTurn() {
 const turnOrder = gameData.turnOrder;
 const currentTurnIndex = gameData.currentTurnIndex;
 
-if (!turnOrder || turnOrder[currentTurnIndex] !== currentPlayerId) {
-  return;
+// Allow displacement even if not technically current turn
+if (
+  !gameData.battle ||
+  gameData.battle.stage !== "displacement"
+) {
+  if (!turnOrder || turnOrder[currentTurnIndex] !== currentPlayerId) {
+    return;
+  }
 }
     const player = gameData.players[currentPlayerId];
 
