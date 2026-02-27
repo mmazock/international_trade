@@ -17,63 +17,65 @@
       <img id="map-image" src="map.png" alt="International Trade Map">
     </div>
 
-<div id="setupSection">
 
-  <h2>Game Setup</h2>
 
-  <button id="createGameBtn">Create Game (Host)</button>
+      <hr>
+<div id="ledger">
+
+  <div id="setupSection">
+
+    <h2>Game Setup</h2>
+
+    <button id="createGameBtn">Create Game (Host)</button>
+    <br><br>
+
+    <input type="text" id="joinCodeInput" placeholder="Enter Join Code">
+    <br><br>
+
+    <input type="text" id="playerNameInput" placeholder="Enter Your Name">
+    <br><br>
+
+    <select id="countrySelect">
+      <option value="">Select Country</option>
+      <option value="Spain">Spain</option>
+      <option value="Portugal">Portugal</option>
+      <option value="England">England</option>
+      <option value="France">France</option>
+      <option value="Italy">Italy</option>
+      <option value="Germany">Germany</option>
+    </select>
+
+    <br><br>
+
+    <button id="joinGameBtn">Join Game</button>
+
+    <p id="joinStatus"></p>
+
+    <hr>
+
+  </div>
+
+  <h2>Ledger</h2>
+
+  <p><strong>Current Phase:</strong> <span id="phaseDisplay"></span></p>
+  <button id="endPhaseBtn">End Phase</button>
   <br><br>
 
-  <input type="text" id="joinCodeInput" placeholder="Enter Join Code">
+  <button id="leaveGameBtn">Leave Game</button>
   <br><br>
 
-  <input type="text" id="playerNameInput" placeholder="Enter Your Name">
-  <br><br>
-
-  <select id="countrySelect">
-    <option value="">Select Country</option>
-    <option value="Spain">Spain</option>
-    <option value="Portugal">Portugal</option>
-    <option value="England">England</option>
-    <option value="France">France</option>
-    <option value="Italy">Italy</option>
-    <option value="Germany">Germany</option>
-  </select>
-
-  <br><br>
-
-  <button id="joinGameBtn">Join Game</button>
-
-  <p id="joinStatus"></p>
+  <h3>Inventory</h3>
+  <div id="inventoryList"></div>
 
   <hr>
 
+  <div id="messageBox"
+       style="margin-top:20px; padding:10px; border:1px solid #333; min-height:150px;">
+    <em>Create or join a game to begin.</em>
+  </div>
+
 </div>
 
-      <hr>
-
-      <h2>Ledger</h2>
-<p><strong>Current Phase:</strong> <span id="phaseDisplay"></span></p>
-<button id="endPhaseBtn">End Phase</button>
-<br><br>
-
-      <button id="leaveGameBtn">Leave Game</button>
-<br><br>
-
-<h3>Inventory</h3>
-<div id="inventoryList"></div>
-
-
-<hr>
-
-<div id="messageBox"
-           style="margin-top:20px; padding:10px; border:1px solid #333; min-height:150px;">
-        <em>Create or join a game to begin.</em>
-      </div>
-
-    </div>
-
-  </div>
 
   <!-- Firebase Scripts -->
   <script src="https://www.gstatic.com/firebasejs/12.9.0/firebase-app-compat.js"></script>
