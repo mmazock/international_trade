@@ -1572,6 +1572,5 @@ function resolveBattle(attackerId, defenderId, gameData) {
   } else {
     return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
   }
-}
 
 });
