@@ -1116,9 +1116,6 @@ if (defendingPlayerId) {
 
   return;
 }
-
-return;
-}
     if (!waterSquares.has(target)) return;
 
     const currentPos = player.shipPosition;
