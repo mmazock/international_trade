@@ -1533,10 +1533,10 @@ else if (battle.stage === "result") {
 overlay.style.pointerEvents = "auto";
   
   // End attacker movement
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(battle.attackerId)
-    .update({ movesRemaining: 0 });
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(battle.winnerId)
+  .update({ movesRemaining: 0 });
 
   overlay.innerHTML = `
     <h1>BATTLE RESULT</h1>
