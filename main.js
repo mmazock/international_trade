@@ -949,6 +949,15 @@ startHarvestSelection(region);
 
   }
 
+// === CASH IN CONTINUE ===
+if (event.target && event.target.id === "cashInContinueBtn") {
+
+  const messageBox = document.getElementById("messageBox");
+  messageBox.innerHTML = "";
+
+  await advanceTurn();
+}
+
 });
 
 async function advanceTurn() {
@@ -1169,27 +1178,47 @@ if (
   Object.keys(updatedPlayer.inventory).length > 0
 ) {
 
-  let totalValue = 0;
+let totalValue = 0;
+let breakdownHtml = "<h3>Cash In Summary</h3>";
 
-  for (let resource in updatedPlayer.inventory) {
+for (let resource in updatedPlayer.inventory) {
 
-    const quantity = updatedPlayer.inventory[resource];
-    const baseValue = baseResourceValues[resource] || 0;
-    const multiplier = updatedPlayer.multipliers?.[resource] || 1;
+  const quantity = updatedPlayer.inventory[resource];
+  const baseValue = baseResourceValues[resource] || 0;
+  const multiplier = updatedPlayer.multipliers?.[resource] || 1;
 
-    totalValue += quantity * baseValue * multiplier;
+  const resourceTotal = quantity * baseValue * multiplier;
+  totalValue += resourceTotal;
+
+  if (multiplier !== 1) {
+    breakdownHtml += `
+      <p>${quantity} ${resource} $${baseValue} × ${multiplier} multiplier = $${resourceTotal}</p>
+    `;
+  } else {
+    breakdownHtml += `
+      <p>${quantity} ${resource} $${baseValue} = $${resourceTotal}</p>
+    `;
   }
+}
 
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(currentPlayerId)
-    .update({
-      money: (updatedPlayer.money || 0) + totalValue,
-      inventory: {},
-    });
+breakdownHtml += `<hr><strong>Total = $${totalValue}</strong><br><br>
+<button id="cashInContinueBtn">Continue to next player's turn</button>`;
 
-  await advanceTurn();
-  return;
+// Add money + clear inventory
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    money: (updatedPlayer.money || 0) + totalValue,
+    inventory: {},
+  });
+
+// Display breakdown in messageBox
+const messageBox = document.getElementById("messageBox");
+messageBox.innerHTML = breakdownHtml;
+
+// Stop automatic turn advancement
+return;
 }
 
 
