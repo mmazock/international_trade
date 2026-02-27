@@ -1086,7 +1086,6 @@ if (defendingPlayerId) {
 
   const defender = players[defendingPlayerId];
 
-  // Cannot attack in defender's home port
   if (target === defender.homePort) {
     alert("This player is in their home waters and cannot be attacked.");
     return;
@@ -1098,21 +1097,29 @@ if (defendingPlayerId) {
     return;
   }
 
-  // Resolve battle
-// Resolve battle but store in Firebase instead of alerting
-const battleResult = resolveBattle(currentPlayerId, defendingPlayerId, gameData);
+  // 🔥 Move attacker into defender's square FIRST
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      shipPosition: target
+    });
 
-await gamesRef.child(currentGameCode).update({
-  battle: {
-    attackerId: currentPlayerId,
-    defenderId: defendingPlayerId,
-    attackerRoll: null,
-    defenderRoll: null,
-    winnerId: null,
-    stage: "awaitingAttackerRoll"
-  },
-  lastActive: Date.now()
-});
+  // THEN start battle
+  await gamesRef.child(currentGameCode).update({
+    battle: {
+      attackerId: currentPlayerId,
+      defenderId: defendingPlayerId,
+      attackerRoll: null,
+      defenderRoll: null,
+      winnerId: null,
+      stage: "awaitingAttackerRoll"
+    },
+    lastActive: Date.now()
+  });
+
+  return;
+}
 
 return;
 }
