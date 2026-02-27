@@ -1549,8 +1549,8 @@ overlay.style.pointerEvents = "auto";
         : `<p>Waiting for winner...</p>`
     }
   `;
-
-
+}
+}
 /* =============================
    BATTLE RESOLUTION (UTILITY)
    ============================= */
