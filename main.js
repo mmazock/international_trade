@@ -1064,6 +1064,17 @@ if (
       (Math.abs(colDiff) === 1 && rowDiff === 0) ||
       (Math.abs(rowDiff) === 1 && colDiff === 0);
 
+    // === SUEZ RESTRICTION ===
+if (
+  (currentPos === "G3" && target === "G4") ||
+  (currentPos === "G4" && target === "G3")
+) {
+  if (!gameData.suezOwner) {
+    alert("The Suez Canal has not been constructed.");
+    return;
+  }
+}
+
     if (!isAdjacent) return;
     if (!waterSquares.has(target)) return;
 
@@ -1294,7 +1305,7 @@ if (newMoves === 0) {
     <button id="upgradeNavigation">Navigation ($100)</button><br><br>
     <button id="upgradeWeapons">Weapons ($100)</button><br><br>
     <button id="upgradeSuez">Construct Suez ($150)</button><br><br>
-    <button id="upgradeDictatorship">Fund Dictatorship ($200)</button><br><br>
+    <button id="upgradeDictatorship">Fund Dictatorship (60% success, $300 × level)</button>
   `;
 }
 
