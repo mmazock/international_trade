@@ -1230,20 +1230,68 @@ if (defendingPlayerId) {
 
   return;
 }
-    if (!waterSquares.has(target)) return;
+const currentPos = player.shipPosition;
 
-    const currentPos = player.shipPosition;
+// Must be water
+if (!waterSquares.has(target)) return;
 
-    const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
-    const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+// === SUEZ RESTRICTION ===
+if (
+  (currentPos === "G3" && target === "G4") ||
+  (currentPos === "G4" && target === "G3")
+) {
+  if (!gameData.suezOwner) {
+    alert("The Suez Canal has not been constructed.");
+    return;
+  }
 
-    const isAdjacent =
-      (Math.abs(colDiff) === 1 && rowDiff === 0) ||
-      (Math.abs(rowDiff) === 1 && colDiff === 0);
+  if (gameData.suezOwner !== currentPlayerId) {
+    const owner = gameData.players[gameData.suezOwner];
+    const granted = confirm(
+      `${owner.name} controls the Suez Canal. Grant access?`
+    );
 
-    if (!isAdjacent) return;
+    if (!granted) {
+      alert("Access to the Suez Canal denied.");
+      return;
+    }
+  }
+}
 
-    if (restrictedTransitions[currentPos]) {
+// === DICTATORSHIP ENTRY CHECK ===
+if (gameData.dictatorships && gameData.dictatorships[target]) {
+
+  const ownerId = gameData.dictatorships[target];
+
+  if (ownerId !== currentPlayerId) {
+
+    const owner = gameData.players[ownerId];
+
+    const granted = confirm(
+      `${owner.name} controls ${target}. Grant access?`
+    );
+
+    if (!granted) {
+      alert("Access denied.");
+      return;
+    }
+  }
+}
+
+// Adjacency check
+const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
+const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+
+const isAdjacent =
+  (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+  (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+if (!isAdjacent) return;
+
+// Malacca restriction
+if (restrictedTransitions[currentPos]) {
+  if (!restrictedTransitions[currentPos].includes(target)) return;
+}
       if (!restrictedTransitions[currentPos].includes(target)) return;
     }
 
