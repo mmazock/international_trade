@@ -853,6 +853,94 @@ if (event.target && event.target.id === "upgradeNavigation") {
   return;
 }
 
+  // === SUEZ CONSTRUCTION ===
+if (event.target && event.target.id === "upgradeSuez") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const player = gameData.players[currentPlayerId];
+
+  if (gameData.suezOwner) {
+    alert("The Suez Canal has already been constructed.");
+    return;
+  }
+
+  if (player.money < 150) {
+    alert("Not enough money. Cost is $150.");
+    return;
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: player.money - 150
+    });
+
+  await gamesRef.child(currentGameCode).update({
+    suezOwner: currentPlayerId
+  });
+
+  alert("The Suez Canal has been constructed and is now under your control.");
+}
+
+// === DICTATORSHIP ===
+if (event.target && event.target.id === "upgradeDictatorship") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const player = gameData.players[currentPlayerId];
+
+  const ownedDictatorships = Object.values(gameData.dictatorships || {})
+    .filter(ownerId => ownerId === currentPlayerId).length;
+
+  const cost = 300 * (ownedDictatorships + 1);
+
+  if (player.money < cost) {
+    alert(`Not enough money. Cost is $${cost}.`);
+    return;
+  }
+
+  const square = prompt("Enter the square (e.g., E10) to place dictatorship:");
+  if (!square) return;
+
+  const target = square.toUpperCase();
+
+  if (!waterSquares.has(target) && !harvestZones[target]) {
+    alert("Dictatorships may only be placed on water tiles or harvest zones.");
+    return;
+  }
+
+  if (player.homePort === target) {
+    alert("You cannot place a dictatorship on your home port.");
+    return;
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: player.money - cost
+    });
+
+  const success = Math.random() < 0.6;
+
+  if (!success) {
+    alert("Dictatorship attempt failed. Funds lost.");
+    return;
+  }
+
+  const dictatorships = gameData.dictatorships || {};
+  dictatorships[target] = currentPlayerId;
+
+  await gamesRef.child(currentGameCode).update({
+    dictatorships: dictatorships
+  });
+
+  alert(`Dictatorship successfully established on ${target}.`);
+}
 
   /* ===== ROLL DICE ===== */
 
