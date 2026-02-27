@@ -1292,8 +1292,6 @@ if (!isAdjacent) return;
 if (restrictedTransitions[currentPos]) {
   if (!restrictedTransitions[currentPos].includes(target)) return;
 }
-      if (!restrictedTransitions[currentPos].includes(target)) return;
-    }
 
 await gamesRef.child(currentGameCode).update({
   lastActive: Date.now()
