@@ -449,6 +449,8 @@ leaveGameBtn.addEventListener("click", async () => {
     playerNameInput.style.display = "none";
     countrySelect.style.display = "none";
     joinStatus.style.display = "none";
+  
+  document.querySelector("#ledger h2").style.display = "none";
   }
 
   function listenToGameData() {
@@ -1010,7 +1012,13 @@ async function advanceTurn() {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
+    
+const turnOrder = gameData.turnOrder;
+const currentTurnIndex = gameData.currentTurnIndex;
 
+if (!turnOrder || turnOrder[currentTurnIndex] !== currentPlayerId) {
+  return;
+}
     const player = gameData.players[currentPlayerId];
 
   const rect = mapImage.getBoundingClientRect();
@@ -1362,7 +1370,17 @@ if (gameData.battle) {
     inventoryList.innerHTML = `<h2>Battle Resolved</h2>`;
     return;
   }
+if (gameData.battle.stage === "displacement") {
 
+  const battle = gameData.battle;
+
+  inventoryList.innerHTML = `
+    <h2>Displacement</h2>
+    <p>Select adjacent water square for defeated ship.</p>
+  `;
+
+  return;
+}
   runBattleAnimation(gameData);
   return;
 }
@@ -1533,19 +1551,6 @@ overlay.style.pointerEvents = "auto";
   `;
 }
 
-
-
-  // === DISPLACEMENT ===
-  else if (battle.stage === "displacement") {
-
-overlay.style.pointerEvents = "none";
-    
-    overlay.innerHTML = `
-      <h1>DISPLACEMENT</h1>
-      <h2>Select adjacent water square for defeated ship.</h2>
-    `;
-  }
-}
 /* =============================
    BATTLE RESOLUTION (UTILITY)
    ============================= */
