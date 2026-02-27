@@ -1240,21 +1240,27 @@ if (
   (currentPos === "G3" && target === "G4") ||
   (currentPos === "G4" && target === "G3")
 ) {
+
   if (!gameData.suezOwner) {
     alert("The Suez Canal has not been constructed.");
     return;
   }
 
+  // If mover is not the owner, create permission request
   if (gameData.suezOwner !== currentPlayerId) {
-    const owner = gameData.players[gameData.suezOwner];
-    const granted = confirm(
-      `${owner.name} controls the Suez Canal. Grant access?`
-    );
 
-    if (!granted) {
-      alert("Access to the Suez Canal denied.");
-      return;
-    }
+    await gamesRef.child(currentGameCode).update({
+      permissionRequest: {
+        type: "suez",
+        requesterId: currentPlayerId,
+        ownerId: gameData.suezOwner,
+        square: target,
+        round: gameData.round
+      }
+    });
+
+    alert("Waiting for Suez owner to respond.");
+    return;
   }
 }
 
@@ -1265,16 +1271,18 @@ if (gameData.dictatorships && gameData.dictatorships[target]) {
 
   if (ownerId !== currentPlayerId) {
 
-    const owner = gameData.players[ownerId];
+    await gamesRef.child(currentGameCode).update({
+      permissionRequest: {
+        type: "dictatorship",
+        requesterId: currentPlayerId,
+        ownerId: ownerId,
+        square: target,
+        round: gameData.round
+      }
+    });
 
-    const granted = confirm(
-      `${owner.name} controls ${target}. Grant access?`
-    );
-
-    if (!granted) {
-      alert("Access denied.");
-      return;
-    }
+    alert("Waiting for territory owner to respond.");
+    return;
   }
 }
 
