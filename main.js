@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const games = snapshot.val();
 
   if (!games || typeof games !== "object") return;
-
+gameLog: []
   const now = Date.now();
   const fifteenMinutes = 15 * 60 * 1000;
 
@@ -749,7 +749,7 @@ if (event.target && event.target.id === "upgradeYesBtn") {
   showUpgradeOptions();
   return;
 }
- /* ===== TRANSPORT UPGRADE ===== */
+/* ===== TRANSPORT UPGRADE ===== */
 
 if (event.target && event.target.id === "upgradeTransport") {
 
@@ -765,17 +765,20 @@ if (event.target && event.target.id === "upgradeTransport") {
 
   const player = gameData.players[currentPlayerId];
 
-  if (player.money < 150) {
-    alert("Not enough money. Cost is $150.");
+  const level = player.upgrades?.transport || 0;
+  const cost = 150 * (level + 1);
+
+  if (player.money < cost) {
+    alert(`Not enough money. Cost is $${cost}.`);
     return;
   }
 
-  // Deduct money first
+  // Deduct money
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(currentPlayerId)
     .update({
-      money: player.money - 150
+      money: player.money - cost
     });
 
   const success = Math.random() < 0.75;
@@ -785,7 +788,7 @@ if (event.target && event.target.id === "upgradeTransport") {
       .child("players")
       .child(currentPlayerId)
       .update({
-        "upgrades/transport": (player.upgrades?.transport || 0) + 1
+        "upgrades/transport": level + 1
       });
 
     alert("Transport upgrade successful!");
