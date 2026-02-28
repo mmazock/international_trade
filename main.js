@@ -1234,10 +1234,10 @@ if (
       (Math.abs(colDiff) === 1 && rowDiff === 0) ||
       (Math.abs(rowDiff) === 1 && colDiff === 0);
 
-    // === SUEZ RESTRICTION ===
+// === SUEZ RESTRICTION (DISPLACEMENT) ===
 if (
-  (currentPos === "G3" && target === "G4") ||
-  (currentPos === "G4" && target === "G3")
+  (origin === "G3" && target === "G4") ||
+  (origin === "G4" && target === "G3")
 ) {
   if (!gameData.suezOwner) {
     alert("The Suez Canal has not been constructed.");
