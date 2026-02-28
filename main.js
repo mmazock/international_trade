@@ -1046,6 +1046,35 @@ if (event.target && event.target.id === "cashInContinueBtn") {
   await advanceTurn();
 }
 
+// === GRANT ACCESS ===
+if (event.target && event.target.id === "grantAccessBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const request = gameData.permissionRequest;
+
+  if (!request) return;
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(request.requesterId)
+    .update({
+      shipPosition: request.square
+    });
+
+  await gamesRef.child(currentGameCode).update({
+    permissionRequest: null
+  });
+}
+
+// === DENY ACCESS ===
+if (event.target && event.target.id === "denyAccessBtn") {
+
+  await gamesRef.child(currentGameCode).update({
+    permissionRequest: null
+  });
+}
+
 });
 
 async function advanceTurn() {
