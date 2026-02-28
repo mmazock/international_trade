@@ -1834,12 +1834,12 @@ function resolveBattle(attackerId, defenderId, gameData) {
   const attackerRoll = Math.floor(Math.random() * attackerMax) + 1;
   const defenderRoll = Math.floor(Math.random() * defenderMax) + 1;
 
-  if (attackerRoll > defenderRoll) {
-    return { winner: attackerId, loser: defenderId, attackerRoll, defenderRoll };
-  } else {
-    return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
-  }
-
+ if (attackerRoll > defenderRoll) {
+  return { winner: attackerId, loser: defenderId, attackerRoll, defenderRoll };
+} else {
+  return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
 }
 
-  });
+}  // closes resolveBattle
+
+}); // closes DOMContentLoaded
