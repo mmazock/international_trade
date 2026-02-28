@@ -1909,6 +1909,8 @@ function resolveBattle(attackerId, defenderId, gameData) {
   return { winner: attackerId, loser: defenderId, attackerRoll, defenderRoll };
 } else {
   return { winner: defenderId, loser: attackerId, attackerRoll, defenderRoll };
+ }
+   
 } // closes resolveBattle
 
 }); // closes DOMContentLoaded
