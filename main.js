@@ -1128,8 +1128,6 @@ if (event.target && event.target.id === "permissionAcknowledgeBtn") {
   });
 }
 
-});   // <-- CLOSES document.addEventListener("click"...)
-
 async function advanceTurn() {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
