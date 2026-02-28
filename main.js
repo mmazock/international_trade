@@ -336,7 +336,7 @@ await gamesRef.child(code).set({
     currentGameCode = code;
     joinStatus.textContent = "Game created. Share this code: " + code;
   });
-
+console.log("Game created with gameLog initialized");
   /* =============================
      JOIN GAME
      ============================= */
