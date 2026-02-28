@@ -970,7 +970,9 @@ if (displacedPlayerId) {
 
 alert(`Dictatorship successfully established on ${target}.`);
 
-  /* ===== ROLL DICE ===== */
+} // closes upgradeDictatorsship
+
+/* ===== ROLL DICE ===== */
 
   if (event.target && event.target.id === "rollDiceBtn") {
 
