@@ -797,11 +797,13 @@ if (event.target && event.target.id === "upgradeTransport") {
   }
 
   await gamesRef.child(currentGameCode).update({
-    lastActive: Date.now()
-  });
+  lastActive: Date.now()
+});
 
-  return;
-}
+// Hide upgrade menu after purchase
+document.getElementById("messageBox").innerHTML = "";
+
+return;
 /* ===== NAVIGATION UPGRADE ===== */
 
 if (event.target && event.target.id === "upgradeNavigation") {
@@ -855,12 +857,14 @@ if (event.target && event.target.id === "upgradeNavigation") {
     alert("Navigation upgrade failed. Investment lost.");
   }
 
-  await gamesRef.child(currentGameCode).update({
-    lastActive: Date.now()
-  });
+await gamesRef.child(currentGameCode).update({
+  lastActive: Date.now()
+});
 
-  return;
-}
+// Hide upgrade menu after purchase
+document.getElementById("messageBox").innerHTML = "";
+
+return;
 
   /* ===== WEAPONS UPGRADE ===== */
 
@@ -909,12 +913,14 @@ if (event.target && event.target.id === "upgradeWeapons") {
     alert("Weapons upgrade failed. Investment lost.");
   }
 
-  await gamesRef.child(currentGameCode).update({
-    lastActive: Date.now()
-  });
+await gamesRef.child(currentGameCode).update({
+  lastActive: Date.now()
+});
 
-  return;
-}
+// Hide upgrade menu after purchase
+document.getElementById("messageBox").innerHTML = "";
+
+return;
   
   // === SUEZ CONSTRUCTION ===
 if (event.target && event.target.id === "upgradeSuez") {
