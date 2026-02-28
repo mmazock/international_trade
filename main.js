@@ -1055,6 +1055,7 @@ if (event.target && event.target.id === "grantAccessBtn") {
 
   if (!request) return;
 
+  // Move requester
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(request.requesterId)
@@ -1062,7 +1063,12 @@ if (event.target && event.target.id === "grantAccessBtn") {
       shipPosition: request.square
     });
 
+  // Send approval message
   await gamesRef.child(currentGameCode).update({
+    permissionResult: {
+      requesterId: request.requesterId,
+      message: "Access Approved!"
+    },
     permissionRequest: null
   });
 }
@@ -1070,12 +1076,20 @@ if (event.target && event.target.id === "grantAccessBtn") {
 // === DENY ACCESS ===
 if (event.target && event.target.id === "denyAccessBtn") {
 
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const request = gameData.permissionRequest;
+
+  if (!request) return;
+
   await gamesRef.child(currentGameCode).update({
+    permissionResult: {
+      requesterId: request.requesterId,
+      message: "Access Denied."
+    },
     permissionRequest: null
   });
 }
-
-});
 
 async function advanceTurn() {
 
@@ -1571,6 +1585,19 @@ if (
     <p>${gameData.players[request.requesterId].name} wants access to ${request.square}</p>
     <button id="grantAccessBtn">Grant</button>
     <button id="denyAccessBtn">Deny</button>
+  `;
+
+  return;
+}
+  // === PERMISSION RESULT HANDLER ===
+if (
+  gameData.permissionResult &&
+  gameData.permissionResult.requesterId === currentPlayerId
+) {
+
+  inventoryList.innerHTML = `
+    <h2>${gameData.permissionResult.message}</h2>
+    <button id="permissionAcknowledgeBtn">OK</button>
   `;
 
   return;
