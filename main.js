@@ -1056,12 +1056,15 @@ if (event.target && event.target.id === "grantAccessBtn") {
   if (!request) return;
 
   // Move requester
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(request.requesterId)
-    .update({
-      shipPosition: request.square
-    });
+const requester = gameData.players[request.requesterId];
+
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(request.requesterId)
+  .update({
+    shipPosition: request.square,
+    movesRemaining: requester.movesRemaining - 1
+  });
 
   // Send approval message
   await gamesRef.child(currentGameCode).update({
@@ -1300,15 +1303,29 @@ if (
   // If mover is not the owner, create permission request
   if (gameData.suezOwner !== currentPlayerId) {
 
-    await gamesRef.child(currentGameCode).update({
-      permissionRequest: {
-        type: "suez",
-        requesterId: currentPlayerId,
-        ownerId: gameData.suezOwner,
-        square: target,
-        round: gameData.round
-      }
-    });
+// Prevent duplicate request this turn
+if (
+  gameData.lastSuezRequest &&
+  gameData.lastSuezRequest.requesterId === currentPlayerId &&
+  gameData.lastSuezRequest.round === gameData.round
+) {
+  alert("Access already denied this turn.");
+  return;
+}
+
+await gamesRef.child(currentGameCode).update({
+  permissionRequest: {
+    type: "suez",
+    requesterId: currentPlayerId,
+    ownerId: gameData.suezOwner,
+    square: target,
+    round: gameData.round
+  },
+  lastSuezRequest: {
+    requesterId: currentPlayerId,
+    round: gameData.round
+  }
+});
 
     alert("Waiting for Suez owner to respond.");
     return;
@@ -1682,6 +1699,11 @@ if (gameData.battle.stage === "displacement") {
     html += `<strong>${player.name} (${player.country})</strong>`;
     if (isCurrentTurn) html += ` (Current Turn)`;
 
+// === SUEZ OWNERSHIP INDICATOR ===
+if (gameData.suezOwner === playerId) {
+html += `<br>🏗️ <strong>Suez Owner</strong>`;
+}
+    
     html += `<br>Money: $${player.money}`;
     html += `<br>Transport: ${(player.upgrades?.transport) || 0}`;
     html += `<br>Navigation: ${(player.upgrades?.navigation) || 0}`;
