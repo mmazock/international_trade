@@ -328,7 +328,8 @@ await gamesRef.child(code).set({
   currentTurnIndex: 0,
   currentPhase: 0,
   round: 1,
-  lastActive: Date.now()
+  lastActive: Date.now(),
+  gameLog: []
 });
 
 
