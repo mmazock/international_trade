@@ -933,14 +933,42 @@ if (event.target && event.target.id === "upgradeDictatorship") {
   }
 
   const dictatorships = gameData.dictatorships || {};
-  dictatorships[target] = currentPlayerId;
+dictatorships[target] = currentPlayerId;
+
+// Check if another player is on that square
+let displacedPlayerId = null;
+
+for (let id in gameData.players) {
+  if (
+    id !== currentPlayerId &&
+    gameData.players[id].shipPosition === target
+  ) {
+    displacedPlayerId = id;
+    break;
+  }
+}
+
+if (displacedPlayerId) {
+
+  await gamesRef.child(currentGameCode).update({
+    dictatorships: dictatorships,
+    battle: {
+      stage: "displacement",
+      winnerId: currentPlayerId,
+      displacedPlayerId: displacedPlayerId,
+      originSquare: target
+    }
+  });
+
+} else {
 
   await gamesRef.child(currentGameCode).update({
     dictatorships: dictatorships
   });
 
-  alert(`Dictatorship successfully established on ${target}.`);
 }
+
+alert(`Dictatorship successfully established on ${target}.`);
 
   /* ===== ROLL DICE ===== */
 
@@ -1462,7 +1490,7 @@ if (newMoves === 0) {
     document.querySelectorAll(".ship").forEach(s => s.remove());
 
     const players = gameData.players || {};
-
+const dictatorships = gameData.dictatorships || {};
     Object.keys(players).forEach(playerId => {
 
       const player = players[playerId];
@@ -1504,6 +1532,29 @@ if (newMoves === 0) {
       wrapper.appendChild(circle);
       mapContainer.appendChild(wrapper);
     });
+    // === DICTATORSHIP VISUAL OVERLAYS ===
+Object.keys(dictatorships).forEach(square => {
+
+  const ownerId = dictatorships[square];
+  const owner = players[ownerId];
+  if (!owner) return;
+
+  const pos = getScaledPosition(square);
+
+  const overlay = document.createElement("div");
+  overlay.style.position = "absolute";
+  overlay.style.left = pos.x + "px";
+  overlay.style.top = pos.y + "px";
+  overlay.style.width = "30px";
+  overlay.style.height = "30px";
+  overlay.style.backgroundColor = owner.color;
+  overlay.style.opacity = "0.3";
+  overlay.style.transform = "translate(-50%, -50%)";
+  overlay.style.pointerEvents = "none";
+
+  mapContainer.appendChild(overlay);
+});
+    
   }
   function showUpgradeOptions() {
 
