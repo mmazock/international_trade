@@ -1841,3 +1841,5 @@ function resolveBattle(attackerId, defenderId, gameData) {
   }
 
 }
+
+  });
