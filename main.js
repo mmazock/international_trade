@@ -1657,13 +1657,46 @@ function showUpgradeOptions() {
 
   const messageBox = document.getElementById("messageBox");
 
+  const gameData = latestGameData;
+  const player = gameData.players[currentPlayerId];
+
+  const transportLevel = player.upgrades?.transport || 0;
+  const navigationLevel = player.upgrades?.navigation || 0;
+  const weaponsLevel = player.upgrades?.weapons || 0;
+
+  const transportCost = 150 * (transportLevel + 1);
+  const navigationCost = 100 * (navigationLevel + 1);
+  const weaponsCost = 100 * (weaponsLevel + 1);
+
   messageBox.innerHTML = `
     <strong>Select Upgrade:</strong><br><br>
-    <button id="upgradeTransport">Transport ($150)</button><br><br>
-    <button id="upgradeNavigation">Navigation ($100)</button><br><br>
-    <button id="upgradeWeapons">Weapons ($100)</button><br><br>
-    <button id="upgradeSuez">Construct Suez ($150)</button><br><br>
-    <button id="upgradeDictatorship">Fund Dictatorship (60% success, $300 × level)</button>
+
+    <button id="upgradeTransport">
+      Transport (Level ${transportLevel} → ${transportLevel + 1})<br>
+      Cost: $${transportCost} | Success: 75%
+    </button>
+    <br><br>
+
+    <button id="upgradeNavigation" ${navigationLevel >= 3 ? "disabled" : ""}>
+      Navigation (Level ${navigationLevel}${navigationLevel < 3 ? ` → ${navigationLevel + 1}` : ""})<br>
+      Cost: $${navigationCost} | Success: 75% | Max Level: 3
+    </button>
+    <br><br>
+
+    <button id="upgradeWeapons">
+      Weapons (Level ${weaponsLevel} → ${weaponsLevel + 1})<br>
+      Cost: $${weaponsCost} | Success: 75%
+    </button>
+    <br><br>
+
+    <button id="upgradeSuez">
+      Construct Suez Canal ($150)
+    </button>
+    <br><br>
+
+    <button id="upgradeDictatorship">
+      Fund Dictatorship (60% success, $300 × level)
+    </button>
   `;
 }
 
