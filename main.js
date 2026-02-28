@@ -1090,7 +1090,13 @@ if (event.target && event.target.id === "denyAccessBtn") {
     permissionRequest: null
   });
 }
+// === PERMISSION ACKNOWLEDGE ===
+if (event.target && event.target.id === "permissionAcknowledgeBtn") {
 
+  await gamesRef.child(currentGameCode).update({
+    permissionResult: null
+  });
+}
 async function advanceTurn() {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
@@ -1797,18 +1803,17 @@ await gamesRef.child(currentGameCode)
   .child(battle.winnerId)
   .update({ movesRemaining: 0 });
 
-  overlay.innerHTML = `
-    <h1>BATTLE RESULT</h1>
-    <h2>${attacker.name}: ${battle.attackerRoll}</h2>
-    <h2>${defender.name}: ${battle.defenderRoll}</h2>
-    <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
-    ${
-      currentPlayerId === battle.winnerId
-        ? `<br><br><button id="battleContinueBtn">Continue</button>`
-        : `<p>Waiting for winner...</p>`
-    }
-  `;
-}
+overlay.innerHTML = `
+  <h1>BATTLE RESULT</h1>
+  <h2>${attacker.name}: ${battle.attackerRoll}</h2>
+  <h2>${defender.name}: ${battle.defenderRoll}</h2>
+  <h2>${gameData.players[battle.winnerId].name} WINS!</h2>
+  ${
+    currentPlayerId === battle.winnerId
+      ? '<br><br><button id="battleContinueBtn">Continue</button>'
+      : '<p>Waiting for winner...</p>'
+  }
+`;
 }
 /* =============================
    BATTLE RESOLUTION (UTILITY)
