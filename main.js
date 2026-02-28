@@ -1556,8 +1556,41 @@ Object.keys(dictatorships).forEach(square => {
   mapContainer.appendChild(overlay);
 });
     
+// === SUEZ CANAL VISUAL LINE ===
+if (gameData.suezOwner) {
+
+  const owner = players[gameData.suezOwner];
+  if (owner) {
+
+    const posG3 = getScaledPosition("G3");
+    const posG4 = getScaledPosition("G4");
+
+    const line = document.createElement("div");
+
+    line.style.position = "absolute";
+    line.style.left = posG3.x + "px";
+    line.style.top = posG3.y + "px";
+
+    const deltaX = posG4.x - posG3.x;
+    const deltaY = posG4.y - posG3.y;
+
+    const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+
+    line.style.width = length + "px";
+    line.style.height = "6px";
+    line.style.backgroundColor = owner.color;
+    line.style.transformOrigin = "0 50%";
+    line.style.transform = `rotate(${angle}deg)`;
+    line.style.opacity = "0.9";
+    line.style.pointerEvents = "none";
+
+    mapContainer.appendChild(line);
   }
-  function showUpgradeOptions() {
+}
+
+}
+function showUpgradeOptions() {
 
   const messageBox = document.getElementById("messageBox");
 
