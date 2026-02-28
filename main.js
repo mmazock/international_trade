@@ -866,7 +866,7 @@ await gamesRef.child(currentGameCode).update({
 document.getElementById("messageBox").innerHTML = "";
 
 return;
-
+}
   /* ===== WEAPONS UPGRADE ===== */
 
 if (event.target && event.target.id === "upgradeWeapons") {
@@ -922,7 +922,7 @@ await gamesRef.child(currentGameCode).update({
 document.getElementById("messageBox").innerHTML = "";
 
 return;
-  
+}
   // === SUEZ CONSTRUCTION ===
 if (event.target && event.target.id === "upgradeSuez") {
 
