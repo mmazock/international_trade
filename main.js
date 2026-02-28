@@ -1123,12 +1123,13 @@ if (event.target && event.target.id === "denyAccessBtn") {
     permissionRequest: null
   });
 }
-// === PERMISSION ACKNOWLEDGE ===
 if (event.target && event.target.id === "permissionAcknowledgeBtn") {
   await gamesRef.child(currentGameCode).update({
     permissionResult: null
   });
 }
+
+}); // closes document.addEventListener("click", ...)
 
 async function advanceTurn() {
 
