@@ -804,6 +804,7 @@ if (event.target && event.target.id === "upgradeTransport") {
 document.getElementById("messageBox").innerHTML = "";
 
 return;
+}
 /* ===== NAVIGATION UPGRADE ===== */
 
 if (event.target && event.target.id === "upgradeNavigation") {
