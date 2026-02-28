@@ -802,7 +802,7 @@ if (event.target && event.target.id === "upgradeTransport") {
 
   return;
 }
- /* ===== NAVIGATION UPGRADE ===== */
+/* ===== NAVIGATION UPGRADE ===== */
 
 if (event.target && event.target.id === "upgradeNavigation") {
 
@@ -818,21 +818,26 @@ if (event.target && event.target.id === "upgradeNavigation") {
 
   const player = gameData.players[currentPlayerId];
 
-  if ((player.upgrades?.navigation || 0) >= 3) {
-    alert("Navigation is already at maximum level.");
+  const level = player.upgrades?.navigation || 0;
+
+  if (level >= 3) {
+    alert("Navigation is already at maximum level (3).");
     return;
   }
 
-  if (player.money < 100) {
-    alert("Not enough money. Cost is $100.");
+  const cost = 100 * (level + 1);
+
+  if (player.money < cost) {
+    alert(`Not enough money. Cost is $${cost}.`);
     return;
   }
 
+  // Deduct money
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(currentPlayerId)
     .update({
-      money: player.money - 100
+      money: player.money - cost
     });
 
   const success = Math.random() < 0.75;
@@ -842,7 +847,7 @@ if (event.target && event.target.id === "upgradeNavigation") {
       .child("players")
       .child(currentPlayerId)
       .update({
-        "upgrades/navigation": (player.upgrades?.navigation || 0) + 1
+        "upgrades/navigation": level + 1
       });
 
     alert("Navigation upgrade successful!");
