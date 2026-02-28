@@ -862,6 +862,60 @@ if (event.target && event.target.id === "upgradeNavigation") {
   return;
 }
 
+  /* ===== WEAPONS UPGRADE ===== */
+
+if (event.target && event.target.id === "upgradeWeapons") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  if (!gameData || gameData.currentPhase !== 1) return;
+
+  const turnOrder = gameData.turnOrder;
+  const currentTurnIndex = gameData.currentTurnIndex;
+
+  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+
+  const player = gameData.players[currentPlayerId];
+
+  const level = player.upgrades?.weapons || 0;
+  const cost = 100 * (level + 1);
+
+  if (player.money < cost) {
+    alert(`Not enough money. Cost is $${cost}.`);
+    return;
+  }
+
+  // Deduct money
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: player.money - cost
+    });
+
+  const success = Math.random() < 0.75;
+
+  if (success) {
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(currentPlayerId)
+      .update({
+        "upgrades/weapons": level + 1
+      });
+
+    alert("Weapons upgrade successful!");
+  } else {
+    alert("Weapons upgrade failed. Investment lost.");
+  }
+
+  await gamesRef.child(currentGameCode).update({
+    lastActive: Date.now()
+  });
+
+  return;
+}
+  
   // === SUEZ CONSTRUCTION ===
 if (event.target && event.target.id === "upgradeSuez") {
 
