@@ -2009,7 +2009,8 @@ if (
 
     html += `</div>`;
   });
-
+inventoryList.innerHTML = html;
+}
 /* =============================
    BATTLE ANIMATION ENGINE
    ============================= */
