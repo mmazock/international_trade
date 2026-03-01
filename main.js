@@ -1901,11 +1901,6 @@ const roundNumber = gameData.round || 1;
 const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
 phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
 
-
-
-let html = "";
-
-  
   // === PLAYER HEADER RESTORE ===
   if (players[currentPlayerId]) {
     const me = players[currentPlayerId];
