@@ -541,12 +541,29 @@ if (event.target && event.target.id === "giveNoBtn") {
 // === GIVE: YES ===
 if (event.target && event.target.id === "giveYesBtn") {
 
-  showGiveOptions();
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  // Store temporary UI state
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      givingMode: true
+    });
+
   return;
-} 
+}
   // === GIVE: BACK ===
 if (event.target && event.target.id === "giveBackBtn") {
-  document.getElementById("messageBox").innerHTML = "";
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      givingMode: null
+    });
+
   return;
 }
   // === ROLL ATTACK ===
@@ -1937,7 +1954,23 @@ phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}
 
     html += `<strong>${player.name} (${player.country})</strong>`;
     if (isCurrentTurn) html += ` (Current Turn)`;
-
+// === GIVE MODE UI ===
+if (
+  currentPhase === 0 &&
+  playerId === currentPlayerId &&
+  player.givingMode
+) {
+  html += `
+    <br><strong>Select What to Give:</strong><br>
+    <button id="giveMoneyBtn">Give Money</button><br>
+    <button id="giveResourcesBtn">Give Resources</button><br>
+    ${gameData.suezOwner === currentPlayerId ? '<button id="giveSuezBtn">Transfer Suez</button><br>' : ''}
+    ${Object.entries(gameData.dictatorships || {}).some(([sq, owner]) => owner === currentPlayerId)
+      ? '<button id="giveDictatorshipBtn">Transfer Dictatorship</button><br>'
+      : ''}
+    <button id="giveBackBtn">Back</button>
+  `;
+}
 // === SUEZ OWNERSHIP INDICATOR ===
 if (gameData.suezOwner === playerId) {
 html += `<br>🏗️ <strong>Suez Owner</strong>`;
