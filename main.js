@@ -670,6 +670,42 @@ if (event.target && event.target.id === "giveResourcesBtn") {
 
   inventoryList.innerHTML = html;
 }
+
+  // === RESOURCE SELECTED ===
+if (event.target && event.target.classList.contains("resourceSelectBtn")) {
+
+  const resource = event.target.dataset.resource;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const sender = gameData.players[currentPlayerId];
+
+  const available = sender.inventory?.[resource] || 0;
+
+  const amountStr = prompt(`How many ${resource} would you like to give? (Max: ${available})`);
+  if (!amountStr) return;
+
+  const amount = parseInt(amountStr);
+
+  if (isNaN(amount) || amount <= 0 || amount > available) {
+    alert("Invalid amount.");
+    return;
+  }
+
+  // Store temporary selection in Firebase
+  await gamesRef.child(currentGameCode).update({
+    pendingResourceTransfer: {
+      resource,
+      amount,
+      senderId: currentPlayerId
+    }
+  });
+
+  showResourceRecipientOptions(gameData, resource, amount);
+
+  return;
+}
+  
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
@@ -1902,7 +1938,27 @@ function showUpgradeOptions() {
 
   inventoryList.innerHTML = html;
 }
+function showResourceRecipientOptions(gameData, resource, amount) {
 
+  const players = gameData.players || {};
+
+  let html = `<strong>Give ${amount} ${resource} to:</strong><br><br>`;
+
+  Object.keys(players).forEach(playerId => {
+
+    if (playerId !== currentPlayerId) {
+      html += `
+        <button class="resourceRecipientBtn" data-recipient="${playerId}">
+          ${players[playerId].name}
+        </button><br><br>
+      `;
+    }
+  });
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+}
 async function startHarvestSelection(region) {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
