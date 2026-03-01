@@ -1993,7 +1993,8 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
 if (
   isCurrentTurn &&
   playerId === currentPlayerId &&
-  currentPhase === 0
+  currentPhase === 0 &&
+  !player.givingMode
 ) {
   html += `
     <br><strong>Would you like to give anything?</strong><br>
