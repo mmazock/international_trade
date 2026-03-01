@@ -1892,28 +1892,20 @@ if (gameData.battle.stage === "displacement") {
   runBattleAnimation(gameData);
   return;
 }
-  const players = gameData.players || {};
-  const turnOrder = gameData.turnOrder || [];
-  const currentTurnIndex = gameData.currentTurnIndex || 0;
-  const currentPhase = gameData.currentPhase || 0;
-  const roundNumber = gameData.round || 1;
+const players = gameData.players || {};
+const turnOrder = gameData.turnOrder || [];
+const currentTurnIndex = gameData.currentTurnIndex || 0;
+const currentPhase = gameData.currentPhase || 0;
+const roundNumber = gameData.round || 1;
 
-  const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
-  phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
-// === GIVE PHASE UI (Message Box Only) ===
-if (
-  currentPhase === 0 &&
-  turnOrder[currentTurnIndex] === currentPlayerId
-) {
-  const messageBox = document.getElementById("messageBox");
+const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
+phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
 
-  messageBox.innerHTML = `
-    <h3>Give Phase</h3>
-    <p>Would you like to give anything?</p>
-    <button id="giveYesBtn">Yes</button>
-    <button id="giveNoBtn">No</button>
-  `;
-}
+
+
+let html = "";
+
+  
   // === PLAYER HEADER RESTORE ===
   if (players[currentPlayerId]) {
     const me = players[currentPlayerId];
@@ -1996,7 +1988,19 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
 
     html += `</div>`;
   });
-
+// === GIVE PHASE UI ===
+if (
+  currentPhase === 0 &&
+  turnOrder[currentTurnIndex] === currentPlayerId
+) {
+  html += `
+    <br><hr>
+    <strong>Give Phase</strong><br>
+    Would you like to give anything?<br>
+    <button id="giveYesBtn">Yes</button>
+    <button id="giveNoBtn">No</button>
+  `;
+}
   inventoryList.innerHTML = html;
 }
 
