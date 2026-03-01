@@ -527,6 +527,28 @@ await gamesRef.child(currentGameCode).update({
    ============================= */
 
 document.addEventListener("click", async function(event) {
+ // === GIVE: NO ===
+if (event.target && event.target.id === "giveNoBtn") {
+
+  await gamesRef.child(currentGameCode).update({
+    currentPhase: 1, // move to Upgrade Phase
+    lastActive: Date.now()
+  });
+
+  return;
+}
+
+// === GIVE: YES ===
+if (event.target && event.target.id === "giveYesBtn") {
+
+  showGiveOptions();
+  return;
+} 
+  // === GIVE: BACK ===
+if (event.target && event.target.id === "giveBackBtn") {
+  document.getElementById("messageBox").innerHTML = "";
+  return;
+}
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
@@ -1707,6 +1729,20 @@ function showUpgradeOptions() {
   `;
 }
 
+function showGiveOptions() {
+
+  const messageBox = document.getElementById("messageBox");
+
+  messageBox.innerHTML = `
+    <strong>Select What to Give:</strong><br><br>
+    <button id="giveMoneyBtn">Give Money</button><br><br>
+    <button id="giveResourcesBtn">Give Resources</button><br><br>
+    <button id="giveSuezBtn">Transfer Suez (if owner)</button><br><br>
+    <button id="giveDictatorshipBtn">Transfer Dictatorship</button><br><br>
+    <button id="giveBackBtn">Back</button>
+  `;
+}  
+
 async function startHarvestSelection(region) {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
@@ -1864,7 +1900,21 @@ if (gameData.battle.stage === "displacement") {
 
   const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
   phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
+// === GIVE PHASE UI ===
+if (
+  currentPhase === 0 &&
+  turnOrder[currentTurnIndex] === currentPlayerId
+) {
 
+  inventoryList.innerHTML = `
+    <h2>Give Phase</h2>
+    <p>Would you like to give anything?</p>
+    <button id="giveYesBtn">Yes</button>
+    <button id="giveNoBtn">No</button>
+  `;
+
+  return;
+}
   // === PLAYER HEADER RESTORE ===
   if (players[currentPlayerId]) {
     const me = players[currentPlayerId];
