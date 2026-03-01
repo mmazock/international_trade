@@ -1728,6 +1728,35 @@ function showUpgradeOptions() {
     </button>
   `;
 }
+  function showGiveOptions(gameData) {
+
+  const players = gameData.players || {};
+  const turnOrder = gameData.turnOrder || [];
+
+  let html = `
+    <h2>Give Phase</h2>
+    <strong>Select what to give:</strong><br><br>
+    <button id="giveMoneyBtn">Give Money</button><br><br>
+    <button id="giveResourcesBtn">Give Resources</button><br><br>
+  `;
+
+  // Only show Suez transfer if player owns it
+  if (gameData.suezOwner === currentPlayerId) {
+    html += `<button id="giveSuezBtn">Transfer Suez Canal</button><br><br>`;
+  }
+
+  // Only show dictatorship transfer if player owns any
+  const ownedDictatorships = Object.entries(gameData.dictatorships || {})
+    .filter(([square, ownerId]) => ownerId === currentPlayerId);
+
+  if (ownedDictatorships.length > 0) {
+    html += `<button id="giveDictatorshipBtn">Transfer Dictatorship</button><br><br>`;
+  }
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+}
 
 async function startHarvestSelection(region) {
 
