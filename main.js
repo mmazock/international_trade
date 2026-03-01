@@ -1900,20 +1900,19 @@ if (gameData.battle.stage === "displacement") {
 
   const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
   phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
-// === GIVE PHASE UI ===
+// === GIVE PHASE UI (Message Box Only) ===
 if (
   currentPhase === 0 &&
   turnOrder[currentTurnIndex] === currentPlayerId
 ) {
+  const messageBox = document.getElementById("messageBox");
 
-  inventoryList.innerHTML = `
-    <h2>Give Phase</h2>
+  messageBox.innerHTML = `
+    <h3>Give Phase</h3>
     <p>Would you like to give anything?</p>
     <button id="giveYesBtn">Yes</button>
     <button id="giveNoBtn">No</button>
   `;
-
-  return;
 }
   // === PLAYER HEADER RESTORE ===
   if (players[currentPlayerId]) {
