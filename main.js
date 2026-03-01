@@ -566,6 +566,74 @@ if (event.target && event.target.id === "giveBackBtn") {
 
   return;
 }
+  // === GIVE MONEY ===
+if (event.target && event.target.id === "giveMoneyBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const player = gameData.players[currentPlayerId];
+
+  const amountInput = prompt("Enter whole dollar amount to give:");
+  if (!amountInput) return;
+
+  const amount = parseInt(amountInput);
+
+  if (isNaN(amount) || amount <= 0) {
+    alert("Enter a valid whole number.");
+    return;
+  }
+
+  if (amount > player.money) {
+    alert("You cannot give more than you have.");
+    return;
+  }
+
+  showGiveMoneyRecipients(gameData, amount);
+
+  return;
+}
+
+  // === GIVE MONEY RECIPIENT SELECTED ===
+if (event.target && event.target.classList.contains("giveMoneyRecipientBtn")) {
+
+  const recipientId = event.target.dataset.id;
+  const amount = parseInt(event.target.dataset.amount);
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const sender = gameData.players[currentPlayerId];
+  const recipient = gameData.players[recipientId];
+
+  // Deduct from sender
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      money: sender.money - amount
+    });
+
+  // Add to recipient
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(recipientId)
+    .update({
+      money: recipient.money + amount
+    });
+
+  alert(`${sender.name} gave $${amount} to ${recipient.name}.`);
+
+  // Reset giving mode
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      givingMode: false
+    });
+
+  return;
+}
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
@@ -1769,6 +1837,30 @@ function showUpgradeOptions() {
   if (ownedDictatorships.length > 0) {
     html += `<button id="giveDictatorshipBtn">Transfer Dictatorship</button><br><br>`;
   }
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+}
+  function showGiveMoneyRecipients(gameData, amount) {
+
+  const players = gameData.players || {};
+
+  let html = `<strong>Select recipient:</strong><br><br>`;
+
+  Object.keys(players).forEach(id => {
+
+    if (id !== currentPlayerId) {
+      html += `
+        <button class="giveMoneyRecipientBtn" 
+                data-id="${id}" 
+                data-amount="${amount}">
+          ${players[id].name}
+        </button><br><br>
+      `;
+    }
+
+  });
 
   html += `<button id="giveBackBtn">Back</button>`;
 
