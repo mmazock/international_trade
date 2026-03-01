@@ -1729,20 +1729,6 @@ function showUpgradeOptions() {
   `;
 }
 
-function showGiveOptions() {
-
-  const messageBox = document.getElementById("messageBox");
-
-  messageBox.innerHTML = `
-    <strong>Select What to Give:</strong><br><br>
-    <button id="giveMoneyBtn">Give Money</button><br><br>
-    <button id="giveResourcesBtn">Give Resources</button><br><br>
-    <button id="giveSuezBtn">Transfer Suez (if owner)</button><br><br>
-    <button id="giveDictatorshipBtn">Transfer Dictatorship</button><br><br>
-    <button id="giveBackBtn">Back</button>
-  `;
-}  
-
 async function startHarvestSelection(region) {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
