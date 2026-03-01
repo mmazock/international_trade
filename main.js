@@ -1956,7 +1956,18 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
         html += `${resource}: ${player.inventory[resource]}<br>`;
       }
     }
-
+// === GIVE PHASE PROMPT (inside green box) ===
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 0
+) {
+  html += `
+    <br><strong>Would you like to give anything?</strong><br>
+    <button id="giveYesBtn">Yes</button>
+    <button id="giveNoBtn">No</button>
+  `;
+}
     // === UPGRADE PHASE PROMPT RESTORED ===
     if (
       isCurrentTurn &&
@@ -1997,27 +2008,6 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
     }
 
     html += `</div>`;
-  });
-// === GIVE PHASE UI ===
-if (
-  currentPhase === 0 &&
-  turnOrder[currentTurnIndex] === currentPlayerId
-) {
-  html += `
-    <br><hr>
-    <strong>Give Phase</strong><br>
-    Would you like to give anything?<br>
-    <button id="giveYesBtn">Yes</button>
-    <button id="giveNoBtn">No</button>
-  `;
-}
-  inventoryList.innerHTML = html;
-}
-
-  window.addEventListener("resize", () => {
-    if (latestGameData) {
-      renderShips(latestGameData);
-    }
   });
 
 /* =============================
