@@ -636,8 +636,39 @@ if (event.target && event.target.classList.contains("giveMoneyRecipientBtn")) {
     .update({
       givingMode: false
     });
-
   return;
+}
+  // === GIVE RESOURCES ===
+if (event.target && event.target.id === "giveResourcesBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const sender = gameData.players[currentPlayerId];
+
+  const inventory = sender.inventory || {};
+
+  let html = `<strong>Select Resource to Give:</strong><br><br>`;
+
+  const resourceKeys = Object.keys(inventory);
+
+  if (resourceKeys.length === 0) {
+    html += "You have no resources to give.<br><br>";
+    html += `<button id="giveBackBtn">Back</button>`;
+    inventoryList.innerHTML = html;
+    return;
+  }
+
+  resourceKeys.forEach(resource => {
+    html += `
+      <button class="resourceSelectBtn" data-resource="${resource}">
+        ${resource} (${inventory[resource]})
+      </button><br><br>
+    `;
+  });
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
 }
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
