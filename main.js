@@ -622,7 +622,12 @@ if (event.target && event.target.classList.contains("giveMoneyRecipientBtn")) {
       money: recipient.money + amount
     });
 
-  alert(`${sender.name} gave $${amount} to ${recipient.name}.`);
+  await gamesRef.child(currentGameCode)
+  .child("gameLog")
+  .push({
+    round: gameData.round,
+    message: `${sender.name} gave $${amount} to ${recipient.name}.`
+  });
 
   // Reset giving mode
   await gamesRef.child(currentGameCode)
