@@ -1918,37 +1918,30 @@ Object.keys(dictatorships).forEach(square => {
   mapContainer.appendChild(overlay);
 });
     
-// === SUEZ CANAL VISUAL LINE ===
+// Remove old Suez line
+document.querySelectorAll(".suez-line").forEach(line => line.remove());
+
 if (gameData.suezOwner) {
 
   const owner = players[gameData.suezOwner];
-  if (owner) {
+  if (!owner) return;
 
-    const posG3 = getScaledPosition("G3");
-    const posG4 = getScaledPosition("G4");
+  const g3 = getScaledPosition("G3");
+  const g4 = getScaledPosition("G4");
 
-    const line = document.createElement("div");
+  const suezLine = document.createElement("div");
+  suezLine.className = "suez-line";
 
-    line.style.position = "absolute";
-    line.style.left = posG3.x + "px";
-    line.style.top = posG3.y + "px";
+  suezLine.style.position = "absolute";
+  suezLine.style.left = g3.x + "px";
+  suezLine.style.top = g3.y + "px";
+  suezLine.style.width = "4px";
+  suezLine.style.height = Math.abs(g4.y - g3.y) + "px";
+  suezLine.style.backgroundColor = owner.color;
+  suezLine.style.transform = "translate(-50%, 0)";
+  suezLine.style.pointerEvents = "none";
 
-    const deltaX = posG4.x - posG3.x;
-    const deltaY = posG4.y - posG3.y;
-
-    const length = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-
-    line.style.width = length + "px";
-    line.style.height = "6px";
-    line.style.backgroundColor = owner.color;
-    line.style.transformOrigin = "0 50%";
-    line.style.transform = `rotate(${angle}deg)`;
-    line.style.opacity = "0.9";
-    line.style.pointerEvents = "none";
-
-    mapContainer.appendChild(line);
-  }
+  mapContainer.appendChild(suezLine);
 }
 
 }
