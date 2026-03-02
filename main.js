@@ -1994,11 +1994,14 @@ function showResourceRecipientOptions(gameData, resource, amount) {
   Object.keys(players).forEach(playerId => {
 
     if (playerId !== currentPlayerId) {
-      html += `
-        <button class="resourceRecipientBtn" data-recipient="${playerId}">
-          ${players[playerId].name}
-        </button><br><br>
-      `;
+html += `
+  <button class="giveResourceRecipientBtn"
+          data-id="${id}"
+          data-resource="${resource}"
+          data-amount="${amount}">
+    ${players[id].name}
+  </button><br><br>
+`;
     }
   });
 
