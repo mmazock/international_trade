@@ -732,14 +732,28 @@ if (event.target.classList.contains("giveResourceRecipientBtn")) {
     delete senderInventory[resource];
   }
 
-  // Add to recipient
-  recipientInventory[resource] =
-    (recipientInventory[resource] || 0) + amount;
+// === CHECK IF RECIPIENT IS AT HOME ===
+if (recipient.shipPosition === recipient.homePort) {
+
+  const baseValue = baseResourceValues[resource] || 0;
+  const multiplier = recipient.multipliers?.[resource] || 1;
+
+  const totalValue = amount * baseValue * multiplier;
 
   await gamesRef.child(currentGameCode)
     .child("players")
-    .child(currentPlayerId)
-    .update({ inventory: senderInventory });
+    .child(recipientId)
+    .update({
+      money: (recipient.money || 0) + totalValue
+    });
+
+  alert(`${sender.name} gave ${amount} ${resource} to ${recipient.name}. It was immediately cashed in for $${totalValue}.`);
+
+} else {
+
+  // Add to recipient inventory normally
+  recipientInventory[resource] =
+    (recipientInventory[resource] || 0) + amount;
 
   await gamesRef.child(currentGameCode)
     .child("players")
@@ -747,6 +761,14 @@ if (event.target.classList.contains("giveResourceRecipientBtn")) {
     .update({ inventory: recipientInventory });
 
   alert(`${sender.name} gave ${amount} ${resource} to ${recipient.name}.`);
+
+}
+
+// Update sender inventory after transfer
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({ inventory: senderInventory });
 
   // Return to Give Phase start
   document.getElementById("messageBox").innerHTML = "";
