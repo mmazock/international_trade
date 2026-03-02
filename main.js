@@ -1988,20 +1988,18 @@ function showUpgradeOptions() {
 function showResourceRecipientOptions(gameData, resource, amount) {
 
   const players = gameData.players || {};
-
   let html = `<strong>Give ${amount} ${resource} to:</strong><br><br>`;
 
-  Object.keys(players).forEach(playerId => {
-
-    if (playerId !== currentPlayerId) {
-html += `
-  <button class="giveResourceRecipientBtn"
-          data-id="${id}"
-          data-resource="${resource}"
-          data-amount="${amount}">
-    ${players[id].name}
-  </button><br><br>
-`;
+  Object.keys(players).forEach(id => {
+    if (id !== currentPlayerId) {
+      html += `
+        <button class="giveResourceRecipientBtn"
+                data-id="${id}"
+                data-resource="${resource}"
+                data-amount="${amount}">
+          ${players[id].name}
+        </button><br><br>
+      `;
     }
   });
 
