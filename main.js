@@ -775,6 +775,50 @@ await gamesRef.child(currentGameCode)
 
   return;
 }
+  // === GIVE SUEZ ===
+if (event.target && event.target.id === "giveSuezBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const players = gameData.players || {};
+
+  let html = `<strong>Transfer Suez Canal to:</strong><br><br>`;
+
+  Object.keys(players).forEach(id => {
+    if (id !== currentPlayerId) {
+      html += `
+        <button class="giveSuezRecipientBtn" data-id="${id}">
+          ${players[id].name}
+        </button><br><br>
+      `;
+    }
+  });
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+
+  return;
+}
+  // === SUEZ RECIPIENT SELECTED ===
+if (event.target && event.target.classList.contains("giveSuezRecipientBtn")) {
+
+  const recipientId = event.target.dataset.id;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const sender = gameData.players[currentPlayerId];
+  const recipient = gameData.players[recipientId];
+
+  await gamesRef.child(currentGameCode).update({
+    suezOwner: recipientId
+  });
+
+  alert(`${sender.name} transferred control of the Suez Canal to ${recipient.name}.`);
+
+  return;
+}
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
