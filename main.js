@@ -705,7 +705,50 @@ if (event.target && event.target.classList.contains("resourceSelectBtn")) {
 
   return;
 }
-  
+  // === GIVE RESOURCE TO RECIPIENT ===
+if (event.target && event.target.classList.contains("giveResourceRecipientBtn")) {
+
+  const recipientId = event.target.dataset.id;
+  const resource = event.target.dataset.resource;
+  const amount = parseInt(event.target.dataset.amount);
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  const sender = gameData.players[currentPlayerId];
+  const recipient = gameData.players[recipientId];
+
+  const senderInventory = sender.inventory || {};
+  const recipientInventory = recipient.inventory || {};
+
+  // Safety check
+  if (!senderInventory[resource] || senderInventory[resource] < amount) {
+    alert("Not enough resources.");
+    return;
+  }
+
+  // Remove from sender
+  senderInventory[resource] -= amount;
+  if (senderInventory[resource] <= 0) {
+    delete senderInventory[resource];
+  }
+
+  // Add to recipient
+  recipientInventory[resource] = (recipientInventory[resource] || 0) + amount;
+
+  // Update Firebase
+  await gamesRef.child(currentGameCode).child("players").child(currentPlayerId).update({
+    inventory: senderInventory
+  });
+
+  await gamesRef.child(currentGameCode).child("players").child(recipientId).update({
+    inventory: recipientInventory
+  });
+
+  alert(`Gave ${amount} ${resource} to ${recipient.name}.`);
+
+  return;
+}
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
