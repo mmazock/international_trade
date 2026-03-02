@@ -705,8 +705,8 @@ if (event.target && event.target.classList.contains("resourceSelectBtn")) {
 
   return;
 }
-  // === GIVE RESOURCE TO RECIPIENT ===
-if (event.target && event.target.classList.contains("giveResourceRecipientBtn")) {
+// === GIVE RESOURCE RECIPIENT SELECTED ===
+if (event.target.classList.contains("giveResourceRecipientBtn")) {
 
   const recipientId = event.target.dataset.id;
   const resource = event.target.dataset.resource;
@@ -721,31 +721,35 @@ if (event.target && event.target.classList.contains("giveResourceRecipientBtn"))
   const senderInventory = sender.inventory || {};
   const recipientInventory = recipient.inventory || {};
 
-  // Safety check
   if (!senderInventory[resource] || senderInventory[resource] < amount) {
     alert("Not enough resources.");
     return;
   }
 
-  // Remove from sender
+  // Subtract from sender
   senderInventory[resource] -= amount;
   if (senderInventory[resource] <= 0) {
     delete senderInventory[resource];
   }
 
   // Add to recipient
-  recipientInventory[resource] = (recipientInventory[resource] || 0) + amount;
+  recipientInventory[resource] =
+    (recipientInventory[resource] || 0) + amount;
 
-  // Update Firebase
-  await gamesRef.child(currentGameCode).child("players").child(currentPlayerId).update({
-    inventory: senderInventory
-  });
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({ inventory: senderInventory });
 
-  await gamesRef.child(currentGameCode).child("players").child(recipientId).update({
-    inventory: recipientInventory
-  });
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(recipientId)
+    .update({ inventory: recipientInventory });
 
-  alert(`Gave ${amount} ${resource} to ${recipient.name}.`);
+  alert(`${sender.name} gave ${amount} ${resource} to ${recipient.name}.`);
+
+  // Return to Give Phase start
+  document.getElementById("messageBox").innerHTML = "";
 
   return;
 }
