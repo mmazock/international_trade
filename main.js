@@ -1560,17 +1560,7 @@ if (event.target && event.target.id === "cashInContinueBtn") {
 
   await advanceTurn();
 }
-// === MANUFACTURE BUTTON ===
-if (
-  isCurrentTurn &&
-  playerId === currentPlayerId &&
-  currentPhase === 2 &&
-  factoryZones[player.shipPosition] &&
-  player.movesRemaining > 0 &&
-  player.shipPosition !== player.homePort
-) {
-  html += `<br><button id="manufactureBtn">Manufacture</button>`;
-}
+
 // === GRANT ACCESS ===
 if (event.target && event.target.id === "grantAccessBtn") {
 
@@ -2455,16 +2445,28 @@ if (
     }
 
     // === HARVEST BUTTON ===
-    if (
-      isCurrentTurn &&
-      playerId === currentPlayerId &&
-      currentPhase === 2 &&
-      onHarvestSquare &&
-      player.rollValue &&
-      player.movesRemaining > 0
-    ) {
-      html += `<br><button id="harvestBtn">Harvest</button>`;
-    }
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 2 &&
+  onHarvestSquare &&
+  player.rollValue &&
+  player.movesRemaining > 0
+) {
+  html += `<br><button id="harvestBtn">Harvest</button>`;
+}
+
+// === MANUFACTURE BUTTON ===
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 2 &&
+  factoryZones[player.shipPosition] &&
+  player.movesRemaining > 0 &&
+  player.shipPosition !== player.homePort
+) {
+  html += `<br><button id="manufactureBtn">Manufacture</button>`;
+}
 
     if (player.movesRemaining > 0) {
       html += `<br>Moves Remaining: ${player.movesRemaining}`;
