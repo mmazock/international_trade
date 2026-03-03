@@ -1895,6 +1895,10 @@ const dictatorships = gameData.dictatorships || {};
       wrapper.appendChild(circle);
       mapContainer.appendChild(wrapper);
     });
+// Remove old dictatorship overlays
+document.querySelectorAll(".dictatorship-overlay")
+  .forEach(el => el.remove());
+    
     // === DICTATORSHIP VISUAL OVERLAYS ===
 Object.keys(dictatorships).forEach(square => {
 
@@ -1904,7 +1908,8 @@ Object.keys(dictatorships).forEach(square => {
 
   const pos = getScaledPosition(square);
 
-  const overlay = document.createElement("div");
+ const overlay = document.createElement("div");
+overlay.className = "dictatorship-overlay";
   overlay.style.position = "absolute";
   overlay.style.left = pos.x + "px";
   overlay.style.top = pos.y + "px";
