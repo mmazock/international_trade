@@ -891,9 +891,18 @@ if (event.target && event.target.id === "manufactureBtn") {
     `;
   });
 
-  html += `<button id="giveBackBtn">Back</button>`;
+  html += `<button id="manufactureBackBtn">Back</button>`;
 
   inventoryList.innerHTML = html;
+  return;
+}
+  // === MANUFACTURE BACK ===
+if (event.target && event.target.id === "manufactureBackBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+
+  renderLedger(gameData); // Re-render the movement phase UI
   return;
 }
   // === MANUFACTURE SELECTION ===
