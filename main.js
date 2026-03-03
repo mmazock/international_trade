@@ -1054,7 +1054,13 @@ if (event.target && event.target.id === "battleDestroy") {
   await gamesRef.child(currentGameCode).update({
     battle: null
   });
-
+// Increase bounty for attacker
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    bounty: (gameData.players[currentPlayerId].bounty || 0) + 200
+  });
   await advanceTurn();
 }
 
@@ -1098,6 +1104,13 @@ if (event.target && event.target.id === "battlePlunder") {
       displacedPlayerId: loserId,
       originSquare: winner.shipPosition
     }
+  });
+  // Increase bounty for attacker
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    bounty: (gameData.players[currentPlayerId].bounty || 0) + 200
   });
 }
 
