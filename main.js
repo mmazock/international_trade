@@ -158,7 +158,33 @@ const harvestZones = {
 
 };
 
+/* =============================
+   FACTORY ZONES
+   ============================= */
 
+const factoryZones = {
+
+  // TECHNOLOGY
+  "P3": ["Technology", "Automobile", "Steel"],
+  "Q3": ["Technology", "Automobile"],
+  "R3": ["Technology", "Automobile"],
+  "L4": ["Technology", "Clothes"],
+
+  // AUTOMOBILES
+  "O4": ["Automobile", "Steel"],
+
+  // STEEL
+  "K5": ["Steel"],
+  "L5": ["Steel", "Clothes"],
+  "P4": ["Steel"],
+
+  // CLOTHES
+  "M4": ["Clothes"],
+  "M5": ["Clothes"],
+  "N5": ["Clothes"],
+  "K6": ["Clothes"]
+
+};
   /* =============================
    REGION RESOURCES
    ============================= */
@@ -203,7 +229,29 @@ const baseResourceValues = {
   "Porcelain": 80
 };
 
+/* =============================
+   MANUFACTURING RECIPES
+   ============================= */
 
+const manufacturingRecipes = {
+
+  "Technology": {
+    inputs: ["Copper", "Oil"]
+  },
+
+  "Automobile": {
+    inputs: ["Steel", "Clothes", "Oil", "Copper"]
+  },
+
+  "Steel": {
+    inputs: ["Iron", "Coal"]
+  },
+
+  "Clothes": {
+    inputs: ["Cotton", "Silk"]
+  }
+
+};
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
 
 const countryData = {
@@ -817,6 +865,81 @@ if (event.target && event.target.classList.contains("giveSuezRecipientBtn")) {
 
   alert(`${sender.name} transferred control of the Suez Canal to ${recipient.name}.`);
 
+  return;
+}
+  // === MANUFACTURE BUTTON CLICKED ===
+if (event.target && event.target.id === "manufactureBtn") {
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const player = gameData.players[currentPlayerId];
+
+  const goods = factoryZones[player.shipPosition];
+  if (!goods) return;
+
+  let html = `<strong>Select Production:</strong><br><br>`;
+
+  goods.forEach(good => {
+
+    const recipe = manufacturingRecipes[good];
+    const ingredients = recipe.inputs.join(" + ");
+
+    html += `
+      <button class="manufactureSelectBtn" data-good="${good}">
+        ${good} = ${ingredients}
+      </button><br><br>
+    `;
+  });
+
+  html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+  return;
+}
+  // === MANUFACTURE SELECTION ===
+if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
+
+  const good = event.target.dataset.good;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const player = gameData.players[currentPlayerId];
+
+  const recipe = manufacturingRecipes[good];
+  if (!recipe) return;
+
+  const inventory = player.inventory || {};
+
+  // Check resources
+  for (let resource of recipe.inputs) {
+    if (!inventory[resource] || inventory[resource] < 1) {
+      alert("Insufficient resources.");
+      return;
+    }
+  }
+
+  // Remove inputs
+  recipe.inputs.forEach(resource => {
+    inventory[resource] -= 1;
+    if (inventory[resource] <= 0) {
+      delete inventory[resource];
+    }
+  });
+
+  // Add manufactured good
+  inventory[good] = (inventory[good] || 0) + 1;
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      inventory: inventory,
+      movesRemaining: 0
+    });
+
+  alert(`${good} manufactured successfully!`);
+
+  await advanceTurn();
   return;
 }
   // === ROLL ATTACK ===
@@ -1437,7 +1560,17 @@ if (event.target && event.target.id === "cashInContinueBtn") {
 
   await advanceTurn();
 }
-
+// === MANUFACTURE BUTTON ===
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  currentPhase === 2 &&
+  factoryZones[player.shipPosition] &&
+  player.movesRemaining > 0 &&
+  player.shipPosition !== player.homePort
+) {
+  html += `<br><button id="manufactureBtn">Manufacture</button>`;
+}
 // === GRANT ACCESS ===
 if (event.target && event.target.id === "grantAccessBtn") {
 
