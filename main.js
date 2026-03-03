@@ -2426,6 +2426,9 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
     html += `<br>Transport: ${(player.upgrades?.transport) || 0}`;
     html += `<br>Navigation: ${(player.upgrades?.navigation) || 0}`;
     html += `<br>Weapons: ${(player.upgrades?.weapons) || 0}`;
+    if (player.bounty && player.bounty > 0) {
+  html += `<br>⚠️ Bounty: $${player.bounty}`;
+}
     html += `<br>Inventory:<br>`;
 
     if (!player.inventory || Object.keys(player.inventory).length === 0) {
