@@ -227,12 +227,12 @@ const baseResourceValues = {
   "Copper": 20,
   "Silk": 80,
   "Porcelain": 80,
+
   "Clothes": 250,
   "Steel": 150,
   "Technology": 200,
   "Automobiles": 1500
 };
-
 /* =============================
    MANUFACTURING RECIPES
    ============================= */
