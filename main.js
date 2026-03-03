@@ -428,6 +428,7 @@ await newPlayerRef.set({
   homePort: countryData[country].home,
   multipliers: countryData[country].multipliers,
   money: 0,
+  bounty: 0, // ← ADD THIS LINE
   upgrades: {
     transport: 0,
     navigation: 0,
