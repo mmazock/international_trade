@@ -1091,7 +1091,12 @@ if (event.target && event.target.id === "battleDestroy") {
 
   await advanceTurn();
 }
-
+await gamesRef.child(currentGameCode)
+  .child("gameLog")
+  .push({
+    round: gameData.round,
+    message: `${winner.name} destroyed ${loser.name} and collected $${loser.bounty} bounty.`
+  });
 // === PLUNDER ===
 if (event.target && event.target.id === "battlePlunder") {
 
