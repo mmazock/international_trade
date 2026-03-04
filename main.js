@@ -1036,12 +1036,46 @@ if (event.target && event.target.id === "battleDestroy") {
   const gameData = gameSnap.val();
   const battle = gameData.battle;
 
-  const loserId = battle.winnerId === battle.attackerId
+  const winnerId = battle.winnerId;
+  const loserId = winnerId === battle.attackerId
     ? battle.defenderId
     : battle.attackerId;
 
+  const winner = gameData.players[winnerId];
   const loser = gameData.players[loserId];
 
+  let winnerBountyHistory = winner.bountyCollectedFrom || {};
+  let bountyAward = 0;
+
+  // === BOUNTY COLLECTION CHECK ===
+  if (loser.bounty && loser.bounty > 0) {
+
+    if (!winnerBountyHistory[loserId]) {
+
+      bountyAward = loser.bounty;
+
+      winnerBountyHistory[loserId] = true;
+
+      await gamesRef.child(currentGameCode)
+        .child("players")
+        .child(winnerId)
+        .update({
+          money: (winner.money || 0) + bountyAward,
+          bountyCollectedFrom: winnerBountyHistory
+        });
+
+      await gamesRef.child(currentGameCode)
+        .child("players")
+        .child(loserId)
+        .update({
+          bounty: 0
+        });
+
+      alert(`Bounty Collected: $${bountyAward}`);
+    }
+  }
+
+  // Reset loser ship
   await gamesRef.child(currentGameCode)
     .child("players")
     .child(loserId)
@@ -1054,13 +1088,7 @@ if (event.target && event.target.id === "battleDestroy") {
   await gamesRef.child(currentGameCode).update({
     battle: null
   });
-// Increase bounty for attacker
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .update({
-    bounty: (gameData.players[currentPlayerId].bounty || 0) + 200
-  });
+
   await advanceTurn();
 }
 
