@@ -381,7 +381,12 @@ await gamesRef.child(code).set({
   currentPhase: 0,
   round: 1,
   lastActive: Date.now(),
-  gameLog: []
+  gameLog: [],
+  gameState: "lobby",
+  victoryCondition: {
+    type: "money",
+    target: 2000
+  }
 });
 
 
@@ -503,19 +508,24 @@ function hideSetupUI() {
   }
 }
 
-  function listenToGameData() {
+function listenToGameData() {
 
-    gamesRef.child(currentGameCode).on("value", snapshot => {
+  gamesRef.child(currentGameCode).on("value", snapshot => {
 
-      const gameData = snapshot.val();
-      if (!gameData) return;
+    const gameData = snapshot.val();
+    if (!gameData) return;
 
-      latestGameData = gameData;
+    latestGameData = gameData;
 
-      renderShips(gameData);
-      renderLedger(gameData);
-    });
-  }
+    if (gameData.gameState === "lobby") {
+      renderLobby(gameData);
+      return;
+    }
+
+    renderShips(gameData);
+    renderLedger(gameData);
+  });
+}
 
   /* =============================
      PHASE ENGINE
@@ -954,6 +964,17 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
   alert(`${good} manufactured successfully!`);
 
   await advanceTurn();
+  return;
+}
+  // === START GAME ===
+if (event.target && event.target.id === "startGameBtn") {
+
+  await gamesRef.child(currentGameCode).update({
+    gameState: "active",
+    currentPhase: 0,
+    round: 1
+  });
+
   return;
 }
   // === ROLL ATTACK ===
@@ -2205,6 +2226,32 @@ function showUpgradeOptions() {
   }
 
   html += `<button id="giveBackBtn">Back</button>`;
+
+  inventoryList.innerHTML = html;
+}
+  function renderLobby(gameData) {
+
+  const players = gameData.players || {};
+
+  let html = `
+    <h2>Game Lobby</h2>
+    <p><strong>Join Code:</strong> ${currentGameCode}</p>
+    <hr>
+    <strong>Players:</strong><br><br>
+  `;
+
+  Object.keys(players).forEach(id => {
+    html += `${players[id].name} (${players[id].country})<br>`;
+  });
+
+  html += `<br><hr>`;
+
+  html += `
+    <strong>Victory Condition:</strong><br>
+    <button id="victoryMoneyBtn">Money ($2000)</button><br><br>
+  `;
+
+  html += `<br><button id="startGameBtn">Start Game</button>`;
 
   inventoryList.innerHTML = html;
 }
