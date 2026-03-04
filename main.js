@@ -372,27 +372,66 @@ const countryData = {
      CREATE GAME
      ============================= */
 
-  createGameBtn.addEventListener("click", async () => {
-    const code = Math.random().toString(36).substring(2,7).toUpperCase();
-await gamesRef.child(code).set({
-  players: {},
-  turnOrder: [],
-  currentTurnIndex: 0,
-  currentPhase: 0,
-  round: 1,
-  lastActive: Date.now(),
-  gameLog: [],
-  gameState: "lobby",
-  victoryCondition: {
-    type: "money",
-    target: 2000
+createGameBtn.addEventListener("click", async () => {
+
+  const name = playerNameInput.value.trim();
+  const country = countrySelect.value;
+
+  if (!name || !country) {
+    joinStatus.textContent = "Enter your name and select a country first.";
+    return;
   }
-});
 
+  const code = Math.random().toString(36).substring(2,7).toUpperCase();
 
-    currentGameCode = code;
-    joinStatus.textContent = "Game created. Share this code: " + code;
+  await gamesRef.child(code).set({
+    players: {},
+    turnOrder: [],
+    currentTurnIndex: 0,
+    currentPhase: 0,
+    round: 1,
+    gameState: "lobby",
+    lastActive: Date.now()
   });
+
+  currentGameCode = code;
+
+  // Assign first available color
+  const color = availableColors[0];
+  const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
+
+  const newPlayerRef = gamesRef.child(code).child("players").push();
+
+  await newPlayerRef.set({
+    name,
+    country,
+    homePort: countryData[country].home,
+    multipliers: countryData[country].multipliers,
+    money: 0,
+    upgrades: {
+      transport: 0,
+      navigation: 0,
+      weapons: 0
+    },
+    inventory: {},
+    shipPosition: countryData[country].home,
+    color,
+    initials,
+    movesRemaining: 0,
+    rollValue: null,
+    bounty: 0
+  });
+
+  currentPlayerId = newPlayerRef.key;
+
+  await gamesRef.child(code).child("turnOrder").set([currentPlayerId]);
+
+  localStorage.setItem("gameCode", currentGameCode);
+  localStorage.setItem("playerId", currentPlayerId);
+
+  hideSetupUI();
+  listenToGameData();
+});
 console.log("Game created with gameLog initialized");
   /* =============================
      JOIN GAME
