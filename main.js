@@ -1881,9 +1881,21 @@ for (let id in players) {
     break;
   }
 }
-if (defendingPlayerId && !isAdjacent) {
-  alert("You must move adjacent to initiate battle.");
-  return;
+if (defendingPlayerId) {
+
+  const currentPos = player.shipPosition;
+
+  const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
+  const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+
+  const isAdjacent =
+    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+    (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+  if (!isAdjacent) {
+    alert("You must move adjacent to initiate battle.");
+    return;
+  }
 }
 if (defendingPlayerId) {
 
