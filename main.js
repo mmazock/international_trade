@@ -2006,14 +2006,6 @@ if (gameData.dictatorships && gameData.dictatorships[target]) {
   }
 }
 
-// Adjacency check
-const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
-const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
-
-const isAdjacent =
-  (Math.abs(colDiff) === 1 && rowDiff === 0) ||
-  (Math.abs(rowDiff) === 1 && colDiff === 0);
-
 if (!isAdjacent) return;
 
 // Malacca restriction
