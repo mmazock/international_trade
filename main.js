@@ -1923,7 +1923,6 @@ if (defendingPlayerId) {
 
   return;
 }
-const currentPos = player.shipPosition;
 
 // Must be water
 if (!waterSquares.has(target)) return;
