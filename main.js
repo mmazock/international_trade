@@ -629,6 +629,8 @@ await gamesRef.child(currentGameCode).update({
    ============================= */
 
 document.addEventListener("click", async function(event) {
+
+  if (!currentGameCode) return;
  // === GIVE: NO ===
 if (event.target && event.target.id === "giveNoBtn") {
 
@@ -1149,14 +1151,17 @@ if (event.target && event.target.id === "battleDestroy") {
     battle: null
   });
 
-  await advanceTurn();
-}
+await advanceTurn();
+
 await gamesRef.child(currentGameCode)
   .child("gameLog")
   .push({
     round: gameData.round,
-    message: `${winner.name} destroyed ${loser.name} and collected $${loser.bounty} bounty.`
+    message: `${winner.name} destroyed ${loser.name} and collected $${bountyAward} bounty.`
   });
+
+return;
+}
 // === PLUNDER ===
 if (event.target && event.target.id === "battlePlunder") {
 
