@@ -1876,7 +1876,20 @@ for (let id in players) {
 }
 
 if (defendingPlayerId) {
+  // 🔒 REQUIRE ADJACENCY TO START BATTLE
+  const currentPos = player.shipPosition;
 
+  const colDiff = target.charCodeAt(0) - currentPos.charCodeAt(0);
+  const rowDiff = parseInt(target.slice(1)) - parseInt(currentPos.slice(1));
+
+  const isAdjacent =
+    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+    (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+  if (!isAdjacent) {
+    alert("You must be adjacent to initiate battle.");
+    return;
+  }
   const defender = players[defendingPlayerId];
 
   if (target === defender.homePort) {
