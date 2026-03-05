@@ -1852,7 +1852,7 @@ if (
     return;
   }
 }
-
+// Adjacency check
     if (!isAdjacent) return;
     if (!waterSquares.has(target)) return;
 
