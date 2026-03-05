@@ -7,13 +7,20 @@ body {
   display: flex;
   gap: 20px;
   align-items: flex-start;
+  width: 100%;
 }
-
 /* Map container */
 #map-container {
   position: relative;
-  width: 700px;
-  border: 2px solid black;
+  flex: 1;
+  max-width: 75vw;   /* allows map to grow on large screens */
+}
+
+#map-image {
+  width: 100%;
+  height: auto;
+  max-height: 85vh;  /* prevents map from being too tall */
+  display: block;
 }
 
 /* Map image */
