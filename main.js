@@ -9,7 +9,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const games = snapshot.val();
 
   if (!games || typeof games !== "object") return;
-gameLog: []
   const now = Date.now();
   const fifteenMinutes = 15 * 60 * 1000;
 
