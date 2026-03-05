@@ -1881,6 +1881,8 @@ for (let id in players) {
     break;
   }
 }
+
+// 🔴 NEW ADJACENCY CHECK
 if (defendingPlayerId) {
 
   const currentPos = player.shipPosition;
