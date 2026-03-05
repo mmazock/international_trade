@@ -630,9 +630,11 @@ await gamesRef.child(currentGameCode).update({
 
 document.addEventListener("click", async function(event) {
 
+  // Prevent clicks before game is fully loaded
   if (!currentGameCode) return;
- // === GIVE: NO ===
-if (event.target && event.target.id === "giveNoBtn") {
+
+  // === GIVE: NO ===
+  if (event.target && event.target.id === "giveNoBtn") {
 
   await gamesRef.child(currentGameCode).update({
     currentPhase: 1, // move to Upgrade Phase
@@ -1249,21 +1251,13 @@ if (event.target && event.target.id === "battleContinueBtn") {
 }
 /* ===== UPGRADE PHASE PROMPT ===== */
 
+// === UPGRADE: NO ===
 if (event.target && event.target.id === "upgradeNoBtn") {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
-  if (!gameData || gameData.currentPhase !== 1) return;
-
-  const turnOrder = gameData.turnOrder;
-  const currentTurnIndex = gameData.currentTurnIndex;
-
-  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
-
-  // Clear upgrade UI
-  const messageBox = document.getElementById("messageBox");
-  messageBox.innerHTML = "";
+  if (!gameData) return;
 
   await gamesRef.child(currentGameCode).update({
     currentPhase: 2,
@@ -1274,17 +1268,13 @@ if (event.target && event.target.id === "upgradeNoBtn") {
 }
 
 
+// === UPGRADE: YES ===
 if (event.target && event.target.id === "upgradeYesBtn") {
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
 
-  if (!gameData || gameData.currentPhase !== 1) return;
-
-  const turnOrder = gameData.turnOrder;
-  const currentTurnIndex = gameData.currentTurnIndex;
-
-  if (turnOrder[currentTurnIndex] !== currentPlayerId) return;
+  if (!gameData) return;
 
   showUpgradeOptions();
   return;
