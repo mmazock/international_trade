@@ -2005,7 +2005,7 @@ if (gameData.dictatorships && gameData.dictatorships[target]) {
     return;
   }
 }
-
+//Adjacency check
 if (!isAdjacent) return;
 
 // Malacca restriction
