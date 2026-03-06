@@ -318,7 +318,20 @@ const countryData = {
   }
 
 };
+#referencePanel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 20px;
+}
 
+.referenceColumn {
+  flex: 1;
+  border: 2px solid #333;
+  padding: 10px;
+  background-color: #f4f4f4;
+  font-size: 14px;
+}
 
   const originalWidth = 275;
   const originalHeight = 150;
@@ -2863,4 +2876,5 @@ window.addEventListener("resize", () => {
     renderShips(latestGameData);
   }
 });
+renderReferencePanel();
 }); // closes DOMContentLoaded
