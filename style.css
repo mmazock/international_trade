@@ -5,6 +5,7 @@ body {
 
 #game {
   display: flex;
+  flex-wrap: wrap;   /* allows items to wrap to next line */
   gap: 20px;
   align-items: flex-start;
   width: 100%;
@@ -60,4 +61,12 @@ body {
   padding: 10px;
   background-color: #f4f4f4;
   font-size: 14px;
+}
+
+#map-container {
+  flex: 1 1 100%;
+}
+
+#referencePanel {
+  flex: 1 1 100%;   /* forces it to take full width under map */
 }
