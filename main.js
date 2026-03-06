@@ -1040,9 +1040,6 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
 
   return;
 }
-
-  return;
-}
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
