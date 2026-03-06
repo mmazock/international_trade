@@ -2863,4 +2863,38 @@ window.addEventListener("resize", () => {
     renderShips(latestGameData);
   }
 });
+  function renderReferencePanel() {
+
+  const panel = document.getElementById("referencePanel");
+  if (!panel) return;
+
+  let html = `
+    <div class="referenceColumn">
+      <h3>Country Bonuses</h3>
+  `;
+
+  for (let country in countryData) {
+    html += `<strong>${country}</strong><br>`;
+    const multipliers = countryData[country].multipliers;
+    for (let resource in multipliers) {
+      html += `${resource}: ×${multipliers[resource]}<br>`;
+    }
+    html += `<br>`;
+  }
+
+  html += `</div>`;
+
+  html += `
+    <div class="referenceColumn">
+      <h3>Resource Values</h3>
+  `;
+
+  for (let resource in baseResourceValues) {
+    html += `${resource}: $${baseResourceValues[resource]}<br>`;
+  }
+
+  html += `</div>`;
+
+  panel.innerHTML = html;
+}
 }); // closes DOMContentLoaded
