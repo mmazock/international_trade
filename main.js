@@ -2776,5 +2776,10 @@ function resolveBattle(attackerId, defenderId, gameData) {
  }
    
 } // closes resolveBattle
-
+// 🔄 Re-render ships when window resizes
+window.addEventListener("resize", () => {
+  if (latestGameData) {
+    renderShips(latestGameData);
+  }
+});
 }); // closes DOMContentLoaded
