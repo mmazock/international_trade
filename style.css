@@ -47,8 +47,17 @@ body {
   pointer-events: none;
   user-select: none;
 }
+#referencePanel {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  gap: 20px;
+}
 
-<div id="referencePanel">
-  <div id="countryReference" class="referenceColumn"></div>
-  <div id="resourceReference" class="referenceColumn"></div>
-</div>
+.referenceColumn {
+  flex: 1;
+  border: 2px solid #333;
+  padding: 10px;
+  background-color: #f4f4f4;
+  font-size: 14px;
+}
