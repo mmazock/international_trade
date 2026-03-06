@@ -2323,11 +2323,6 @@ function showUpgradeOptions() {
 
   html += `<br><hr>`;
 
-  html += `
-    <strong>Victory Condition:</strong><br>
-    <button id="victoryMoneyBtn">Money ($2000)</button><br><br>
-
-`;
  // READY BUTTON FOR NON-HOSTS
 if (currentPlayerId !== gameData.hostId) {
   html += `<button id="readyBtn">Ready</button><br><br>`;
