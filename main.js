@@ -2133,11 +2133,15 @@ const dictatorships = gameData.dictatorships || {};
       if (!player.shipPosition) return;
 
       const pos = getScaledPosition(player.shipPosition);
-      const rect = mapImage.getBoundingClientRect();
+    const rect = mapImage.getBoundingClientRect();
 const scaleFactor = rect.width / originalWidth;
 
-const shipSize = 22 * scaleFactor;
-const iconSize = 14 * scaleFactor;
+// Clamp scale so ships don't get gigantic
+const clampedScale = Math.min(scaleFactor, 1.8);
+
+const shipSize = 18 * clampedScale;
+const iconSize = 14 * clampedScale;
+const fontSize = 7 * clampedScale;
 
       const wrapper = document.createElement("div");
       wrapper.className = "ship";
@@ -2164,7 +2168,7 @@ shipImg.style.width = iconSize + "px";
 
       const label = document.createElement("div");
       label.textContent = player.initials;
-      label.style.fontSize = "7px";
+      label.style.fontSize = fontSize + "px";
       label.style.fontWeight = "bold";
       label.style.color = player.color === "yellow" ? "black" : "white";
 
