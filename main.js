@@ -371,13 +371,19 @@ const countryData = {
      CREATE GAME
      ============================= */
 
-createGameBtn.addEventListener("click", async () => {
+createGameBtn.addEventListener("click", () => {
 
-  const name = playerNameInput.value.trim();
-  const country = countrySelect.value;
+  createGameBtn.style.display = "none";
+  document.getElementById("hostSetup").style.display = "block";
+
+});
+document.getElementById("confirmHostBtn").addEventListener("click", async () => {
+
+  const name = document.getElementById("hostNameInput").value.trim();
+  const country = document.getElementById("hostCountrySelect").value;
 
   if (!name || !country) {
-    joinStatus.textContent = "Enter your name and select a country first.";
+    alert("Enter name and select country.");
     return;
   }
 
@@ -390,9 +396,47 @@ createGameBtn.addEventListener("click", async () => {
     currentPhase: 0,
     round: 1,
     gameState: "lobby",
+    hostId: null,
+    victoryCondition: "money10k",
+    readyPlayers: {},
     lastActive: Date.now()
   });
 
+  currentGameCode = code;
+
+  const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
+
+  const newPlayerRef = gamesRef.child(code).child("players").push();
+
+  await newPlayerRef.set({
+    name,
+    country,
+    homePort: countryData[country].home,
+    multipliers: countryData[country].multipliers,
+    money: 0,
+    bounty: 0,
+    upgrades: { transport:0, navigation:0, weapons:0 },
+    inventory: {},
+    shipPosition: countryData[country].home,
+    color: availableColors[0],
+    initials,
+    movesRemaining: 0,
+    rollValue: null
+  });
+
+  currentPlayerId = newPlayerRef.key;
+
+  await gamesRef.child(code).update({
+    turnOrder: [currentPlayerId],
+    hostId: currentPlayerId
+  });
+
+  localStorage.setItem("gameCode", code);
+  localStorage.setItem("playerId", currentPlayerId);
+
+  hideSetupUI();
+  listenToGameData();
+});
   currentGameCode = code;
 
   // Assign first available color
@@ -631,7 +675,16 @@ document.addEventListener("click", async function(event) {
 
   // Prevent clicks before game is fully loaded
   if (!currentGameCode) return;
+if (event.target.id === "readyBtn") {
 
+  await gamesRef.child(currentGameCode)
+    .child("readyPlayers")
+    .update({
+      [currentPlayerId]: true
+    });
+
+  return;
+}
   // === GIVE: NO ===
   if (event.target && event.target.id === "giveNoBtn") {
 
@@ -1009,13 +1062,29 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
   return;
 }
   // === START GAME ===
-if (event.target && event.target.id === "startGameBtn") {
+html += `
+<hr>
+<strong>Victory Condition:</strong><br>
+<select id="victorySelect">
+  <option value="money10k">First to $10,000</option>
+  <option value="mostAfter200">Most Money After 200 Rounds</option>
+  <option value="auto10">Most Money After 10 Automobiles Cashed In</option>
+</select><br><br>
+`;
+  
+ if (event.target.id === "startGameBtn") {
+
+  const victory = document.getElementById("victorySelect").value;
 
   await gamesRef.child(currentGameCode).update({
     gameState: "active",
     currentPhase: 0,
-    round: 1
+    round: 1,
+    victoryCondition: victory
   });
+
+  return;
+}
 
   return;
 }
@@ -2304,7 +2373,21 @@ function showUpgradeOptions() {
     <button id="victoryMoneyBtn">Money ($2000)</button><br><br>
   `;
 
+ // READY BUTTON FOR NON-HOSTS
+if (currentPlayerId !== gameData.hostId) {
+  html += `<button id="readyBtn">Ready</button><br><br>`;
+}
+
+// SHOW WHO IS READY
+html += "<strong>Ready Players:</strong><br>";
+Object.keys(gameData.readyPlayers || {}).forEach(id => {
+  html += `${gameData.players[id].name} ✓<br>`;
+});
+
+// HOST CAN START
+if (currentPlayerId === gameData.hostId) {
   html += `<br><button id="startGameBtn">Start Game</button>`;
+}
 
   inventoryList.innerHTML = html;
 }
