@@ -47,3 +47,8 @@ body {
   pointer-events: none;
   user-select: none;
 }
+
+<div id="referencePanel">
+  <div id="countryReference" class="referenceColumn"></div>
+  <div id="resourceReference" class="referenceColumn"></div>
+</div>
