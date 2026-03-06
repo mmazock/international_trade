@@ -437,44 +437,7 @@ document.getElementById("confirmHostBtn").addEventListener("click", async () => 
   hideSetupUI();
   listenToGameData();
 });
-  currentGameCode = code;
 
-  // Assign first available color
-  const color = availableColors[0];
-  const initials = name.split(" ").map(n => n[0]).join("").toUpperCase();
-
-  const newPlayerRef = gamesRef.child(code).child("players").push();
-
-  await newPlayerRef.set({
-    name,
-    country,
-    homePort: countryData[country].home,
-    multipliers: countryData[country].multipliers,
-    money: 0,
-    upgrades: {
-      transport: 0,
-      navigation: 0,
-      weapons: 0
-    },
-    inventory: {},
-    shipPosition: countryData[country].home,
-    color,
-    initials,
-    movesRemaining: 0,
-    rollValue: null,
-    bounty: 0
-  });
-
-  currentPlayerId = newPlayerRef.key;
-
-  await gamesRef.child(code).child("turnOrder").set([currentPlayerId]);
-
-  localStorage.setItem("gameCode", currentGameCode);
-  localStorage.setItem("playerId", currentPlayerId);
-
-  hideSetupUI();
-  listenToGameData();
-});
 console.log("Game created with gameLog initialized");
   /* =============================
      JOIN GAME
@@ -1062,15 +1025,7 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
   return;
 }
   // === START GAME ===
-html += `
-<hr>
-<strong>Victory Condition:</strong><br>
-<select id="victorySelect">
-  <option value="money10k">First to $10,000</option>
-  <option value="mostAfter200">Most Money After 200 Rounds</option>
-  <option value="auto10">Most Money After 10 Automobiles Cashed In</option>
-</select><br><br>
-`;
+
   
  if (event.target.id === "startGameBtn") {
 
@@ -2373,6 +2328,7 @@ function showUpgradeOptions() {
     <button id="victoryMoneyBtn">Money ($2000)</button><br><br>
   `;
 
+`;
  // READY BUTTON FOR NON-HOSTS
 if (currentPlayerId !== gameData.hostId) {
   html += `<button id="readyBtn">Ready</button><br><br>`;
@@ -2383,7 +2339,15 @@ html += "<strong>Ready Players:</strong><br>";
 Object.keys(gameData.readyPlayers || {}).forEach(id => {
   html += `${gameData.players[id].name} ✓<br>`;
 });
-
+html += `
+<hr>
+<strong>Victory Condition:</strong><br>
+<select id="victorySelect">
+  <option value="money10k">First to $10,000</option>
+  <option value="mostAfter200">Most Money After 200 Rounds</option>
+  <option value="auto10">Most Money After 10 Automobiles Cashed In</option>
+</select><br><br>
+`;
 // HOST CAN START
 if (currentPlayerId === gameData.hostId) {
   html += `<br><button id="startGameBtn">Start Game</button>`;
