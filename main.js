@@ -1784,7 +1784,9 @@ async function advanceTurn() {
     round: newRound,
     lastActive: Date.now()
   });
-
+// 🔍 Check victory conditions after turn advances
+const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+checkVictoryConditions(updatedSnap.val());
   // Initialize next player movement state
   await gamesRef.child(currentGameCode)
     .child("players")
@@ -2088,7 +2090,17 @@ for (let resource in updatedPlayer.inventory) {
 
 breakdownHtml += `<hr><strong>Total = $${totalValue}</strong><br><br>
 <button id="cashInContinueBtn">Continue to next player's turn</button>`;
+// 🚗 Track automobile cash-ins BEFORE inventory is cleared
+if (updatedPlayer.inventory["Automobiles"]) {
+  const autos = updatedPlayer.inventory["Automobiles"];
 
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({
+      automobilesCashed: (updatedPlayer.automobilesCashed || 0) + autos
+    });
+}
 // Add money + clear inventory
 await gamesRef.child(currentGameCode)
   .child("players")
@@ -2475,7 +2487,19 @@ if (remaining <= 0) {
 }
 
 function renderLedger(gameData) {
-// === PERMISSION REQUEST HANDLER ===
+// 🏁 GAME OVER SCREEN
+if (gameData.gameState === "gameOver") {
+
+  const winner = gameData.players[gameData.winnerId];
+
+  inventoryList.innerHTML = `
+    <h1 style="color:red;">GAME OVER</h1>
+    <h2>${winner.name} wins!</h2>
+  `;
+
+  return;
+}
+  // === PERMISSION REQUEST HANDLER ===
 if (
   gameData.permissionRequest &&
   gameData.permissionRequest.ownerId === currentPlayerId
@@ -2752,6 +2776,63 @@ overlay.innerHTML = `
   }
 `;
 }
+}
+  function checkVictoryConditions(gameData) {
+
+  if (!gameData || gameData.gameState !== "active") return;
+
+  const players = gameData.players || {};
+  const victory = gameData.victoryCondition || "money10k";
+
+  // 🏆 CONDITION 1 — First to $10,000
+  if (victory === "money10k") {
+    for (let id in players) {
+      if ((players[id].money || 0) >= 10000) {
+        endGame(gameData, id);
+        return;
+      }
+    }
+  }
+
+  // 🏆 CONDITION 2 — Most money after 200 rounds
+  if (victory === "mostAfter200") {
+    if ((gameData.round || 0) >= 200) {
+      let winnerId = null;
+      let highest = -1;
+
+      for (let id in players) {
+        if ((players[id].money || 0) > highest) {
+          highest = players[id].money;
+          winnerId = id;
+        }
+      }
+
+      if (winnerId) endGame(gameData, winnerId);
+      return;
+    }
+  }
+
+  // 🏆 CONDITION 3 — 10 Automobiles cashed in
+  if (victory === "auto10") {
+    for (let id in players) {
+      if ((players[id].automobilesCashed || 0) >= 10) {
+        endGame(gameData, id);
+        return;
+      }
+    }
+  }
+}
+  function endGame(gameData, winnerId) {
+
+  const winner = gameData.players[winnerId];
+  if (!winner) return;
+
+  gamesRef.child(currentGameCode).update({
+    gameState: "gameOver",
+    winnerId: winnerId
+  });
+
+  alert(`GAME OVER: ${winner.name} wins!`);
 }
 /* =============================
    BATTLE RESOLUTION (UTILITY)
