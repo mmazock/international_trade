@@ -2326,7 +2326,6 @@ function showUpgradeOptions() {
   html += `
     <strong>Victory Condition:</strong><br>
     <button id="victoryMoneyBtn">Money ($2000)</button><br><br>
-  `;
 
 `;
  // READY BUTTON FOR NON-HOSTS
