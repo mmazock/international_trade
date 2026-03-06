@@ -2112,19 +2112,24 @@ const dictatorships = gameData.dictatorships || {};
       if (!player.shipPosition) return;
 
       const pos = getScaledPosition(player.shipPosition);
+      const rect = mapImage.getBoundingClientRect();
+const scaleFactor = rect.width / originalWidth;
+
+const shipSize = 22 * scaleFactor;
+const iconSize = 14 * scaleFactor;
 
       const wrapper = document.createElement("div");
       wrapper.className = "ship";
       wrapper.style.position = "absolute";
       wrapper.style.left = pos.x + "px";
       wrapper.style.top = pos.y + "px";
-      wrapper.style.width = "22px";
-      wrapper.style.height = "22px";
+wrapper.style.width = shipSize + "px";
+wrapper.style.height = shipSize + "px";
       wrapper.style.transform = "translate(-50%, -50%)";
 
       const circle = document.createElement("div");
-      circle.style.width = "22px";
-      circle.style.height = "22px";
+circle.style.width = shipSize + "px";
+circle.style.height = shipSize + "px";
       circle.style.backgroundColor = player.color;
       circle.style.borderRadius = "50%";
       circle.style.display = "flex";
@@ -2134,7 +2139,7 @@ const dictatorships = gameData.dictatorships || {};
 
       const shipImg = document.createElement("img");
       shipImg.src = "ship.png";
-      shipImg.style.width = "14px";
+shipImg.style.width = iconSize + "px";
 
       const label = document.createElement("div");
       label.textContent = player.initials;
