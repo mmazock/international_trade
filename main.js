@@ -1660,41 +1660,101 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
   
 if (event.target.id === "startGameBtn") {
 
-  const conditions = {};
+  const victoryConditions = {};
 
-  const moneyCheck = document.getElementById("victoryMoney");
-  const roundsCheck = document.getElementById("victoryRounds");
-  const autosCheck = document.getElementById("victoryAutos");
-
-  if (moneyCheck && moneyCheck.checked) {
-    const amount = parseInt(document.getElementById("victoryMoneyAmount").value) || 10000;
-    conditions.money = amount;
+  if (document.getElementById("vcMoney")?.checked) {
+    victoryConditions.money = parseInt(document.getElementById("vcMoneyAmount")?.value || 10000);
+  }
+  if (document.getElementById("vcRounds")?.checked) {
+    victoryConditions.rounds = parseInt(document.getElementById("vcRoundsAmount")?.value || 200);
+  }
+  if (document.getElementById("vcAutos")?.checked) {
+    victoryConditions.autos = parseInt(document.getElementById("vcAutosAmount")?.value || 10);
   }
 
-  if (roundsCheck && roundsCheck.checked) {
-    const amount = parseInt(document.getElementById("victoryRoundsAmount").value) || 200;
-    conditions.rounds = amount;
-  }
-
-  if (autosCheck && autosCheck.checked) {
-    const amount = parseInt(document.getElementById("victoryAutosAmount").value) || 10;
-    conditions.autos = amount;
-  }
-
-  if (Object.keys(conditions).length === 0) {
-    alert("Please select at least one victory condition.");
+  if (Object.keys(victoryConditions).length === 0) {
+    alert("Select at least one victory condition.");
     return;
+  }
+
+  const botCount = parseInt(document.getElementById("botCount")?.value || "0");
+  const snapshot = await gamesRef.child(currentGameCode).once("value");
+  const currentData = snapshot.val();
+  let turnOrder = currentData.turnOrder || [];
+
+  const usedCountries = Object.values(currentData.players || {}).map(p => p.country);
+  const usedColors = Object.values(currentData.players || {}).map(p => p.color);
+  const allCountries = ["Spain", "Portugal", "England", "France", "Italy", "Germany"];
+
+  for (let i = 0; i < botCount; i++) {
+    const personalityId = document.querySelector(`.botPersonality[data-bot="${i}"]`)?.value || "putin";
+    const difficultyId = document.querySelector(`.botDifficulty[data-bot="${i}"]`)?.value || "medium";
+    const persona = BOT_PERSONALITIES[personalityId];
+
+    const availableCountries = allCountries.filter(c => !usedCountries.includes(c));
+    if (availableCountries.length === 0) break;
+
+    let bestCountry = availableCountries[0];
+    let bestScore = -1;
+
+    for (const country of availableCountries) {
+      const data = countryData[country];
+      let score = Math.random() * 2;
+
+      for (let r in data.multipliers) {
+        const val = (baseResourceValues[r] || 0) * data.multipliers[r];
+        score += val * persona.economyPriority * 0.01;
+      }
+
+      if (persona.aggression > 0.5) {
+        if (country === "England" || country === "Spain") score += 3;
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCountry = country;
+      }
+    }
+
+    usedCountries.push(bestCountry);
+    const color = availableColors.find(c => !usedColors.includes(c)) || "gray";
+    usedColors.push(color);
+
+    const botRef = gamesRef.child(currentGameCode).child("players").push();
+
+    await botRef.set({
+      name: `${persona.name} ${persona.emoji}`,
+      country: bestCountry,
+      homePort: countryData[bestCountry].home,
+      multipliers: countryData[bestCountry].multipliers,
+      money: 0,
+      bounty: 0,
+      upgrades: { transport: 0, navigation: 0, weapons: 0 },
+      inventory: {},
+      shipPosition: countryData[bestCountry].home,
+      color,
+      initials: persona.name.substring(0, 2).toUpperCase(),
+      movesRemaining: 0,
+      rollValue: null,
+      isBot: true,
+      personality: personalityId,
+      difficulty: difficultyId
+    });
+
+    turnOrder.push(botRef.key);
   }
 
   await gamesRef.child(currentGameCode).update({
     gameState: "active",
     currentPhase: 0,
     round: 1,
-    victoryConditions: conditions
+    victoryConditions: victoryConditions,
+    turnOrder: turnOrder
   });
 
   return;
 }
+
 
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
@@ -3025,25 +3085,36 @@ html += "<strong>Ready Players:</strong><br>";
 Object.keys(gameData.readyPlayers || {}).forEach(id => {
   html += `${gameData.players[id].name} ✓<br>`;
 });
-html += `
-<hr>
-<strong>Victory Conditions (select one or more):</strong><br><br>
+html += `<hr><strong>Victory Conditions:</strong><br><br>`;
 
-<label>
-  <input type="checkbox" id="victoryMoney" checked>
-  First to $<input type="number" id="victoryMoneyAmount" value="10000" style="width:80px;"> 
-</label><br><br>
+if (currentPlayerId === gameData.hostId) {
+  html += `
+    <label><input type="checkbox" id="vcMoney" checked> First to $
+      <input type="number" id="vcMoneyAmount" value="10000" min="1000" step="1000" style="width:80px">
+    </label><br><br>
+    <label><input type="checkbox" id="vcRounds"> Most money after
+      <input type="number" id="vcRoundsAmount" value="200" min="10" step="10" style="width:60px"> rounds
+    </label><br><br>
+    <label><input type="checkbox" id="vcAutos"> Most money after
+      <input type="number" id="vcAutosAmount" value="10" min="1" step="1" style="width:50px"> automobiles cashed in
+    </label><br><br>
+  `;
 
-<label>
-  <input type="checkbox" id="victoryRounds">
-  Most Money After <input type="number" id="victoryRoundsAmount" value="200" style="width:60px;"> Rounds
-</label><br><br>
-
-<label>
-  <input type="checkbox" id="victoryAutos">
-  Most Money After <input type="number" id="victoryAutosAmount" value="10" style="width:60px;"> Automobiles Cashed In
-</label><br><br>
-`;
+  html += `
+    <hr><strong>AI Bots:</strong><br><br>
+    <label>Number of Bots:
+      <select id="botCount">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </label><br><br>
+    <div id="botConfigList"></div>
+  `;
+} else {
+  html += `<em>Host is configuring victory conditions and bots...</em><br><br>`;
+}
 
 // HOST CAN START
 if (currentPlayerId === gameData.hostId) {
