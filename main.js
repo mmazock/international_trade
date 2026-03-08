@@ -814,79 +814,7 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
   await advanceTurn();
 }
 
-function botChooseMove(botId, bot, gameData, personality, difficulty) {
-  const currentPos = bot.shipPosition;
-  const currentCol = currentPos.charCodeAt(0);
-  const currentRow = parseInt(currentPos.slice(1));
 
-  const adjacent = [];
-  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-
-  for (const [dc, dr] of directions) {
-    const newCol = String.fromCharCode(currentCol + dc);
-    const newRow = currentRow + dr;
-    const target = newCol + newRow;
-
-    if (!waterSquares.has(target)) continue;
-
-    if (restrictedTransitions[currentPos]) {
-      if (!restrictedTransitions[currentPos].includes(target)) continue;
-    }
-
-    if ((currentPos === "G3" && target === "G4") || (currentPos === "G4" && target === "G3")) {
-      if (!gameData.suezOwner) continue;
-    }
-
-    adjacent.push(target);
-  }
-
-  if (adjacent.length === 0) return null;
-
-  const scored = adjacent.map(target => {
-    let score = Math.random() * 2;
-
-    if (harvestZones[target]) {
-      score += personality.economyPriority * 5;
-    }
-
-    if (factoryZones[target]) {
-      score += personality.economyPriority * 4;
-      const recipes = factoryZones[target];
-      for (const good of recipes) {
-        const recipe = manufacturingRecipes[good];
-        if (recipe) {
-          const hasAll = recipe.inputs.every(r => (bot.inventory?.[r] || 0) >= 1);
-          if (hasAll) score += 8;
-        }
-      }
-    }
-
-    if (target === bot.homePort && bot.inventory && Object.keys(bot.inventory).length > 0) {
-      score += 10;
-    }
-
-    for (let id in gameData.players) {
-      if (id !== botId && gameData.players[id].shipPosition) {
-        const otherPos = gameData.players[id].shipPosition;
-        const dist = Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
-                     Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
-        if (personality.aggression > 0.5) {
-          score += (10 - dist) * personality.aggression * 0.3;
-        } else {
-          score += dist * 0.2;
-        }
-      }
-    }
-
-    score *= difficulty.decisionQuality;
-    score += Math.random() * (1 - difficulty.decisionQuality) * 5;
-
-    return { target, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-  return scored[0]?.target || null;
-}
 // BFS helper: find shortest path length from start to goal on water
 function bfsDist(start, goal, gameData) {
   if (start === goal) return 0;
