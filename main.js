@@ -444,6 +444,449 @@ function checkDealFulfillment(gameData, playerId) {
     return true;
   });
 }
+  /* =============================
+   BOT TURN EXECUTION
+   ============================= */
+
+async function executeBotTurn(botId, gameData) {
+  const bot = gameData.players[botId];
+  if (!bot || !bot.isBot) return;
+
+  const personality = BOT_PERSONALITIES[bot.personality];
+  const difficulty = DIFFICULTY_LEVELS[bot.difficulty];
+  const phase = gameData.currentPhase || 0;
+
+  await new Promise(r => setTimeout(r, 1200 + Math.random() * 1000));
+
+  if (phase === 0) {
+    await botGivePhase(botId, bot, gameData, personality, difficulty);
+    await gamesRef.child(currentGameCode).update({
+      currentPhase: 1,
+      lastActive: Date.now()
+    });
+
+  } else if (phase === 1) {
+    await botUpgradePhase(botId, bot, gameData, personality, difficulty);
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(botId)
+      .update({ rollValue: null, movesRemaining: 0 });
+    await gamesRef.child(currentGameCode).update({
+      currentPhase: 2,
+      lastActive: Date.now()
+    });
+
+  } else if (phase === 2) {
+    await botMovementPhase(botId, bot, gameData, personality, difficulty);
+  }
+}
+
+async function botGivePhase(botId, bot, gameData, personality, difficulty) {
+  const dealsToHonor = pendingDeals.filter(d =>
+    d.promiserId === botId && !d.fulfilled && d.type === 'give'
+  );
+
+  for (const deal of dealsToHonor) {
+    if (deal.willBetray) {
+      updateTrust(botId, deal.recipientId, -30);
+      const responses = BOT_PERSONALITIES[bot.personality].dealResponses.betray;
+      console.log(`Bot ${bot.name}: ${responses[Math.floor(Math.random() * responses.length)]}`);
+      deal.fulfilled = true;
+      continue;
+    }
+
+    if (deal.giveType === 'money' && bot.money >= deal.amount) {
+      await gamesRef.child(currentGameCode).child("players").child(botId)
+        .update({ money: bot.money - deal.amount });
+      await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
+        .update({ money: (gameData.players[deal.recipientId].money || 0) + deal.amount });
+      deal.fulfilled = true;
+      updateTrust(botId, deal.recipientId, 15);
+    } else if (deal.giveType === 'resource' && bot.inventory?.[deal.resource]) {
+      const botInv = { ...bot.inventory };
+      const recipientInv = { ...(gameData.players[deal.recipientId].inventory || {}) };
+      botInv[deal.resource] = (botInv[deal.resource] || 0) - 1;
+      if (botInv[deal.resource] <= 0) delete botInv[deal.resource];
+      recipientInv[deal.resource] = (recipientInv[deal.resource] || 0) + 1;
+
+      await gamesRef.child(currentGameCode).child("players").child(botId)
+        .update({ inventory: botInv });
+      await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
+        .update({ inventory: recipientInv });
+      deal.fulfilled = true;
+      updateTrust(botId, deal.recipientId, 15);
+    }
+  }
+}
+
+async function botUpgradePhase(botId, bot, gameData, personality, difficulty) {
+  if (bot.money < 100) return;
+
+  const options = [];
+
+  const transportLevel = bot.upgrades?.transport || 0;
+  const navLevel = bot.upgrades?.navigation || 0;
+  const weaponsLevel = bot.upgrades?.weapons || 0;
+
+  const transportCost = 150 * (transportLevel + 1);
+  const navCost = 100 * (navLevel + 1);
+  const weaponsCost = 100 * (weaponsLevel + 1);
+
+  if (bot.money >= transportCost) {
+    options.push({ type: 'transport', score: personality.economyPriority * 0.8, cost: transportCost, level: transportLevel });
+  }
+  if (bot.money >= navCost && navLevel < 3) {
+    options.push({ type: 'navigation', score: personality.economyPriority * 0.6 + personality.expansionPriority * 0.4, cost: navCost, level: navLevel });
+  }
+  if (bot.money >= weaponsCost) {
+    options.push({ type: 'weapons', score: personality.aggression * 0.9, cost: weaponsCost, level: weaponsLevel });
+  }
+
+  if (options.length === 0) return;
+  if (Math.random() < difficulty.mistakeRate) return;
+
+  options.sort((a, b) => b.score - a.score);
+  const chosen = options[0];
+
+  await gamesRef.child(currentGameCode).child("players").child(botId)
+    .update({ money: bot.money - chosen.cost });
+
+  if (Math.random() < 0.75) {
+    await gamesRef.child(currentGameCode).child("players").child(botId)
+      .update({ [`upgrades/${chosen.type}`]: chosen.level + 1 });
+  }
+}
+
+async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
+  const maxRoll = 6 + ((bot.upgrades?.navigation || 0) * 3);
+  const roll = Math.floor(Math.random() * maxRoll) + 1;
+
+  await gamesRef.child(currentGameCode).child("players").child(botId)
+    .update({ movesRemaining: roll, rollValue: roll });
+
+  await new Promise(r => setTimeout(r, 800));
+
+  let movesLeft = roll;
+
+  while (movesLeft > 0) {
+    const freshSnap = await gamesRef.child(currentGameCode).once("value");
+    const freshData = freshSnap.val();
+    const freshBot = freshData.players[botId];
+
+    if (freshData.battle) break;
+
+    const target = botChooseMove(botId, freshBot, freshData, personality, difficulty);
+    if (!target) break;
+
+    let defenderId = null;
+    for (let id in freshData.players) {
+      if (id !== botId && freshData.players[id].shipPosition === target) {
+        defenderId = id;
+        break;
+      }
+    }
+
+    if (defenderId) {
+      const defender = freshData.players[defenderId];
+      if (target === defender.homePort) {
+        break;
+      }
+      if (Math.random() < personality.aggression) {
+        await gamesRef.child(currentGameCode).child("players").child(botId)
+          .update({ shipPosition: target });
+        await gamesRef.child(currentGameCode).update({
+          battle: {
+            attackerId: botId,
+            defenderId: defenderId,
+            attackerRoll: null,
+            defenderRoll: null,
+            winnerId: null,
+            stage: "awaitingAttackerRoll"
+          },
+          lastActive: Date.now()
+        });
+        await new Promise(r => setTimeout(r, 1500));
+        await botRollAttack(botId, freshData);
+        return;
+      } else {
+        break;
+      }
+    }
+
+    await gamesRef.child(currentGameCode).child("players").child(botId)
+      .update({ shipPosition: target, movesRemaining: movesLeft - 1 });
+
+    movesLeft--;
+    await new Promise(r => setTimeout(r, 600));
+
+    if (harvestZones[target] && Math.random() < difficulty.decisionQuality) {
+      await botHarvest(botId, target, freshData, personality);
+      return;
+    }
+
+    if (factoryZones[target] && target !== freshBot.homePort) {
+      await botManufacture(botId, target, freshData, personality);
+      if (movesLeft <= 0) break;
+    }
+
+    const updatedSnap = await gamesRef.child(currentGameCode).once("value");
+    const updatedBot = updatedSnap.val().players[botId];
+
+    if (updatedBot.shipPosition === updatedBot.homePort &&
+        updatedBot.inventory && Object.keys(updatedBot.inventory).length > 0) {
+
+      let totalValue = 0;
+      for (let resource in updatedBot.inventory) {
+        const qty = updatedBot.inventory[resource];
+        const base = baseResourceValues[resource] || 0;
+        const mult = updatedBot.multipliers?.[resource] || 1;
+        totalValue += qty * base * mult;
+      }
+
+      if (updatedBot.inventory["Automobiles"]) {
+        await gamesRef.child(currentGameCode).child("players").child(botId)
+          .update({
+            automobilesCashed: (updatedBot.automobilesCashed || 0) + updatedBot.inventory["Automobiles"]
+          });
+      }
+
+      await gamesRef.child(currentGameCode).child("players").child(botId)
+        .update({
+          money: (updatedBot.money || 0) + totalValue,
+          inventory: {}
+        });
+
+      await advanceTurn();
+      return;
+    }
+  }
+
+  await advanceTurn();
+}
+
+function botChooseMove(botId, bot, gameData, personality, difficulty) {
+  const currentPos = bot.shipPosition;
+  const currentCol = currentPos.charCodeAt(0);
+  const currentRow = parseInt(currentPos.slice(1));
+
+  const adjacent = [];
+  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+  for (const [dc, dr] of directions) {
+    const newCol = String.fromCharCode(currentCol + dc);
+    const newRow = currentRow + dr;
+    const target = newCol + newRow;
+
+    if (!waterSquares.has(target)) continue;
+
+    if (restrictedTransitions[currentPos]) {
+      if (!restrictedTransitions[currentPos].includes(target)) continue;
+    }
+
+    if ((currentPos === "G3" && target === "G4") || (currentPos === "G4" && target === "G3")) {
+      if (!gameData.suezOwner) continue;
+    }
+
+    adjacent.push(target);
+  }
+
+  if (adjacent.length === 0) return null;
+
+  const scored = adjacent.map(target => {
+    let score = Math.random() * 2;
+
+    if (harvestZones[target]) {
+      score += personality.economyPriority * 5;
+    }
+
+    if (factoryZones[target]) {
+      score += personality.economyPriority * 4;
+      const recipes = factoryZones[target];
+      for (const good of recipes) {
+        const recipe = manufacturingRecipes[good];
+        if (recipe) {
+          const hasAll = recipe.inputs.every(r => (bot.inventory?.[r] || 0) >= 1);
+          if (hasAll) score += 8;
+        }
+      }
+    }
+
+    if (target === bot.homePort && bot.inventory && Object.keys(bot.inventory).length > 0) {
+      score += 10;
+    }
+
+    for (let id in gameData.players) {
+      if (id !== botId && gameData.players[id].shipPosition) {
+        const otherPos = gameData.players[id].shipPosition;
+        const dist = Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
+                     Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
+        if (personality.aggression > 0.5) {
+          score += (10 - dist) * personality.aggression * 0.3;
+        } else {
+          score += dist * 0.2;
+        }
+      }
+    }
+
+    score *= difficulty.decisionQuality;
+    score += Math.random() * (1 - difficulty.decisionQuality) * 5;
+
+    return { target, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.target || null;
+}
+
+async function botHarvest(botId, square, gameData, personality) {
+  const region = harvestZones[square].region;
+  const resources = regionResources[region];
+  const bot = gameData.players[botId];
+  const harvestCapacity = 1 + (bot.upgrades?.transport || 0);
+
+  const botInv = { ...(bot.inventory || {}) };
+
+  for (let i = 0; i < harvestCapacity && i < resources.length; i++) {
+    let bestResource = resources[0];
+    let bestValue = 0;
+
+    for (const r of resources) {
+      const val = (baseResourceValues[r] || 0) * (bot.multipliers?.[r] || 1);
+      if (val > bestValue) {
+        bestValue = val;
+        bestResource = r;
+      }
+    }
+
+    botInv[bestResource] = (botInv[bestResource] || 0) + 1;
+  }
+
+  await gamesRef.child(currentGameCode).child("players").child(botId)
+    .update({ inventory: botInv });
+
+  await advanceTurn();
+}
+
+async function botManufacture(botId, square, gameData, personality) {
+  const goods = factoryZones[square];
+  if (!goods) return;
+
+  const bot = gameData.players[botId];
+  const inventory = { ...(bot.inventory || {}) };
+
+  for (const good of goods) {
+    const recipe = manufacturingRecipes[good];
+    if (!recipe) continue;
+
+    const hasAll = recipe.inputs.every(r => (inventory[r] || 0) >= 1);
+    if (!hasAll) continue;
+
+    recipe.inputs.forEach(r => {
+      inventory[r] -= 1;
+      if (inventory[r] <= 0) delete inventory[r];
+    });
+
+    inventory[good] = (inventory[good] || 0) + 1;
+
+    await gamesRef.child(currentGameCode).child("players").child(botId)
+      .update({ inventory, movesRemaining: 0 });
+
+    await advanceTurn();
+    return;
+  }
+}
+
+async function botRollAttack(botId, gameData) {
+  const bot = gameData.players[botId];
+  const baseMax = 5;
+  const maxRoll = baseMax + ((bot.upgrades?.weapons || 0) * 3);
+  const roll = Math.floor(Math.random() * maxRoll) + 1;
+
+  await gamesRef.child(currentGameCode).child("battle").update({
+    attackerRoll: roll,
+    stage: "awaitingDefenderRoll"
+  });
+}
+
+async function botRollDefense(botId, gameData) {
+  const bot = gameData.players[botId];
+  const battle = gameData.battle;
+  const baseMax = 5;
+  const maxRoll = baseMax + ((bot.upgrades?.weapons || 0) * 3);
+  const roll = Math.floor(Math.random() * maxRoll) + 1;
+
+  const attackerRoll = battle.attackerRoll;
+  let winnerId;
+  if (roll > attackerRoll) winnerId = battle.defenderId;
+  else if (roll < attackerRoll) winnerId = battle.attackerId;
+  else winnerId = battle.defenderId;
+
+  await gamesRef.child(currentGameCode).child("battle").update({
+    defenderRoll: roll,
+    winnerId: winnerId,
+    stage: "result"
+  });
+}
+
+async function botHandleBattleDecision(botId, gameData) {
+  const personality = BOT_PERSONALITIES[gameData.players[botId].personality];
+  const battle = gameData.battle;
+  const loserId = battle.winnerId === battle.attackerId ? battle.defenderId : battle.attackerId;
+  const loser = gameData.players[loserId];
+
+  await new Promise(r => setTimeout(r, 1500));
+
+  if (personality.aggression > 0.7 && Math.random() < personality.aggression) {
+    await gamesRef.child(currentGameCode).child("players").child(loserId)
+      .update({ shipPosition: loser.homePort, inventory: {}, movesRemaining: 0 });
+    await gamesRef.child(currentGameCode).update({ battle: null });
+    await advanceTurn();
+  } else {
+    const winner = gameData.players[botId];
+    const winnerInv = { ...(winner.inventory || {}) };
+    const loserInv = loser.inventory || {};
+
+    for (let r in loserInv) {
+      winnerInv[r] = (winnerInv[r] || 0) + loserInv[r];
+    }
+
+    await gamesRef.child(currentGameCode).child("players").child(botId)
+      .update({ inventory: winnerInv });
+    await gamesRef.child(currentGameCode).child("players").child(loserId)
+      .update({ inventory: {} });
+
+    await gamesRef.child(currentGameCode).update({
+      battle: {
+        ...battle,
+        stage: "displacement",
+        displacedPlayerId: loserId,
+        originSquare: winner.shipPosition
+      }
+    });
+
+    await new Promise(r => setTimeout(r, 800));
+    await botDisplaceLoser(botId, loserId, gameData);
+  }
+}
+
+async function botDisplaceLoser(botId, loserId, gameData) {
+  const origin = gameData.players[botId].shipPosition;
+  const originCol = origin.charCodeAt(0);
+  const originRow = parseInt(origin.slice(1));
+
+  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  for (const [dc, dr] of directions) {
+    const target = String.fromCharCode(originCol + dc) + (originRow + dr);
+    if (waterSquares.has(target)) {
+      await gamesRef.child(currentGameCode).child("players").child(loserId)
+        .update({ shipPosition: target });
+      await gamesRef.child(currentGameCode).update({ battle: null });
+      await advanceTurn();
+      return;
+    }
+  }
+}
+
 
 const countryData = {
 
