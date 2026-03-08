@@ -1758,7 +1758,7 @@ if (event.target && event.target.id === "permissionAcknowledgeBtn") {
   await gamesRef.child(currentGameCode).update({
     permissionResult: null
   });
-
+}
 }); // closes document.addEventListener("click", ...)
 
 async function advanceTurn() {
