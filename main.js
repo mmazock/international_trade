@@ -1343,6 +1343,12 @@ await gamesRef.child(currentGameCode).update({
   currentPhase: newPhase,
   lastActive: Date.now()
 });
+const snap = await gamesRef.child(currentGameCode).once("value");
+const gd = snap.val();
+const p = gd.players[currentPlayerId];
+await gamesRef.child(currentGameCode).child("gameLog").push({
+  round: gd.round, message: `${p.name} (${p.country}) did not give.`
+});
 
 
 
@@ -1590,6 +1596,11 @@ if (event.target.classList.contains("giveResourceRecipientBtn")) {
 
   if (!senderInventory[resource] || senderInventory[resource] < amount) {
     alert("Not enough resources.");
+    await gamesRef.child(currentGameCode).child("gameLog").push({
+  round: gameData.round,
+  message: `${sender.name} gave ${amount} ${resource} to ${recipient.name}.`
+});
+
     return;
   }
 
