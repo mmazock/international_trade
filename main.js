@@ -453,42 +453,96 @@ function checkDealFulfillment(gameData, playerId) {
     return true;
   });
 }
-  /* =============================
+/* =============================
    BOT TURN EXECUTION
    ============================= */
+
+async function runBotStepWithTimeout(stepName, runner, timeoutMs = 6000) {
+  let timeoutId;
+  try {
+    await Promise.race([
+      runner(),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${stepName}_timeout`)), timeoutMs);
+      })
+    ]);
+    return true;
+  } catch (error) {
+    console.warn(`Bot ${stepName} failed, using fallback`, error);
+    return false;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
+
+async function getFreshGameDataWithTimeout(stepName = "refresh_game_state", timeoutMs = 6000) {
+  let timeoutId;
+  try {
+    const snap = await Promise.race([
+      gamesRef.child(currentGameCode).once("value"),
+      new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error(`${stepName}_timeout`)), timeoutMs);
+      })
+    ]);
+    return snap?.val ? snap.val() : null;
+  } catch (error) {
+    console.warn(`Bot ${stepName} read failed`, error);
+    return null;
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+}
 
 async function executeBotTurn(botId, gameData) {
   const bot = gameData.players[botId];
   if (!bot || !bot.isBot) return;
 
-  const personality = BOT_PERSONALITIES[bot.personality];
-  const difficulty = DIFFICULTY_LEVELS[bot.difficulty];
-  const phase = gameData.currentPhase || 0;
+  const personalityId = BOT_PERSONALITIES[bot.personality] ? bot.personality : "putin";
+  const difficultyId = DIFFICULTY_LEVELS[bot.difficulty] ? bot.difficulty : "medium";
+
+  const personality = BOT_PERSONALITIES[personalityId];
+  const difficulty = DIFFICULTY_LEVELS[difficultyId];
+  const phase = Number(gameData.currentPhase ?? 0);
 
   await new Promise(r => setTimeout(r, 1200 + Math.random() * 1000));
 
   if (phase === 0) {
-    await botGivePhase(botId, bot, gameData, personality, difficulty);
-    await gamesRef.child(currentGameCode).update({
+    await runBotStepWithTimeout("give_phase", () => botGivePhase(botId, bot, gameData, personality, difficulty), 5000);
+    await runBotStepWithTimeout("set_phase_1", () => gamesRef.child(currentGameCode).update({
       currentPhase: 1,
       lastActive: Date.now()
-    });
+    }), 5000);
 
   } else if (phase === 1) {
-    await botUpgradePhase(botId, bot, gameData, personality, difficulty);
-    await gamesRef.child(currentGameCode)
+    await runBotStepWithTimeout("upgrade_phase", () => botUpgradePhase(botId, bot, gameData, personality, difficulty), 5000);
+    await runBotStepWithTimeout("reset_bot_move_state", () => gamesRef.child(currentGameCode)
       .child("players")
       .child(botId)
-      .update({ rollValue: null, movesRemaining: 0 });
-    await gamesRef.child(currentGameCode).update({
+      .update({ rollValue: null, movesRemaining: 0 }), 5000);
+    await runBotStepWithTimeout("set_phase_2", () => gamesRef.child(currentGameCode).update({
       currentPhase: 2,
       lastActive: Date.now()
-    });
+    }), 5000);
 
   } else if (phase === 2) {
-    await botMovementPhase(botId, bot, gameData, personality, difficulty);
+    const moved = await runBotStepWithTimeout("movement_phase", () => botMovementPhase(botId, bot, gameData, personality, difficulty), 12000);
+
+    if (!moved) {
+      const freshData = await getFreshGameDataWithTimeout("movement_recovery_refresh", 6000);
+      if (!freshData) return;
+
+      const turnOrder = freshData.turnOrder || [];
+      const currentTurnIndex = freshData.currentTurnIndex || 0;
+      const activePlayerId = turnOrder[currentTurnIndex];
+      const currentPhase = Number(freshData.currentPhase ?? 0);
+
+      if (!freshData.battle && activePlayerId === botId && currentPhase === 2) {
+        await runBotStepWithTimeout("movement_recovery_advance_turn", () => advanceTurn(), 7000);
+      }
+    }
   }
 }
+
 
 async function botGivePhase(botId, bot, gameData, personality, difficulty) {
   const dealsToHonor = pendingDeals.filter(d =>
