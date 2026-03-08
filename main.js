@@ -1461,10 +1461,21 @@ function listenToGameData() {
             <div style="border:1px solid #666; padding:8px; margin:5px 0;">
               <strong>Bot ${i + 1}</strong><br>
               <label>Personality:
-                <select class="botPersonality" data-bot="${i}">
-                  <option value="putin" ${selectedPersonality === "putin" ? "selected" : ""}>Putin 🇷🇺</option>
-                  <option value="gandhi" ${selectedPersonality === "gandhi" ? "selected" : ""}>Gandhi 🇮🇳</option>
-                </select>
+             <select class="botPersonality" data-bot="${i}">
+  <option value="putin" ${selectedPersonality === "putin" ? "selected" : ""}>Putin 🇷🇺</option>
+  <option value="gandhi" ${selectedPersonality === "gandhi" ? "selected" : ""}>Gandhi 🇮🇳</option>
+  <option value="napoleon" ${selectedPersonality === "napoleon" ? "selected" : ""}>Napoleon 🇫🇷</option>
+  <option value="elizabeth" ${selectedPersonality === "elizabeth" ? "selected" : ""}>Elizabeth I 👑</option>
+  <option value="genghis" ${selectedPersonality === "genghis" ? "selected" : ""}>Genghis Khan 🏹</option>
+  <option value="cleopatra" ${selectedPersonality === "cleopatra" ? "selected" : ""}>Cleopatra 🐍</option>
+  <option value="bismarck" ${selectedPersonality === "bismarck" ? "selected" : ""}>Bismarck 🇩🇪</option>
+  <option value="sunTzu" ${selectedPersonality === "sunTzu" ? "selected" : ""}>Sun Tzu ☯️</option>
+  <option value="victoria" ${selectedPersonality === "victoria" ? "selected" : ""}>Queen Victoria 🏰</option>
+  <option value="hardBot1" ${selectedPersonality === "hardBot1" ? "selected" : ""}>Admiral Steele ⚓</option>
+  <option value="hardBot2" ${selectedPersonality === "hardBot2" ? "selected" : ""}>The Merchant 💰</option>
+  <option value="hardBot3" ${selectedPersonality === "hardBot3" ? "selected" : ""}>Iron Maiden ⚔️</option>
+</select>
+
               </label><br>
               <label>Difficulty:
                 <select class="botDifficulty" data-bot="${i}">
