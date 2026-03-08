@@ -2952,6 +2952,145 @@ if (event.target && event.target.id === "denyAccessBtn") {
     permissionRequest: null
   });
 }
+  // === NEGOTIATE WITH BOT (AI Chat) ===
+if (event.target && event.target.classList.contains("negotiateBotBtn")) {
+  const botId = event.target.dataset.bot;
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const bot = gameData.players[botId];
+  const persona = BOT_PERSONALITIES[bot.personality];
+
+  const overlay = document.getElementById("botNegotiateOverlay");
+  overlay.style.display = "flex";
+
+  const trust = botTrustScores[botId]?.[currentPlayerId] || 50;
+  let trustLabel = "Neutral";
+  if (trust > 70) trustLabel = "Trusting";
+  else if (trust > 50) trustLabel = "Cautious";
+  else if (trust > 20) trustLabel = "Suspicious";
+  else trustLabel = "Hostile";
+
+  overlay._botId = botId;
+
+  const me = gameData.players[currentPlayerId];
+  const gameContext = `You are ${bot.name} playing as ${bot.country}. You have $${bot.money} and inventory: ${JSON.stringify(bot.inventory || {})}. Your weapons level: ${bot.upgrades?.weapons || 0}. The player negotiating is ${me.name} (${me.country}) with $${me.money}.`;
+  overlay._gameContext = gameContext;
+  overlay._botName = bot.name;
+  overlay._botPersonality = bot.personality;
+  overlay._botTraits = persona.traits;
+  overlay._trustLabel = trustLabel;
+
+  overlay.innerHTML = `
+    <h2>Negotiate with ${bot.name}</h2>
+    <p><em>${persona.traits}</em></p>
+    <p>Their trust in you: <strong>${trustLabel}</strong></p>
+    <hr style="width:80%; border-color:#555;">
+    <div id="negotiateChatLog" style="max-height:300px; overflow-y:auto; width:90%; text-align:left; margin:10px auto; padding:10px; background:#1a1a1a; border-radius:8px; font-size:0.95em;">
+      <p style="color:#888; font-style:italic;">Say anything — propose trades, make threats, form alliances...</p>
+    </div>
+    <div style="display:flex; gap:8px; width:90%; margin:0 auto;">
+      <input type="text" id="negotiateChatInput" placeholder="Type your message to ${bot.name}..."
+        style="flex:1; padding:8px; border-radius:4px; border:1px solid #555; background:#222; color:white; font-size:1em;">
+      <button id="negotiateSendBtn" style="padding:8px 16px; background:#4a9; color:white; border:none; border-radius:4px; cursor:pointer;">Send</button>
+    </div>
+    <br>
+    <div style="width:90%; margin:0 auto;">
+      <strong>Quick proposals:</strong><br>
+      <button class="quickDealBtn" data-msg="I'll pay you $500 for safe passage through your waters." style="margin:3px; padding:4px 8px; font-size:0.85em;">💰 Safe Passage</button>
+      <button class="quickDealBtn" data-msg="I propose a ceasefire for 5 rounds. No attacks." style="margin:3px; padding:4px 8px; font-size:0.85em;">🤝 Ceasefire</button>
+      <button class="quickDealBtn" data-msg="Stay away from my trade routes or face consequences." style="margin:3px; padding:4px 8px; font-size:0.85em;">⚔️ Warning</button>
+      <button class="quickDealBtn" data-msg="Let's trade resources. What do you need?" style="margin:3px; padding:4px 8px; font-size:0.85em;">📦 Trade</button>
+    </div>
+    <br>
+    <button id="closeNegotiateBtn">Close</button>
+  `;
+
+  setTimeout(() => document.getElementById("negotiateChatInput")?.focus(), 100);
+  return;
+}
+
+// === QUICK DEAL BUTTON ===
+if (event.target && event.target.classList.contains("quickDealBtn")) {
+  const msg = event.target.dataset.msg;
+  const input = document.getElementById("negotiateChatInput");
+  if (input) {
+    input.value = msg;
+    document.getElementById("negotiateSendBtn")?.click();
+  }
+  return;
+}
+
+// === SEND NEGOTIATE MESSAGE ===
+if (event.target && event.target.id === "negotiateSendBtn") {
+  const input = document.getElementById("negotiateChatInput");
+  const chatLog = document.getElementById("negotiateChatLog");
+  const overlay = document.getElementById("botNegotiateOverlay");
+  const sendBtn = event.target;
+
+  if (!input || !chatLog || !overlay) return;
+
+  const message = input.value.trim();
+  if (!message) return;
+
+  chatLog.innerHTML += `<p style="color:#4a9;"><strong>You:</strong> ${message}</p>`;
+  input.value = "";
+  sendBtn.disabled = true;
+  sendBtn.textContent = "...";
+
+  chatLog.innerHTML += `<p id="typingIndicator" style="color:#888; font-style:italic;">${overlay._botName} is thinking...</p>`;
+  chatLog.scrollTop = chatLog.scrollHeight;
+
+  try {
+    const resp = await fetch(`https://moxwjdjqfwjnlhlimcac.supabase.co/functions/v1/bot-negotiate`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1veHdqZGpxZndqbmxobGltY2FjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5OTk5ODQsImV4cCI6MjA4ODU3NTk4NH0.cTxRTqsKWkSQzyO3bZ1UkZglhB4mlt2tkPuzdxYzP4w"
+      },
+      body: JSON.stringify({
+        message,
+        botName: overlay._botName,
+        botPersonality: overlay._botPersonality,
+        botTraits: overlay._botTraits,
+        trustLevel: overlay._trustLabel,
+        gameContext: overlay._gameContext
+      })
+    });
+
+    document.getElementById("typingIndicator")?.remove();
+
+    if (!resp.ok) {
+      chatLog.innerHTML += `<p style="color:red;">Error communicating. Try again.</p>`;
+    } else {
+      const data = await resp.json();
+      let decisionBadge = "";
+      if (data.decision === "ACCEPT") decisionBadge = " ✅";
+      else if (data.decision === "REJECT") decisionBadge = " ❌";
+      else if (data.decision === "COUNTER") decisionBadge = " 🔄";
+
+      chatLog.innerHTML += `<p style="color:#e8a;"><strong>${overlay._botName}:</strong> ${data.reply}${decisionBadge}</p>`;
+
+      if (data.decision === "ACCEPT") updateTrust(overlay._botId, currentPlayerId, 5);
+      else if (data.decision === "REJECT") updateTrust(overlay._botId, currentPlayerId, -2);
+    }
+  } catch (err) {
+    document.getElementById("typingIndicator")?.remove();
+    chatLog.innerHTML += `<p style="color:red;">Network error. Try again.</p>`;
+  }
+
+  sendBtn.disabled = false;
+  sendBtn.textContent = "Send";
+  chatLog.scrollTop = chatLog.scrollHeight;
+  input.focus();
+  return;
+}
+
+// === CLOSE NEGOTIATE ===
+if (event.target && event.target.id === "closeNegotiateBtn") {
+  document.getElementById("botNegotiateOverlay").style.display = "none";
+  return;
+}
+
 if (event.target && event.target.id === "permissionAcknowledgeBtn") {
   await gamesRef.child(currentGameCode).update({
     permissionResult: null
@@ -4076,6 +4215,21 @@ if (
 
     html += `</div>`;
   });
+  // === GAME LOG ===
+const gameLog = gameData.gameLog || {};
+const logEntries = Object.values(gameLog);
+if (logEntries.length > 0) {
+  html += `<div style="border-top:2px solid #555; margin-top:15px; padding-top:10px;">`;
+  html += `<strong>📜 Game Log:</strong><br>`;
+  const recentLogs = logEntries.slice(-10); // show last 10 entries
+  recentLogs.forEach(entry => {
+    html += `<div style="font-size:0.85em; color:#ccc; margin:2px 0;">
+      <span style="color:#888;">R${entry.round || "?"}:</span> ${entry.message}
+    </div>`;
+  });
+  html += `</div>`;
+}
+
 inventoryList.innerHTML = html;
 }
 /* =============================
@@ -4277,3 +4431,10 @@ window.addEventListener("resize", () => {
 }
   renderReferencePanel();
 }); // closes DOMContentLoaded
+// Enter key support for negotiate chat
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.id === "negotiateChatInput") {
+    e.preventDefault();
+    document.getElementById("negotiateSendBtn")?.click();
+  }
+});
