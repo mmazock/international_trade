@@ -1027,19 +1027,44 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
   // === START GAME ===
 
   
- if (event.target.id === "startGameBtn") {
+if (event.target.id === "startGameBtn") {
 
-  const victory = document.getElementById("victorySelect").value;
+  const conditions = {};
+
+  const moneyCheck = document.getElementById("victoryMoney");
+  const roundsCheck = document.getElementById("victoryRounds");
+  const autosCheck = document.getElementById("victoryAutos");
+
+  if (moneyCheck && moneyCheck.checked) {
+    const amount = parseInt(document.getElementById("victoryMoneyAmount").value) || 10000;
+    conditions.money = amount;
+  }
+
+  if (roundsCheck && roundsCheck.checked) {
+    const amount = parseInt(document.getElementById("victoryRoundsAmount").value) || 200;
+    conditions.rounds = amount;
+  }
+
+  if (autosCheck && autosCheck.checked) {
+    const amount = parseInt(document.getElementById("victoryAutosAmount").value) || 10;
+    conditions.autos = amount;
+  }
+
+  if (Object.keys(conditions).length === 0) {
+    alert("Please select at least one victory condition.");
+    return;
+  }
 
   await gamesRef.child(currentGameCode).update({
     gameState: "active",
     currentPhase: 0,
     round: 1,
-    victoryCondition: victory
+    victoryConditions: conditions
   });
 
   return;
 }
+
   // === ROLL ATTACK ===
 if (event.target && event.target.id === "rollAttackBtn") {
 
@@ -2371,13 +2396,24 @@ Object.keys(gameData.readyPlayers || {}).forEach(id => {
 });
 html += `
 <hr>
-<strong>Victory Condition:</strong><br>
-<select id="victorySelect">
-  <option value="money10k">First to $10,000</option>
-  <option value="mostAfter200">Most Money After 200 Rounds</option>
-  <option value="auto10">Most Money After 10 Automobiles Cashed In</option>
-</select><br><br>
+<strong>Victory Conditions (select one or more):</strong><br><br>
+
+<label>
+  <input type="checkbox" id="victoryMoney" checked>
+  First to $<input type="number" id="victoryMoneyAmount" value="10000" style="width:80px;"> 
+</label><br><br>
+
+<label>
+  <input type="checkbox" id="victoryRounds">
+  Most Money After <input type="number" id="victoryRoundsAmount" value="200" style="width:60px;"> Rounds
+</label><br><br>
+
+<label>
+  <input type="checkbox" id="victoryAutos">
+  Most Money After <input type="number" id="victoryAutosAmount" value="10" style="width:60px;"> Automobiles Cashed In
+</label><br><br>
 `;
+
 // HOST CAN START
 if (currentPlayerId === gameData.hostId) {
   html += `<br><button id="startGameBtn">Start Game</button>`;
@@ -2800,26 +2836,26 @@ overlay.innerHTML = `
 `;
 }
 }
-  function checkVictoryConditions(gameData) {
+function checkVictoryConditions(gameData) {
 
   if (!gameData || gameData.gameState !== "active") return;
 
   const players = gameData.players || {};
-  const victory = gameData.victoryCondition || "money10k";
+  const conditions = gameData.victoryConditions || {};
 
-  // 🏆 CONDITION 1 — First to $10,000
-  if (victory === "money10k") {
+  // CONDITION: First to $X
+  if (conditions.money) {
     for (let id in players) {
-      if ((players[id].money || 0) >= 10000) {
+      if ((players[id].money || 0) >= conditions.money) {
         endGame(gameData, id);
         return;
       }
     }
   }
 
-  // 🏆 CONDITION 2 — Most money after 200 rounds
-  if (victory === "mostAfter200") {
-    if ((gameData.round || 0) >= 200) {
+  // CONDITION: Most money after X rounds
+  if (conditions.rounds) {
+    if ((gameData.round || 0) >= conditions.rounds) {
       let winnerId = null;
       let highest = -1;
 
@@ -2835,16 +2871,17 @@ overlay.innerHTML = `
     }
   }
 
-  // 🏆 CONDITION 3 — 10 Automobiles cashed in
-  if (victory === "auto10") {
+  // CONDITION: X automobiles cashed in
+  if (conditions.autos) {
     for (let id in players) {
-      if ((players[id].automobilesCashed || 0) >= 10) {
+      if ((players[id].automobilesCashed || 0) >= conditions.autos) {
         endGame(gameData, id);
         return;
       }
     }
   }
 }
+
   function endGame(gameData, winnerId) {
 
   const winner = gameData.players[winnerId];
