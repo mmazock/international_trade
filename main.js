@@ -256,6 +256,194 @@ const manufacturingRecipes = {
 
 };
   const availableColors = ["red","purple","yellow","black","blue","green","orange"];
+/* =============================
+   BOT SYSTEM
+   ============================= */
+
+const BOT_PERSONALITIES = {
+  putin: {
+    name: "Putin",
+    emoji: "🇷🇺",
+    traits: "Cunning, deceptive, ruthless",
+    aggression: 0.9,
+    deception: 0.85,
+    riskTolerance: 0.7,
+    loyalty: 0.1,
+    expansionPriority: 0.9,
+    economyPriority: 0.5,
+    dealResponses: {
+      accept: [
+        "Da. We have agreement... for now.",
+        "I accept. Do not test my patience.",
+        "This serves my interests. Agreed."
+      ],
+      reject: [
+        "Nyet. You insult me with this offer.",
+        "I have no use for your proposal.",
+        "You are not in position to negotiate."
+      ],
+      betray: [
+        "Agreements are... flexible.",
+        "Circumstances have changed.",
+        "I never promised anything."
+      ]
+    }
+  },
+  gandhi: {
+    name: "Gandhi",
+    emoji: "🇮🇳",
+    traits: "Non-violent, tactical, principled",
+    aggression: 0.1,
+    deception: 0.1,
+    riskTolerance: 0.3,
+    loyalty: 0.95,
+    expansionPriority: 0.3,
+    economyPriority: 0.9,
+    dealResponses: {
+      accept: [
+        "In the spirit of cooperation, I agree.",
+        "Peace and trade benefit us all.",
+        "I accept, and I shall honor my word."
+      ],
+      reject: [
+        "I must respectfully decline.",
+        "This does not align with my principles.",
+        "I cannot accept these terms in good conscience."
+      ],
+      betray: [
+        "I deeply regret I cannot fulfill this.",
+        "Forgive me, circumstances forced my hand."
+      ]
+    }
+  }
+};
+
+const DIFFICULTY_LEVELS = {
+  easy:     { decisionQuality: 0.4, mistakeRate: 0.3, planningDepth: 1 },
+  medium:   { decisionQuality: 0.6, mistakeRate: 0.15, planningDepth: 2 },
+  hard:     { decisionQuality: 0.85, mistakeRate: 0.05, planningDepth: 3 },
+  veryHard: { decisionQuality: 1.0, mistakeRate: 0.0, planningDepth: 4 }
+};
+
+let botTrustScores = {};
+let pendingDeals = [];
+let dealHistory = [];
+
+function initBotTrust(gameData) {
+  const players = gameData.players || {};
+  for (let id in players) {
+    if (players[id].isBot) {
+      if (!botTrustScores[id]) {
+        botTrustScores[id] = {};
+        for (let pid in players) {
+          if (!players[pid].isBot) {
+            botTrustScores[id][pid] = 50;
+          }
+        }
+      }
+    }
+  }
+}
+
+function getBotResponse(botPlayer, dealType, gameData, dealDetails) {
+  const personality = BOT_PERSONALITIES[botPlayer.personality];
+  const difficulty = DIFFICULTY_LEVELS[botPlayer.difficulty];
+
+  if (Math.random() < difficulty.mistakeRate) {
+    const flip = Math.random() > 0.5;
+    const responses = flip ? personality.dealResponses.accept : personality.dealResponses.reject;
+    return {
+      accepted: flip,
+      message: responses[Math.floor(Math.random() * responses.length)]
+    };
+  }
+
+  let acceptChance = 0.5;
+  const trust = botTrustScores[dealDetails.botId]?.[dealDetails.playerId] || 50;
+  acceptChance += (trust - 50) / 200;
+
+  switch (dealType) {
+    case 'safe_passage':
+    case 'request_suez':
+      acceptChance += personality.economyPriority * 0.2;
+      if (dealDetails.amount >= 200) acceptChance += 0.2;
+      break;
+    case 'ceasefire':
+    case 'mutual_defense':
+      acceptChance += (1 - personality.aggression) * 0.3;
+      acceptChance += personality.loyalty * 0.2;
+      break;
+    case 'target_player':
+      acceptChance += personality.aggression * 0.3;
+      acceptChance -= personality.loyalty * 0.2;
+      break;
+    case 'resource_trade':
+    case 'money_for_resource':
+    case 'request_resource':
+      acceptChance += personality.economyPriority * 0.2;
+      break;
+    case 'request_money':
+      acceptChance -= 0.1;
+      acceptChance += personality.loyalty * 0.2;
+      break;
+    case 'warning':
+    case 'bounty_warning':
+    case 'fleet_warning':
+      acceptChance -= personality.aggression * 0.3;
+      acceptChance += (1 - personality.riskTolerance) * 0.2;
+      break;
+  }
+
+  acceptChance *= difficulty.decisionQuality + (1 - difficulty.decisionQuality) * 0.5;
+  acceptChance = Math.max(0.05, Math.min(0.95, acceptChance));
+
+  const accepted = Math.random() < acceptChance;
+  const responses = accepted
+    ? personality.dealResponses.accept
+    : personality.dealResponses.reject;
+
+  let willBetray = false;
+  if (accepted && Math.random() > personality.loyalty) {
+    willBetray = true;
+  }
+
+  return {
+    accepted,
+    willBetray,
+    message: responses[Math.floor(Math.random() * responses.length)]
+  };
+}
+
+function updateTrust(botId, playerId, delta) {
+  if (!botTrustScores[botId]) botTrustScores[botId] = {};
+  const current = botTrustScores[botId][playerId] || 50;
+  botTrustScores[botId][playerId] = Math.max(-100, Math.min(100, current + delta));
+}
+
+function trackDeal(deal) {
+  pendingDeals.push({
+    ...deal,
+    createdRound: deal.round,
+    fulfilled: false
+  });
+}
+
+function checkDealFulfillment(gameData, playerId) {
+  const currentRound = gameData.round || 1;
+  pendingDeals = pendingDeals.filter(deal => {
+    if (currentRound - deal.createdRound > 3) {
+      if (!deal.fulfilled && deal.promiserId === playerId) {
+        for (let id in gameData.players) {
+          if (gameData.players[id].isBot) {
+            updateTrust(id, playerId, -20);
+          }
+        }
+      }
+      return false;
+    }
+    return true;
+  });
+}
 
 const countryData = {
 
