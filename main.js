@@ -1261,36 +1261,55 @@ function listenToGameData() {
       renderLobby(gameData);
 
       const botCountEl = document.getElementById("botCount");
+      const configList = document.getElementById("botConfigList");
+
+      const renderBotConfigList = () => {
+        if (!botCountEl || !configList) return;
+
+        const currentSelections = [];
+        document.querySelectorAll(".botPersonality").forEach(el => {
+          const idx = Number(el.dataset.bot);
+          currentSelections[idx] = {
+            personality: el.value,
+            difficulty: document.querySelector(`.botDifficulty[data-bot="${idx}"]`)?.value || "medium"
+          };
+        });
+
+        const count = Math.max(0, parseInt(botCountEl.value || "0") || 0);
+        configList.innerHTML = "";
+
+        for (let i = 0; i < count; i++) {
+          const selectedPersonality = currentSelections[i]?.personality || "putin";
+          const selectedDifficulty = currentSelections[i]?.difficulty || "medium";
+
+          configList.innerHTML += `
+            <div style="border:1px solid #666; padding:8px; margin:5px 0;">
+              <strong>Bot ${i + 1}</strong><br>
+              <label>Personality:
+                <select class="botPersonality" data-bot="${i}">
+                  <option value="putin" ${selectedPersonality === "putin" ? "selected" : ""}>Putin 🇷🇺</option>
+                  <option value="gandhi" ${selectedPersonality === "gandhi" ? "selected" : ""}>Gandhi 🇮🇳</option>
+                </select>
+              </label><br>
+              <label>Difficulty:
+                <select class="botDifficulty" data-bot="${i}">
+                  <option value="easy" ${selectedDifficulty === "easy" ? "selected" : ""}>Easy</option>
+                  <option value="medium" ${selectedDifficulty === "medium" ? "selected" : ""}>Medium</option>
+                  <option value="hard" ${selectedDifficulty === "hard" ? "selected" : ""}>Hard</option>
+                  <option value="veryHard" ${selectedDifficulty === "veryHard" ? "selected" : ""}>Very Hard</option>
+                </select>
+              </label>
+            </div>
+          `;
+        }
+      };
+
       if (botCountEl && !botCountEl._listenerAttached) {
         botCountEl._listenerAttached = true;
-        botCountEl.addEventListener("change", (e) => {
-          const count = parseInt(e.target.value);
-          const configList = document.getElementById("botConfigList");
-          if (!configList) return;
-          configList.innerHTML = "";
-          for (let i = 0; i < count; i++) {
-            configList.innerHTML += `
-              <div style="border:1px solid #666; padding:8px; margin:5px 0;">
-                <strong>Bot ${i + 1}</strong><br>
-                <label>Personality:
-                  <select class="botPersonality" data-bot="${i}">
-                    <option value="putin">Putin 🇷🇺</option>
-                    <option value="gandhi">Gandhi 🇮🇳</option>
-                  </select>
-                </label><br>
-                <label>Difficulty:
-                  <select class="botDifficulty" data-bot="${i}">
-                    <option value="easy">Easy</option>
-                    <option value="medium" selected>Medium</option>
-                    <option value="hard">Hard</option>
-                    <option value="veryHard">Very Hard</option>
-                  </select>
-                </label>
-              </div>
-            `;
-          }
-        });
+        botCountEl.addEventListener("change", renderBotConfigList);
       }
+
+      renderBotConfigList();
       return;
     }
 
@@ -1298,75 +1317,98 @@ function listenToGameData() {
     renderShips(gameData);
     renderLedger(gameData);
 
-        // === BOT AUTO-PLAY (only host runs bot logic) ===
+    // === BOT AUTO-PLAY (only host runs bot logic) ===
     if (gameData.hostId !== currentPlayerId) return;
     if (gameData.gameState !== "active") return;
 
-    // Prevent re-entrancy — lock so only one bot action runs at a time
-    const actionKey = JSON.stringify({
-      turn: gameData.currentTurnIndex,
-      phase: gameData.currentPhase,
-      battle: gameData.battle ? gameData.battle.stage : null,
-      round: gameData.round
-    });
+    const forceAdvanceFromPhase = async (phaseValue, playerId) => {
+      if (phaseValue === 0) {
+        await runBotStepWithTimeout("recovery_set_phase_1", () => gamesRef.child(currentGameCode).update({
+          currentPhase: 1, lastActive: Date.now()
+        }), 5000);
+        return;
+      }
+      if (phaseValue === 1) {
+        await runBotStepWithTimeout("recovery_reset_bot_move_state", () => gamesRef.child(currentGameCode)
+          .child("players").child(playerId)
+          .update({ rollValue: null, movesRemaining: 0 }), 5000);
+        await runBotStepWithTimeout("recovery_set_phase_2", () => gamesRef.child(currentGameCode).update({
+          currentPhase: 2, lastActive: Date.now()
+        }), 5000);
+        return;
+      }
+      await runBotStepWithTimeout("recovery_advance_turn", () => advanceTurn(), 7000);
+    };
 
-    if (window._botActionKey === actionKey) return;
-    if (window._botTurnLock) return;
+    const processBotAutomation = async (initialData) => {
+      let data = initialData;
+      let safety = 0;
 
-    const turnOrder = gameData.turnOrder || [];
-    const currentTurnIndex = gameData.currentTurnIndex || 0;
-    const activePlayerId = turnOrder[currentTurnIndex];
+      while (safety < 50) {
+        safety += 1;
 
-    if (!activePlayerId) return;
+        const turnOrder = data.turnOrder || [];
+        const currentTurnIndex = data.currentTurnIndex || 0;
+        const activePlayerId = turnOrder[currentTurnIndex];
+        if (!activePlayerId) return;
 
-    const activePlayer = gameData.players[activePlayerId];
-    if (!activePlayer || !activePlayer.isBot) {
-      // Check if a bot needs to act in battle
-      if (gameData.battle) {
-        const battle = gameData.battle;
+        const activePlayer = data.players?.[activePlayerId];
 
-        if (battle.stage === "awaitingDefenderRoll" && gameData.players[battle.defenderId]?.isBot) {
-          window._botTurnLock = true;
-          window._botActionKey = actionKey;
-          await new Promise(r => setTimeout(r, 1500));
-          const freshSnap = await gamesRef.child(currentGameCode).once("value");
-          const freshData = freshSnap.val();
-          if (freshData.battle && freshData.battle.stage === "awaitingDefenderRoll") {
-            await botRollDefense(battle.defenderId, freshData);
+        if (!activePlayer || !activePlayer.isBot) {
+          if (!data.battle) return;
+          const battle = data.battle;
+
+          if (battle.stage === "awaitingDefenderRoll" && data.players?.[battle.defenderId]?.isBot) {
+            await new Promise(r => setTimeout(r, 1500));
+            await runBotStepWithTimeout("battle_defender_roll", () => botRollDefense(battle.defenderId, data), 6000);
+          } else if (battle.stage === "awaitingAttackerRoll" && data.players?.[battle.attackerId]?.isBot) {
+            await new Promise(r => setTimeout(r, 1500));
+            await runBotStepWithTimeout("battle_attacker_roll", () => botRollAttack(battle.attackerId, data), 6000);
+          } else if ((battle.stage === "result" || battle.stage === "decision") && data.players?.[battle.winnerId]?.isBot) {
+            await runBotStepWithTimeout("battle_winner_decision", () => botHandleBattleDecision(battle.winnerId, data), 10000);
+          } else {
+            return;
           }
-          window._botTurnLock = false;
-          return;
+
+          const battleData = await getFreshGameDataWithTimeout("post_battle_refresh", 6000);
+          if (!battleData || battleData.hostId !== currentPlayerId || battleData.gameState !== "active") return;
+          data = battleData;
+          continue;
         }
 
-        if (battle.stage === "awaitingAttackerRoll" && gameData.players[battle.attackerId]?.isBot) {
-          window._botTurnLock = true;
-          window._botActionKey = actionKey;
-          await new Promise(r => setTimeout(r, 1500));
-          const freshSnap = await gamesRef.child(currentGameCode).once("value");
-          const freshData = freshSnap.val();
-          if (freshData.battle && freshData.battle.stage === "awaitingAttackerRoll") {
-            await botRollAttack(battle.attackerId, freshData);
-          }
-          window._botTurnLock = false;
-          return;
+        const beforeTurnIndex = currentTurnIndex;
+        const beforePhase = Number(data.currentPhase ?? 0);
+
+        const executed = await runBotStepWithTimeout("execute_bot_turn", () => executeBotTurn(activePlayerId, data), 18000);
+        if (!executed) {
+          await forceAdvanceFromPhase(beforePhase, activePlayerId);
         }
 
-        if ((battle.stage === "result" || battle.stage === "decision") && gameData.players[battle.winnerId]?.isBot) {
-          window._botTurnLock = true;
-          window._botActionKey = actionKey;
-          await botHandleBattleDecision(battle.winnerId, gameData);
-          window._botTurnLock = false;
-          return;
+        const refreshed = await getFreshGameDataWithTimeout("post_bot_turn_refresh", 6000);
+        if (!refreshed || refreshed.hostId !== currentPlayerId || refreshed.gameState !== "active") return;
+        data = refreshed;
+
+        const afterTurnOrder = data.turnOrder || [];
+        const afterTurnIndex = data.currentTurnIndex || 0;
+        const afterActiveId = afterTurnOrder[afterTurnIndex];
+        const afterPhase = Number(data.currentPhase ?? 0);
+
+        if (!data.battle && afterActiveId === activePlayerId && afterTurnIndex === beforeTurnIndex && afterPhase === beforePhase) {
+          await forceAdvanceFromPhase(afterPhase, activePlayerId);
+          const recovered = await getFreshGameDataWithTimeout("post_deadlock_recovery_refresh", 6000);
+          if (!recovered || recovered.hostId !== currentPlayerId || recovered.gameState !== "active") return;
+          data = recovered;
         }
       }
-      return;
-    }
+    };
 
-    // It's a bot's turn — execute it
-    window._botTurnLock = true;
-    window._botActionKey = actionKey;
-    await executeBotTurn(activePlayerId, gameData);
-    window._botTurnLock = false;
+    if (window._botExecuting) return;
+    window._botExecuting = true;
+    try {
+      await processBotAutomation(gameData);
+    } finally {
+      window._botExecuting = false;
+    }
   });
 }
 
@@ -1837,7 +1879,6 @@ if (event.target && event.target.classList.contains("manufactureSelectBtn")) {
 }
   // === START GAME ===
 
-  
 if (event.target.id === "startGameBtn") {
 
   const victoryConditions = {};
@@ -1866,10 +1907,20 @@ if (event.target.id === "startGameBtn") {
   const usedColors = Object.values(currentData.players || {}).map(p => p.color);
   const allCountries = ["Spain", "Portugal", "England", "France", "Italy", "Germany"];
 
+  const personalityCounts = {};
+  const personalityInputs = Array.from(document.querySelectorAll(".botPersonality"));
+  const difficultyInputs = Array.from(document.querySelectorAll(".botDifficulty"));
+
   for (let i = 0; i < botCount; i++) {
-    const personalityId = document.querySelector(`.botPersonality[data-bot="${i}"]`)?.value || "putin";
-    const difficultyId = document.querySelector(`.botDifficulty[data-bot="${i}"]`)?.value || "medium";
+    const pickedPersonality = personalityInputs[i]?.value;
+    const pickedDifficulty = difficultyInputs[i]?.value;
+
+    const personalityId = BOT_PERSONALITIES[pickedPersonality] ? pickedPersonality : "putin";
+    const difficultyId = DIFFICULTY_LEVELS[pickedDifficulty] ? pickedDifficulty : "medium";
     const persona = BOT_PERSONALITIES[personalityId];
+
+    personalityCounts[personalityId] = (personalityCounts[personalityId] || 0) + 1;
+    const nameCount = personalityCounts[personalityId];
 
     const availableCountries = allCountries.filter(c => !usedCountries.includes(c));
     if (availableCountries.length === 0) break;
@@ -1880,16 +1931,13 @@ if (event.target.id === "startGameBtn") {
     for (const country of availableCountries) {
       const data = countryData[country];
       let score = Math.random() * 2;
-
       for (let r in data.multipliers) {
         const val = (baseResourceValues[r] || 0) * data.multipliers[r];
         score += val * persona.economyPriority * 0.01;
       }
-
       if (persona.aggression > 0.5) {
         if (country === "England" || country === "Spain") score += 3;
       }
-
       if (score > bestScore) {
         bestScore = score;
         bestCountry = country;
@@ -1900,10 +1948,14 @@ if (event.target.id === "startGameBtn") {
     const color = availableColors.find(c => !usedColors.includes(c)) || "gray";
     usedColors.push(color);
 
+    const botDisplayName = nameCount > 1
+      ? `${persona.name} ${nameCount} ${persona.emoji}`
+      : `${persona.name} ${persona.emoji}`;
+
     const botRef = gamesRef.child(currentGameCode).child("players").push();
 
     await botRef.set({
-      name: `${persona.name} ${persona.emoji}`,
+      name: botDisplayName,
       country: bestCountry,
       homePort: countryData[bestCountry].home,
       multipliers: countryData[bestCountry].multipliers,
@@ -1934,6 +1986,7 @@ if (event.target.id === "startGameBtn") {
 
   return;
 }
+
 
 
   // === ROLL ATTACK ===
