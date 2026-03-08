@@ -273,56 +273,145 @@ const BOT_PERSONALITIES = {
   putin: {
     name: "Putin",
     emoji: "🇷🇺",
-    traits: "Cunning, deceptive, ruthless",
-    aggression: 0.9,
-    deception: 0.85,
-    riskTolerance: 0.7,
-    loyalty: 0.1,
-    expansionPriority: 0.9,
-    economyPriority: 0.5,
+    traits: "Cunning, deceptive, ruthless strategist",
+    aggression: 0.9, deception: 0.85, riskTolerance: 0.7, loyalty: 0.1,
+    expansionPriority: 0.9, economyPriority: 0.5,
     dealResponses: {
-      accept: [
-        "Da. We have agreement... for now.",
-        "I accept. Do not test my patience.",
-        "This serves my interests. Agreed."
-      ],
-      reject: [
-        "Nyet. You insult me with this offer.",
-        "I have no use for your proposal.",
-        "You are not in position to negotiate."
-      ],
-      betray: [
-        "Agreements are... flexible.",
-        "Circumstances have changed.",
-        "I never promised anything."
-      ]
+      accept: ["Da. We have agreement... for now.", "I accept. Do not test my patience.", "This serves my interests. Agreed."],
+      reject: ["Nyet. You insult me with this offer.", "I have no use for your proposal.", "You are not in position to negotiate."],
+      betray: ["Agreements are... flexible.", "Circumstances have changed.", "I never promised anything."]
     }
   },
   gandhi: {
     name: "Gandhi",
     emoji: "🇮🇳",
-    traits: "Non-violent, tactical, principled",
-    aggression: 0.1,
-    deception: 0.1,
-    riskTolerance: 0.3,
-    loyalty: 0.95,
-    expansionPriority: 0.3,
-    economyPriority: 0.9,
+    traits: "Non-violent, tactical, principled pacifist",
+    aggression: 0.1, deception: 0.1, riskTolerance: 0.3, loyalty: 0.95,
+    expansionPriority: 0.3, economyPriority: 0.9,
     dealResponses: {
-      accept: [
-        "In the spirit of cooperation, I agree.",
-        "Peace and trade benefit us all.",
-        "I accept, and I shall honor my word."
-      ],
-      reject: [
-        "I must respectfully decline.",
-        "This does not align with my principles.",
-        "I cannot accept these terms in good conscience."
-      ],
-      betray: [
-        "I deeply regret I cannot fulfill this.",
-        "Forgive me, circumstances forced my hand."
-      ]
+      accept: ["In the spirit of cooperation, I agree.", "Peace and trade benefit us all.", "I accept, and I shall honor my word."],
+      reject: ["I must respectfully decline.", "This does not align with my principles.", "I cannot accept these terms in good conscience."],
+      betray: ["I deeply regret I cannot fulfill this.", "Forgive me, circumstances forced my hand."]
+    }
+  },
+  napoleon: {
+    name: "Napoleon",
+    emoji: "🇫🇷",
+    traits: "Ambitious, brilliant tactician, egotistical conqueror",
+    aggression: 0.85, deception: 0.6, riskTolerance: 0.8, loyalty: 0.3,
+    expansionPriority: 0.95, economyPriority: 0.6,
+    dealResponses: {
+      accept: ["Magnifique! This arrangement suits the Empire.", "I shall permit this alliance... temporarily.", "Victory favors the bold. Agreed."],
+      reject: ["You dare offer crumbs to an Emperor?", "France does not beg. Proposal denied.", "I have conquered nations larger than your fleet."],
+      betray: ["An emperor answers to no one.", "Strategy demands sacrifice — yours.", "History will judge me kindly regardless."]
+    }
+  },
+  elizabeth: {
+    name: "Elizabeth I",
+    emoji: "👑",
+    traits: "Shrewd diplomat, patient, calculating queen",
+    aggression: 0.4, deception: 0.7, riskTolerance: 0.4, loyalty: 0.5,
+    expansionPriority: 0.6, economyPriority: 0.85,
+    dealResponses: {
+      accept: ["The Crown finds these terms acceptable.", "England prospers through wise alliances.", "You have my royal assent."],
+      reject: ["We are not amused by this proposal.", "England shall not be made a fool.", "Your terms are beneath the dignity of this throne."],
+      betray: ["A queen must protect her realm above all.", "Promises to rivals are written in sand.", "The crown's interests supersede sentiment."]
+    }
+  },
+  genghis: {
+    name: "Genghis Khan",
+    emoji: "🏹",
+    traits: "Brutal, fearless, unstoppable warlord",
+    aggression: 0.95, deception: 0.3, riskTolerance: 0.95, loyalty: 0.4,
+    expansionPriority: 1.0, economyPriority: 0.3,
+    dealResponses: {
+      accept: ["The Khan accepts. Do not disappoint me.", "Your tribute is noted. We ride together.", "Strength recognizes strength. Agreed."],
+      reject: ["Submit or be trampled.", "The horde does not negotiate with the weak.", "I take what I want. I need no deal."],
+      betray: ["The strong devour the weak. It is natural.", "Your trust was your undoing.", "I warned you — submit or perish."]
+    }
+  },
+  cleopatra: {
+    name: "Cleopatra",
+    emoji: "🐍",
+    traits: "Seductive diplomat, cunning, politically brilliant",
+    aggression: 0.3, deception: 0.8, riskTolerance: 0.5, loyalty: 0.35,
+    expansionPriority: 0.5, economyPriority: 0.9,
+    dealResponses: {
+      accept: ["Egypt smiles upon this arrangement.", "You are wise to seek my favor. Agreed.", "A most... profitable partnership."],
+      reject: ["Do you think the Queen of the Nile so easily swayed?", "Your offer insults the throne of Egypt.", "I have refused emperors. You are no different."],
+      betray: ["The Nile's currents shift without warning, darling.", "Power demands difficult choices.", "I do what I must to preserve my dynasty."]
+    }
+  },
+  bismarck: {
+    name: "Bismarck",
+    emoji: "🇩🇪",
+    traits: "Iron-willed realpolitik master, calculated, disciplined",
+    aggression: 0.6, deception: 0.5, riskTolerance: 0.5, loyalty: 0.6,
+    expansionPriority: 0.7, economyPriority: 0.8,
+    dealResponses: {
+      accept: ["Blood and iron approve this accord.", "A pragmatic arrangement. Germany accepts.", "This aligns with our strategic interests."],
+      reject: ["Realpolitik demands I refuse.", "This deal weakens our position. Declined.", "I did not unite Germany by accepting poor terms."],
+      betray: ["Politics is the art of the possible.", "Sentiment has no place in statecraft.", "The balance of power required adjustment."]
+    }
+  },
+  sunTzu: {
+    name: "Sun Tzu",
+    emoji: "☯️",
+    traits: "Wise strategist, patient, deceptively calm",
+    aggression: 0.3, deception: 0.9, riskTolerance: 0.4, loyalty: 0.5,
+    expansionPriority: 0.5, economyPriority: 0.7,
+    dealResponses: {
+      accept: ["The supreme art of war is to subdue the enemy without fighting. Agreed.", "When the wind is favorable, one must sail. I accept.", "Know your enemy, know yourself. This deal serves both."],
+      reject: ["He who knows when he can fight and when he cannot, will be victorious. Not today.", "Appear weak when you are strong. I decline.", "This offer reveals more about you than you intended."],
+      betray: ["All warfare is based on deception.", "Let your plans be dark as night.", "Opportunities multiply as they are seized."]
+    }
+  },
+  victoria: {
+    name: "Queen Victoria",
+    emoji: "🏰",
+    traits: "Imperial, stubborn, morally rigid empire-builder",
+    aggression: 0.5, deception: 0.3, riskTolerance: 0.3, loyalty: 0.7,
+    expansionPriority: 0.8, economyPriority: 0.85,
+    dealResponses: {
+      accept: ["The Empire accepts. See that you honor it.", "For the good of civilization, we agree.", "Proper conduct demands we accept fair terms."],
+      reject: ["We are not amused.", "The British Empire does not grovel.", "Quite unacceptable. Good day."],
+      betray: ["The Empire's interests must come first.", "We acted for the greater good.", "Regrettable, but necessary for the realm."]
+    }
+  },
+  hardBot1: {
+    name: "Admiral Steele",
+    emoji: "⚓",
+    traits: "Ruthlessly efficient, no-nonsense military strategist",
+    aggression: 0.75, deception: 0.4, riskTolerance: 0.6, loyalty: 0.5,
+    expansionPriority: 0.7, economyPriority: 0.75,
+    dealResponses: {
+      accept: ["Tactical advantage confirmed. Deal accepted.", "Efficient. Agreed.", "This serves the fleet. Proceed."],
+      reject: ["Negative. Unfavorable terms.", "Denied. Try harder.", "That's a losing play. No deal."],
+      betray: ["War is war.", "Nothing personal. Just strategy.", "Adapt or sink."]
+    }
+  },
+  hardBot2: {
+    name: "The Merchant",
+    emoji: "💰",
+    traits: "Greedy, calculating, profit-obsessed trader",
+    aggression: 0.2, deception: 0.6, riskTolerance: 0.3, loyalty: 0.2,
+    expansionPriority: 0.3, economyPriority: 1.0,
+    dealResponses: {
+      accept: ["Profit margins check out. You have a deal.", "Gold talks. I'm listening. Agreed.", "Smart money says yes."],
+      reject: ["The numbers don't add up. Pass.", "I didn't get rich making bad deals.", "Come back when you have a real offer."],
+      betray: ["Business is business.", "Nothing personal — just profit margins.", "Every coin counts. Even yours."]
+    }
+  },
+  hardBot3: {
+    name: "Iron Maiden",
+    emoji: "⚔️",
+    traits: "Aggressive raider, fearless, loves combat",
+    aggression: 0.95, deception: 0.2, riskTolerance: 0.9, loyalty: 0.4,
+    expansionPriority: 0.85, economyPriority: 0.4,
+    dealResponses: {
+      accept: ["Fine. But cross me and I'll sink every ship you own.", "Alliance forged in iron. Don't make it rust.", "Agreed. Now let's find someone to fight."],
+      reject: ["I'd rather take it by force.", "Peace is boring. No deal.", "Why negotiate when I can just attack?"],
+      betray: ["Should've seen this coming.", "The strong take. The weak complain.", "Consider it a lesson learned."]
     }
   }
 };
