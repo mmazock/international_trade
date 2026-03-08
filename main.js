@@ -739,6 +739,7 @@ function botChooseMove(botId, bot, gameData, personality, difficulty) {
 }
 
 async function botHarvest(botId, square, gameData, personality) {
+  if (!harvestZones[square]) return;
   const region = harvestZones[square].region;
   const resources = regionResources[region];
   const bot = gameData.players[botId];
@@ -2719,8 +2720,10 @@ async function advanceTurn() {
     .child(oldPlayerId)
     .update({
       movesRemaining: 0,
-      rollValue: null
+      rollValue: null,
+      givingMode: null
     });
+
 
   // Switch turn + phase + round
   await gamesRef.child(currentGameCode).update({
