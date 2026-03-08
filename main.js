@@ -1234,9 +1234,20 @@ function listenToGameData() {
     renderShips(gameData);
     renderLedger(gameData);
 
-    // === BOT AUTO-PLAY (only host runs bot logic) ===
+        // === BOT AUTO-PLAY (only host runs bot logic) ===
     if (gameData.hostId !== currentPlayerId) return;
     if (gameData.gameState !== "active") return;
+
+    // Prevent re-entrancy — lock so only one bot action runs at a time
+    const actionKey = JSON.stringify({
+      turn: gameData.currentTurnIndex,
+      phase: gameData.currentPhase,
+      battle: gameData.battle ? gameData.battle.stage : null,
+      round: gameData.round
+    });
+
+    if (window._botActionKey === actionKey) return;
+    if (window._botTurnLock) return;
 
     const turnOrder = gameData.turnOrder || [];
     const currentTurnIndex = gameData.currentTurnIndex || 0;
@@ -1251,19 +1262,36 @@ function listenToGameData() {
         const battle = gameData.battle;
 
         if (battle.stage === "awaitingDefenderRoll" && gameData.players[battle.defenderId]?.isBot) {
+          window._botTurnLock = true;
+          window._botActionKey = actionKey;
           await new Promise(r => setTimeout(r, 1500));
-          await botRollDefense(battle.defenderId, gameData);
+          const freshSnap = await gamesRef.child(currentGameCode).once("value");
+          const freshData = freshSnap.val();
+          if (freshData.battle && freshData.battle.stage === "awaitingDefenderRoll") {
+            await botRollDefense(battle.defenderId, freshData);
+          }
+          window._botTurnLock = false;
           return;
         }
 
         if (battle.stage === "awaitingAttackerRoll" && gameData.players[battle.attackerId]?.isBot) {
+          window._botTurnLock = true;
+          window._botActionKey = actionKey;
           await new Promise(r => setTimeout(r, 1500));
-          await botRollAttack(battle.attackerId, gameData);
+          const freshSnap = await gamesRef.child(currentGameCode).once("value");
+          const freshData = freshSnap.val();
+          if (freshData.battle && freshData.battle.stage === "awaitingAttackerRoll") {
+            await botRollAttack(battle.attackerId, freshData);
+          }
+          window._botTurnLock = false;
           return;
         }
 
         if ((battle.stage === "result" || battle.stage === "decision") && gameData.players[battle.winnerId]?.isBot) {
+          window._botTurnLock = true;
+          window._botActionKey = actionKey;
           await botHandleBattleDecision(battle.winnerId, gameData);
+          window._botTurnLock = false;
           return;
         }
       }
@@ -1271,7 +1299,13 @@ function listenToGameData() {
     }
 
     // It's a bot's turn — execute it
+    window._botTurnLock = true;
+    window._botActionKey = actionKey;
     await executeBotTurn(activePlayerId, gameData);
+    window._botTurnLock = false;
+  });
+}
+
   });
 }
 
@@ -3710,12 +3744,6 @@ overlay.style.pointerEvents = "auto";
 else if (battle.stage === "result") {
 
 overlay.style.pointerEvents = "auto";
-  
-  // End attacker movement
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(battle.winnerId)
-  .update({ movesRemaining: 0 });
 
 overlay.innerHTML = `
   <h1>BATTLE RESULT</h1>
