@@ -1282,10 +1282,18 @@ if (event.target && event.target.id === "upgradeNoBtn") {
 
   if (!gameData) return;
 
-  await gamesRef.child(currentGameCode).update({
-    currentPhase: 2,
-    lastActive: Date.now()
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    rollValue: null,
+    movesRemaining: 0
   });
+
+await gamesRef.child(currentGameCode).update({
+  currentPhase: 2,
+  lastActive: Date.now()
+});
 
   return;
 }
@@ -1827,7 +1835,20 @@ if (
   }
 }
     const player = gameData.players[currentPlayerId];
+// 🚫 Prevent movement if not in Movement Phase
+if (gameData.currentPhase !== 2) return;
 
+// 🚫 Prevent movement if player hasn't rolled
+if (!player.rollValue) {
+  alert("You must roll before moving.");
+  return;
+}
+
+// 🚫 Prevent movement if no moves remain
+if ((player.movesRemaining || 0) <= 0) {
+  alert("No moves remaining.");
+  return;
+}
   const rect = mapImage.getBoundingClientRect();
   const xPercent = (event.clientX - rect.left) / rect.width;
   const yPercent = (event.clientY - rect.top) / rect.height;
