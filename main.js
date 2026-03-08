@@ -1186,7 +1186,7 @@ function hideSetupUI() {
 
 function listenToGameData() {
 
-  gamesRef.child(currentGameCode).on("value", snapshot => {
+  gamesRef.child(currentGameCode).on("value", async (snapshot) => {
 
     const gameData = snapshot.val();
     if (!gameData) return;
@@ -1195,13 +1195,86 @@ function listenToGameData() {
 
     if (gameData.gameState === "lobby") {
       renderLobby(gameData);
+
+      const botCountEl = document.getElementById("botCount");
+      if (botCountEl && !botCountEl._listenerAttached) {
+        botCountEl._listenerAttached = true;
+        botCountEl.addEventListener("change", (e) => {
+          const count = parseInt(e.target.value);
+          const configList = document.getElementById("botConfigList");
+          if (!configList) return;
+          configList.innerHTML = "";
+          for (let i = 0; i < count; i++) {
+            configList.innerHTML += `
+              <div style="border:1px solid #666; padding:8px; margin:5px 0;">
+                <strong>Bot ${i + 1}</strong><br>
+                <label>Personality:
+                  <select class="botPersonality" data-bot="${i}">
+                    <option value="putin">Putin 🇷🇺</option>
+                    <option value="gandhi">Gandhi 🇮🇳</option>
+                  </select>
+                </label><br>
+                <label>Difficulty:
+                  <select class="botDifficulty" data-bot="${i}">
+                    <option value="easy">Easy</option>
+                    <option value="medium" selected>Medium</option>
+                    <option value="hard">Hard</option>
+                    <option value="veryHard">Very Hard</option>
+                  </select>
+                </label>
+              </div>
+            `;
+          }
+        });
+      }
       return;
     }
 
+    initBotTrust(gameData);
     renderShips(gameData);
     renderLedger(gameData);
+
+    // === BOT AUTO-PLAY (only host runs bot logic) ===
+    if (gameData.hostId !== currentPlayerId) return;
+    if (gameData.gameState !== "active") return;
+
+    const turnOrder = gameData.turnOrder || [];
+    const currentTurnIndex = gameData.currentTurnIndex || 0;
+    const activePlayerId = turnOrder[currentTurnIndex];
+
+    if (!activePlayerId) return;
+
+    const activePlayer = gameData.players[activePlayerId];
+    if (!activePlayer || !activePlayer.isBot) {
+      // Check if a bot needs to act in battle
+      if (gameData.battle) {
+        const battle = gameData.battle;
+
+        if (battle.stage === "awaitingDefenderRoll" && gameData.players[battle.defenderId]?.isBot) {
+          await new Promise(r => setTimeout(r, 1500));
+          await botRollDefense(battle.defenderId, gameData);
+          return;
+        }
+
+        if (battle.stage === "awaitingAttackerRoll" && gameData.players[battle.attackerId]?.isBot) {
+          await new Promise(r => setTimeout(r, 1500));
+          await botRollAttack(battle.attackerId, gameData);
+          return;
+        }
+
+        if ((battle.stage === "result" || battle.stage === "decision") && gameData.players[battle.winnerId]?.isBot) {
+          await botHandleBattleDecision(battle.winnerId, gameData);
+          return;
+        }
+      }
+      return;
+    }
+
+    // It's a bot's turn — execute it
+    await executeBotTurn(activePlayerId, gameData);
   });
 }
+
 
   /* =============================
      PHASE ENGINE
@@ -3538,51 +3611,62 @@ overlay.innerHTML = `
 `;
 }
 }
-function checkVictoryConditions(gameData) {
-
+  function checkVictoryConditions(gameData) {
   if (!gameData || gameData.gameState !== "active") return;
 
   const players = gameData.players || {};
-  const conditions = gameData.victoryConditions || {};
+  const vc = gameData.victoryConditions || {};
 
-  // CONDITION: First to $X
-  if (conditions.money) {
-    for (let id in players) {
-      if ((players[id].money || 0) >= conditions.money) {
-        endGame(gameData, id);
-        return;
+  // Legacy support for old format
+  if (gameData.victoryCondition && !gameData.victoryConditions) {
+    const victory = gameData.victoryCondition;
+    if (victory === "money10k") {
+      for (let id in players) {
+        if ((players[id].money || 0) >= 10000) { endGame(gameData, id); return; }
       }
+    }
+    if (victory === "mostAfter200") {
+      if ((gameData.round || 0) >= 200) {
+        let winnerId = null, highest = -1;
+        for (let id in players) {
+          if ((players[id].money || 0) > highest) { highest = players[id].money; winnerId = id; }
+        }
+        if (winnerId) endGame(gameData, winnerId);
+      }
+    }
+    if (victory === "auto10") {
+      for (let id in players) {
+        if ((players[id].automobilesCashed || 0) >= 10) { endGame(gameData, id); return; }
+      }
+    }
+    return;
+  }
+
+  // New format — any condition can trigger win
+  if (vc.money) {
+    for (let id in players) {
+      if ((players[id].money || 0) >= vc.money) { endGame(gameData, id); return; }
     }
   }
 
-  // CONDITION: Most money after X rounds
-  if (conditions.rounds) {
-    if ((gameData.round || 0) >= conditions.rounds) {
-      let winnerId = null;
-      let highest = -1;
-
+  if (vc.rounds) {
+    if ((gameData.round || 0) >= vc.rounds) {
+      let winnerId = null, highest = -1;
       for (let id in players) {
-        if ((players[id].money || 0) > highest) {
-          highest = players[id].money;
-          winnerId = id;
-        }
+        if ((players[id].money || 0) > highest) { highest = players[id].money; winnerId = id; }
       }
-
       if (winnerId) endGame(gameData, winnerId);
       return;
     }
   }
 
-  // CONDITION: X automobiles cashed in
-  if (conditions.autos) {
+  if (vc.autos) {
     for (let id in players) {
-      if ((players[id].automobilesCashed || 0) >= conditions.autos) {
-        endGame(gameData, id);
-        return;
-      }
+      if ((players[id].automobilesCashed || 0) >= vc.autos) { endGame(gameData, id); return; }
     }
   }
 }
+
 
   function endGame(gameData, winnerId) {
 
