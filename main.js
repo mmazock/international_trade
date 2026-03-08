@@ -1225,13 +1225,16 @@ if (event.target && event.target.id === "battlePlunder") {
       originSquare: winner.shipPosition
     }
   });
-  // Increase bounty for attacker
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(currentPlayerId)
-  .update({
-    bounty: (gameData.players[currentPlayerId].bounty || 0) + 200
-  });
+// Increase bounty ONLY if attacker committed piracy
+if (winnerId === battle.attackerId) {
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(winnerId)
+    .update({
+      bounty: (gameData.players[winnerId].bounty || 0) + 200
+    });
+
 }
 
 // === MOVE ON ===
