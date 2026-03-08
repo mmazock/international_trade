@@ -2548,6 +2548,110 @@ if (event.target && event.target.id === "permissionAcknowledgeBtn") {
     permissionResult: null
   });
 }
+  // === NEGOTIATE WITH BOT ===
+if (event.target && event.target.classList.contains("negotiateBotBtn")) {
+  const botId = event.target.dataset.bot;
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const bot = gameData.players[botId];
+
+  const overlay = document.getElementById("botNegotiateOverlay");
+  overlay.style.display = "flex";
+
+  const trust = botTrustScores[botId]?.[currentPlayerId] || 50;
+  let trustLabel = "Neutral";
+  if (trust > 70) trustLabel = "Trusting";
+  else if (trust > 50) trustLabel = "Cautious";
+  else if (trust > 20) trustLabel = "Suspicious";
+  else trustLabel = "Hostile";
+
+  overlay.innerHTML = `
+    <h2>Negotiate with ${bot.name}</h2>
+    <p><em>${BOT_PERSONALITIES[bot.personality].traits}</em></p>
+    <p>Their trust in you: <strong>${trustLabel}</strong></p>
+    <hr style="width:80%; border-color:#555;">
+    <h3>Trade Proposals</h3>
+    <button class="dealBtn" data-bot="${botId}" data-deal="safe_passage">
+      "I'll pay you $500 for safe passage through your waters."
+    </button><br><br>
+    <button class="dealBtn" data-bot="${botId}" data-deal="money_for_resource">
+      "I'll give you $300 if you give me a resource next turn."
+    </button><br><br>
+    <h3>Alliances</h3>
+    <button class="dealBtn" data-bot="${botId}" data-deal="ceasefire">
+      "I propose a ceasefire for 5 rounds."
+    </button><br><br>
+    <button class="dealBtn" data-bot="${botId}" data-deal="mutual_defense">
+      "Let's agree not to attack each other."
+    </button><br><br>
+    <h3>Threats</h3>
+    <button class="dealBtn" data-bot="${botId}" data-deal="warning">
+      "Stay away from my trade routes."
+    </button><br><br>
+    <button class="dealBtn" data-bot="${botId}" data-deal="fleet_warning">
+      "My weapons are upgraded. Don't test me."
+    </button><br><br>
+    <h3>Requests</h3>
+    <button class="dealBtn" data-bot="${botId}" data-deal="request_money">
+      "Can you spare $200? I'll repay with interest."
+    </button><br><br>
+    <button class="dealBtn" data-bot="${botId}" data-deal="request_suez">
+      "Grant me Suez access for $300."
+    </button><br><br>
+    <hr style="width:80%; border-color:#555;">
+    <button id="closeNegotiateBtn">Close</button>
+  `;
+  return;
+}
+
+// === DEAL BUTTON CLICKED ===
+if (event.target && event.target.classList.contains("dealBtn")) {
+  const botId = event.target.dataset.bot;
+  const dealType = event.target.dataset.deal;
+
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const bot = gameData.players[botId];
+
+  const response = getBotResponse(bot, dealType, gameData, {
+    botId, playerId: currentPlayerId, amount: 500
+  });
+
+  const overlay = document.getElementById("botNegotiateOverlay");
+  overlay.innerHTML = `
+    <h2>${bot.name} responds:</h2>
+    <p style="font-size:1.3em; font-style:italic;">"${response.message}"</p>
+    <p><strong>${response.accepted ? "✅ DEAL ACCEPTED" : "❌ DEAL REJECTED"}</strong></p>
+    ${response.accepted ? '<p style="color:#aaa;">(Whether they honor this deal is another matter...)</p>' : ''}
+    <br>
+    <button id="closeNegotiateBtn">OK</button>
+  `;
+
+  if (response.accepted) {
+    trackDeal({
+      type: 'give',
+      dealType: dealType,
+      promiserId: botId,
+      recipientId: currentPlayerId,
+      round: gameData.round,
+      willBetray: response.willBetray || false,
+      giveType: dealType.includes('money') ? 'money' : 'resource',
+      amount: 200,
+      resource: null
+    });
+
+    updateTrust(botId, currentPlayerId, 5);
+  }
+
+  return;
+}
+
+// === CLOSE NEGOTIATE ===
+if (event.target && event.target.id === "closeNegotiateBtn") {
+  document.getElementById("botNegotiateOverlay").style.display = "none";
+  return;
+}
+
 }); // closes document.addEventListener("click", ...)
 
 async function advanceTurn() {
@@ -3485,6 +3589,21 @@ if (
     <button id="giveNoBtn">No</button>
   `;
 }
+    // === NEGOTIATE WITH BOT BUTTON ===
+if (
+  isCurrentTurn &&
+  playerId === currentPlayerId &&
+  !players[playerId].isBot
+) {
+  for (let bid in players) {
+    if (players[bid].isBot) {
+      html += `<button class="negotiateBotBtn" data-bot="${bid}">
+        Negotiate with ${players[bid].name}
+      </button><br>`;
+    }
+  }
+}
+
     // === UPGRADE PHASE PROMPT RESTORED ===
     if (
       isCurrentTurn &&
