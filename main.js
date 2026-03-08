@@ -2581,6 +2581,14 @@ if (event.target && event.target.id === "permissionAcknowledgeBtn") {
   await gamesRef.child(currentGameCode).update({
     permissionResult: null
   });
+  
+  // Check if player has no moves left — if so, advance turn
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const gameData = gameSnap.val();
+  const player = gameData.players[currentPlayerId];
+  if (player && player.movesRemaining <= 0) {
+    await advanceTurn();
+  }
 }
   // === NEGOTIATE WITH BOT ===
 if (event.target && event.target.classList.contains("negotiateBotBtn")) {
