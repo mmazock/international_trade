@@ -1234,7 +1234,7 @@ if (winnerId === battle.attackerId) {
     .update({
       bounty: (gameData.players[winnerId].bounty || 0) + 200
     });
-
+}
 }
 
 // === MOVE ON ===
