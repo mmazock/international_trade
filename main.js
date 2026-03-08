@@ -432,14 +432,16 @@ function initBotTrust(gameData) {
       if (!botTrustScores[id]) {
         botTrustScores[id] = {};
         for (let pid in players) {
-          if (!players[pid].isBot) {
-            botTrustScores[id][pid] = 50;
+          if (pid !== id) {
+            botTrustScores[id][pid] = 50; // trust ALL players including other bots
           }
         }
       }
     }
   }
 }
+
+
 
 function getBotResponse(botPlayer, dealType, gameData, dealDetails) {
   const personality = BOT_PERSONALITIES[botPlayer.personality];
@@ -519,27 +521,127 @@ function updateTrust(botId, playerId, delta) {
 function trackDeal(deal) {
   pendingDeals.push({
     ...deal,
-    createdRound: deal.round,
+    createdRound: deal.round || 1,
+    expiresRound: (deal.round || 1) + (deal.rounds || 5),
     fulfilled: false
   });
 }
 
+
 function checkDealFulfillment(gameData, playerId) {
   const currentRound = gameData.round || 1;
   pendingDeals = pendingDeals.filter(deal => {
-    if (currentRound - deal.createdRound > 3) {
+    if (currentRound > deal.expiresRound) {
       if (!deal.fulfilled && deal.promiserId === playerId) {
         for (let id in gameData.players) {
-          if (gameData.players[id].isBot) {
-            updateTrust(id, playerId, -20);
-          }
+          updateTrust(id, playerId, -20);
         }
       }
+      addGameLog(`📜 Deal expired: ${deal.dealType || deal.type} between ${gameData.players[deal.promiserId]?.name || 'Unknown'} and ${gameData.players[deal.recipientId]?.name || 'Unknown'}`);
       return false;
     }
     return true;
   });
 }
+// === BOT-TO-BOT BEHIND-THE-SCENES NEGOTIATION ===
+let botNegotiationCooldown = {};
+
+async function botToBotNegotiate(botId, bot, gameData, personality) {
+  const currentRound = gameData.round || 1;
+  const cooldownKey = `${botId}_${currentRound}`;
+  if (botNegotiationCooldown[cooldownKey]) return;
+  botNegotiationCooldown[cooldownKey] = true;
+
+  // Only negotiate sometimes (based on personality)
+  if (Math.random() > (personality.economyPriority * 0.4 + 0.1)) return;
+
+  // Find another bot to negotiate with
+  const otherBots = Object.keys(gameData.players).filter(id =>
+    id !== botId && gameData.players[id].isBot
+  );
+  if (otherBots.length === 0) return;
+
+  const targetBotId = otherBots[Math.floor(Math.random() * otherBots.length)];
+  const targetBot = gameData.players[targetBotId];
+  const targetPersonality = BOT_PERSONALITIES[targetBot.personality];
+
+  const trust = botTrustScores[botId]?.[targetBotId] || 50;
+
+  // Decide what to propose based on personality and situation
+  let proposal = null;
+
+  if (personality.aggression > 0.6 && trust > 30) {
+    // Aggressive bots want to target human players together
+    const humanPlayers = Object.keys(gameData.players).filter(id => !gameData.players[id].isBot);
+    if (humanPlayers.length > 0) {
+      const targetHuman = humanPlayers[Math.floor(Math.random() * humanPlayers.length)];
+      const humanPlayer = gameData.players[targetHuman];
+      proposal = { dealType: "target_player", targetPlayer: humanPlayer.country || humanPlayer.name };
+    }
+  } else if (personality.economyPriority > 0.6) {
+    // Trade-oriented bots propose resource swaps
+    const botInv = Object.keys(bot.inventory || {});
+    const targetInv = Object.keys(targetBot.inventory || {});
+    if (botInv.length > 0 && targetInv.length > 0) {
+      proposal = {
+        dealType: "resource_trade",
+        offerResource: botInv[0],
+        wantResource: targetInv[0]
+      };
+    }
+  } else if (personality.aggression < 0.4) {
+    // Peaceful bots propose ceasefires
+    proposal = { dealType: "ceasefire", rounds: 3 + Math.floor(Math.random() * 5) };
+  }
+
+  if (!proposal) return;
+
+  // Evaluate acceptance based on target bot personality
+  let acceptChance = 0.5;
+  acceptChance += (trust - 50) / 100;
+
+  if (proposal.dealType === "ceasefire") {
+    acceptChance += (1 - targetPersonality.aggression) * 0.3;
+  } else if (proposal.dealType === "target_player") {
+    acceptChance += targetPersonality.aggression * 0.3;
+    acceptChance -= targetPersonality.loyalty * 0.2;
+  } else if (proposal.dealType === "resource_trade") {
+    acceptChance += targetPersonality.economyPriority * 0.3;
+  }
+
+  acceptChance = Math.max(0.1, Math.min(0.9, acceptChance));
+  const accepted = Math.random() < acceptChance;
+
+  if (accepted) {
+    let willBetray = Math.random() > targetPersonality.loyalty;
+
+    trackDeal({
+      type: proposal.dealType,
+      dealType: proposal.dealType,
+      promiserId: targetBotId,
+      recipientId: botId,
+      round: currentRound,
+      rounds: proposal.rounds || 5,
+      willBetray: willBetray,
+      dealTerms: {
+        resource: proposal.offerResource || null,
+        amount: 1,
+        money: 0,
+        rounds: proposal.rounds || 5,
+        targetPlayer: proposal.targetPlayer || null
+      }
+    });
+
+    updateTrust(botId, targetBotId, 10);
+    updateTrust(targetBotId, botId, 10);
+    addGameLog(`🤝 ${bot.name} and ${targetBot.name} struck a secret ${proposal.dealType} deal!`);
+  } else {
+    updateTrust(botId, targetBotId, -5);
+    addGameLog(`💬 ${bot.name} tried to negotiate with ${targetBot.name} but was refused.`);
+  }
+}
+
+
 /* =============================
    BOT TURN EXECUTION
    ============================= */
@@ -594,7 +696,10 @@ async function executeBotTurn(botId, gameData) {
   await new Promise(r => setTimeout(r, 1200 + Math.random() * 1000));
 
   if (phase === 0) {
+    // Bot-to-bot behind-the-scenes negotiation
+    await runBotStepWithTimeout("bot_negotiate", () => botToBotNegotiate(botId, bot, gameData, personality), 8000);
     await runBotStepWithTimeout("give_phase", () => botGivePhase(botId, bot, gameData, personality, difficulty), 5000);
+
     await runBotStepWithTimeout("set_phase_1", () => gamesRef.child(currentGameCode).update({
       currentPhase: 1,
       lastActive: Date.now()
@@ -632,42 +737,77 @@ async function executeBotTurn(botId, gameData) {
 
 
 async function botGivePhase(botId, bot, gameData, personality, difficulty) {
+  // Honor AI-negotiated deals
   const dealsToHonor = pendingDeals.filter(d =>
-    d.promiserId === botId && !d.fulfilled && d.type === 'give'
+    d.promiserId === botId && !d.fulfilled && (d.type === 'give' || d.dealType === 'money_for_resource' || d.dealType === 'resource_trade' || d.dealType === 'request_money' || d.dealType === 'request_resource')
   );
 
   for (const deal of dealsToHonor) {
-    if (deal.willBetray) {
+    const terms = deal.dealTerms || {};
+    
+    // Check for betrayal
+    if (deal.willBetray && Math.random() < personality.deception) {
       updateTrust(botId, deal.recipientId, -30);
       const responses = BOT_PERSONALITIES[bot.personality].dealResponses.betray;
+      addGameLog(`🗡️ ${bot.name} BETRAYED their deal with ${gameData.players[deal.recipientId]?.name || 'Unknown'}!`);
       console.log(`Bot ${bot.name}: ${responses[Math.floor(Math.random() * responses.length)]}`);
       deal.fulfilled = true;
       continue;
     }
 
-    if (deal.giveType === 'money' && bot.money >= deal.amount) {
+    // Transfer money if promised
+    if (terms.money > 0 && bot.money >= terms.money) {
       await gamesRef.child(currentGameCode).child("players").child(botId)
-        .update({ money: bot.money - deal.amount });
+        .update({ money: bot.money - terms.money });
       await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
-        .update({ money: (gameData.players[deal.recipientId].money || 0) + deal.amount });
-      deal.fulfilled = true;
+        .update({ money: (gameData.players[deal.recipientId]?.money || 0) + terms.money });
       updateTrust(botId, deal.recipientId, 15);
-    } else if (deal.giveType === 'resource' && bot.inventory?.[deal.resource]) {
+      addGameLog(`💰 ${bot.name} paid $${terms.money} to ${gameData.players[deal.recipientId]?.name || 'Unknown'} (honoring deal)`);
+    }
+
+    // Transfer resource if promised
+    if (terms.resource && bot.inventory?.[terms.resource]) {
+      const amount = terms.amount || 1;
       const botInv = { ...bot.inventory };
-      const recipientInv = { ...(gameData.players[deal.recipientId].inventory || {}) };
-      botInv[deal.resource] = (botInv[deal.resource] || 0) - 1;
-      if (botInv[deal.resource] <= 0) delete botInv[deal.resource];
-      recipientInv[deal.resource] = (recipientInv[deal.resource] || 0) + 1;
+      const recipientInv = { ...(gameData.players[deal.recipientId]?.inventory || {}) };
+      botInv[terms.resource] = (botInv[terms.resource] || 0) - amount;
+      if (botInv[terms.resource] <= 0) delete botInv[terms.resource];
+      recipientInv[terms.resource] = (recipientInv[terms.resource] || 0) + amount;
 
       await gamesRef.child(currentGameCode).child("players").child(botId)
         .update({ inventory: botInv });
       await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
         .update({ inventory: recipientInv });
-      deal.fulfilled = true;
       updateTrust(botId, deal.recipientId, 15);
+      addGameLog(`📦 ${bot.name} sent ${terms.resource} x${amount} to ${gameData.players[deal.recipientId]?.name || 'Unknown'} (honoring deal)`);
     }
+
+    // Fallback for old-style deals
+    if (!terms.money && !terms.resource) {
+      if (deal.giveType === 'money' && bot.money >= deal.amount) {
+        await gamesRef.child(currentGameCode).child("players").child(botId)
+          .update({ money: bot.money - deal.amount });
+        await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
+          .update({ money: (gameData.players[deal.recipientId].money || 0) + deal.amount });
+        updateTrust(botId, deal.recipientId, 15);
+      } else if (deal.giveType === 'resource' && bot.inventory?.[deal.resource]) {
+        const botInv = { ...bot.inventory };
+        const recipientInv = { ...(gameData.players[deal.recipientId].inventory || {}) };
+        botInv[deal.resource] = (botInv[deal.resource] || 0) - 1;
+        if (botInv[deal.resource] <= 0) delete botInv[deal.resource];
+        recipientInv[deal.resource] = (recipientInv[deal.resource] || 0) + 1;
+        await gamesRef.child(currentGameCode).child("players").child(botId)
+          .update({ inventory: botInv });
+        await gamesRef.child(currentGameCode).child("players").child(deal.recipientId)
+          .update({ inventory: recipientInv });
+        updateTrust(botId, deal.recipientId, 15);
+      }
+    }
+
+    deal.fulfilled = true;
   }
 }
+
 
 async function botUpgradePhase(botId, bot, gameData, personality, difficulty) {
   if (bot.money < 100) return;
@@ -741,7 +881,47 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
       if (target === defender.homePort) {
         break;
       }
-      if (Math.random() < personality.aggression) {
+
+      // Check for active ceasefire or safe_passage deals
+      const hasCeasefire = pendingDeals.some(d =>
+        !d.fulfilled &&
+        (d.dealType === "ceasefire" || d.dealType === "safe_passage") &&
+        ((d.promiserId === botId && d.recipientId === defenderId) ||
+         (d.recipientId === botId && d.promiserId === defenderId)) &&
+        (freshData.round || 1) <= (d.expiresRound || 999)
+      );
+
+      if (hasCeasefire) {
+        // Check if bot will betray the deal
+        const ceasefireDeal = pendingDeals.find(d =>
+          !d.fulfilled &&
+          (d.dealType === "ceasefire" || d.dealType === "safe_passage") &&
+          ((d.promiserId === botId && d.recipientId === defenderId) ||
+           (d.recipientId === botId && d.promiserId === defenderId))
+        );
+        if (!ceasefireDeal.willBetray || Math.random() > personality.deception) {
+          // Honor the ceasefire — skip this target
+          break;
+        } else {
+          // Betray!
+          addGameLog(`🗡️ ${freshBot.name} BROKE their ceasefire with ${defender.name}!`);
+          updateTrust(botId, defenderId, -40);
+          ceasefireDeal.fulfilled = true;
+        }
+      }
+
+      // Check for target_player deals — boost aggression toward targeted players
+      const hasTargetDeal = pendingDeals.some(d =>
+        !d.fulfilled &&
+        d.dealType === "target_player" &&
+        d.promiserId === botId &&
+        d.dealTerms?.targetPlayer &&
+        (defender.country === d.dealTerms.targetPlayer || defender.name === d.dealTerms.targetPlayer)
+      );
+
+      const effectiveAggression = hasTargetDeal ? Math.min(personality.aggression + 0.4, 1.0) : personality.aggression;
+
+      if (Math.random() < effectiveAggression) {
         await gamesRef.child(currentGameCode).child("players").child(botId)
           .update({ shipPosition: target });
         await gamesRef.child(currentGameCode).update({
@@ -762,6 +942,7 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
         break;
       }
     }
+
 
     await gamesRef.child(currentGameCode).child("players").child(botId)
       .update({ shipPosition: target, movesRemaining: movesLeft - 1 });
@@ -848,9 +1029,44 @@ function botChooseStrategicGoal(botId, bot, gameData, personality) {
   const inv = bot.inventory || {};
   const invCount = Object.keys(inv).length;
 
+  // Check for target_player deals — hunt that player
+  const targetDeal = pendingDeals.find(d =>
+    !d.fulfilled &&
+    d.dealType === "target_player" &&
+    d.promiserId === botId &&
+    d.dealTerms?.targetPlayer
+  );
+  if (targetDeal && personality.aggression > 0.4) {
+    for (let id in gameData.players) {
+      const p = gameData.players[id];
+      if ((p.country === targetDeal.dealTerms.targetPlayer || p.name === targetDeal.dealTerms.targetPlayer) && p.shipPosition) {
+        return p.shipPosition;
+      }
+    }
+  }
+
+  // Check for mutual_defense — move toward ally if they're near an enemy
+  const defenseDeal = pendingDeals.find(d =>
+    !d.fulfilled &&
+    d.dealType === "mutual_defense" &&
+    (d.promiserId === botId || d.recipientId === botId)
+  );
+  if (defenseDeal && personality.loyalty > 0.5) {
+    const allyId = defenseDeal.promiserId === botId ? defenseDeal.recipientId : defenseDeal.promiserId;
+    const ally = gameData.players[allyId];
+    if (ally?.shipPosition) {
+      // Check if any enemy is near the ally
+      for (let id in gameData.players) {
+        if (id !== botId && id !== allyId && gameData.players[id].shipPosition) {
+          const dist = bfsDist(gameData.players[id].shipPosition, ally.shipPosition, gameData);
+          if (dist <= 3) return ally.shipPosition; // Rush to defend
+        }
+      }
+    }
+  }
+
   // GOAL 1: If carrying goods, head home to cash in
   if (invCount > 0) {
-    // Check if we can manufacture something along the way
     for (const sq in factoryZones) {
       const goods = factoryZones[sq];
       for (const good of goods) {
@@ -882,7 +1098,17 @@ function botChooseStrategicGoal(botId, bot, gameData, personality) {
       value = Math.max(value, base * mult);
     }
 
-    const score = (value * personality.economyPriority) / (dist + 1);
+    // Trust-influenced: avoid areas near hostile players
+    let dangerPenalty = 0;
+    for (let id in gameData.players) {
+      if (id !== botId && gameData.players[id].shipPosition) {
+        const trust = botTrustScores[botId]?.[id] || 50;
+        const playerDist = bfsDist(sq, gameData.players[id].shipPosition, gameData);
+        if (trust < 20 && playerDist < 4) dangerPenalty += (4 - playerDist) * 3;
+      }
+    }
+
+    const score = (value * personality.economyPriority) / (dist + 1) - dangerPenalty;
     if (score > bestScore) {
       bestScore = score;
       bestTarget = sq;
@@ -891,6 +1117,7 @@ function botChooseStrategicGoal(botId, bot, gameData, personality) {
 
   return bestTarget || bot.homePort;
 }
+
 
 function botChooseMove(botId, bot, gameData, personality, difficulty) {
   const currentPos = bot.shipPosition;
@@ -2907,7 +3134,9 @@ if (event.target && event.target.classList.contains("negotiateBotBtn")) {
   else if (trust > 20) trustLabel = "Suspicious";
   else trustLabel = "Hostile";
 
-  overlay._botId = botId;
+    overlay._botId = botId;
+  overlay._conversationHistory = []; // Reset conversation for new negotiation session
+
 
   const me = gameData.players[currentPlayerId];
   const gameContext = `You are ${bot.name} playing as ${bot.country}. You have $${bot.money} and inventory: ${JSON.stringify(bot.inventory || {})}. Your weapons level: ${bot.upgrades?.weapons || 0}. The player negotiating is ${me.name} (${me.country}) with $${me.money}.`;
@@ -2974,8 +3203,29 @@ if (event.target && event.target.id === "negotiateSendBtn") {
   sendBtn.disabled = true;
   sendBtn.textContent = "...";
 
+  // Track conversation history
+  if (!overlay._conversationHistory) overlay._conversationHistory = [];
+  overlay._conversationHistory.push({ role: "user", content: message });
+
   chatLog.innerHTML += `<p id="typingIndicator" style="color:#888; font-style:italic;">${overlay._botName} is thinking...</p>`;
   chatLog.scrollTop = chatLog.scrollHeight;
+
+  // Build enriched game context with active deals
+  const gameSnap = await gamesRef.child(currentGameCode).once("value");
+  const freshGameData = gameSnap.val();
+  const bot = freshGameData.players[overlay._botId];
+  const me = freshGameData.players[currentPlayerId];
+  
+  const activeDeals = pendingDeals.filter(d =>
+    !d.fulfilled &&
+    (d.promiserId === overlay._botId || d.recipientId === overlay._botId) &&
+    (freshGameData.round || 1) <= (d.expiresRound || 999)
+  );
+  const dealSummary = activeDeals.length > 0 
+    ? `Active deals: ${activeDeals.map(d => `${d.dealType} with ${freshGameData.players[d.promiserId === overlay._botId ? d.recipientId : d.promiserId]?.name || 'Unknown'} (expires round ${d.expiresRound})`).join(', ')}`
+    : 'No active deals.';
+
+  const enrichedContext = `You are ${bot.name} playing as ${bot.country}. You have $${bot.money} and inventory: ${JSON.stringify(bot.inventory || {})}. Your weapons level: ${bot.upgrades?.weapons || 0}. The player negotiating is ${me.name} (${me.country}) with $${me.money} and inventory: ${JSON.stringify(me.inventory || {})}. Current round: ${freshGameData.round || 1}. ${dealSummary}`;
 
   try {
     const resp = await fetch(`https://moxwjdjqfwjnlhlimcac.supabase.co/functions/v1/bot-negotiate`, {
@@ -2990,7 +3240,8 @@ if (event.target && event.target.id === "negotiateSendBtn") {
         botPersonality: overlay._botPersonality,
         botTraits: overlay._botTraits,
         trustLevel: overlay._trustLabel,
-        gameContext: overlay._gameContext
+        gameContext: enrichedContext,
+        conversationHistory: overlay._conversationHistory.slice(-10) // last 10 messages
       })
     });
 
@@ -3007,8 +3258,36 @@ if (event.target && event.target.id === "negotiateSendBtn") {
 
       chatLog.innerHTML += `<p style="color:#e8a;"><strong>${overlay._botName}:</strong> ${data.reply}${decisionBadge}</p>`;
 
-      if (data.decision === "ACCEPT") updateTrust(overlay._botId, currentPlayerId, 5);
-      else if (data.decision === "REJECT") updateTrust(overlay._botId, currentPlayerId, -2);
+      // Track bot response in history
+      overlay._conversationHistory.push({ role: "assistant", content: data.reply });
+
+      // Apply trust change from AI
+      if (data.trustChange) {
+        updateTrust(overlay._botId, currentPlayerId, data.trustChange);
+      }
+
+      // If deal was ACCEPTED, create a real game deal
+      if (data.decision === "ACCEPT" && data.dealType) {
+        const terms = data.dealTerms || {};
+        trackDeal({
+          type: data.dealType,
+          dealType: data.dealType,
+          promiserId: overlay._botId,
+          recipientId: currentPlayerId,
+          round: freshGameData.round || 1,
+          rounds: terms.rounds || 5,
+          willBetray: data.willBetray || false,
+          dealTerms: terms,
+          botCommitment: data.botCommitment,
+          playerCommitment: data.playerCommitment
+        });
+        addGameLog(`🤝 ${overlay._botName} ACCEPTED a ${data.dealType} deal with ${me.name}!`);
+        chatLog.innerHTML += `<p style="color:#4f4; font-weight:bold;">📜 Deal recorded: ${data.dealType} (expires in ${terms.rounds || 5} rounds)</p>`;
+      } else if (data.decision === "REJECT") {
+        addGameLog(`❌ ${overlay._botName} rejected ${me.name}'s proposal.`);
+      } else if (data.decision === "COUNTER") {
+        chatLog.innerHTML += `<p style="color:#ff4; font-style:italic;">💡 ${overlay._botName} made a counter-proposal. Continue negotiating...</p>`;
+      }
     }
   } catch (err) {
     document.getElementById("typingIndicator")?.remove();
@@ -3021,6 +3300,7 @@ if (event.target && event.target.id === "negotiateSendBtn") {
   input.focus();
   return;
 }
+
 
 // === CLOSE NEGOTIATE ===
 if (event.target && event.target.id === "closeNegotiateBtn") {
