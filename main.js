@@ -889,6 +889,166 @@ function botChooseMove(botId, bot, gameData, personality, difficulty) {
   scored.sort((a, b) => b.score - a.score);
   return scored[0]?.target || null;
 }
+// BFS helper: find shortest path length from start to goal on water
+function bfsDist(start, goal, gameData) {
+  if (start === goal) return 0;
+  const visited = new Set();
+  const queue = [[start, 0]];
+  visited.add(start);
+  while (queue.length > 0) {
+    const [pos, dist] = queue.shift();
+    const col = pos.charCodeAt(0);
+    const row = parseInt(pos.slice(1));
+    const dirs = [[-1,0],[1,0],[0,-1],[0,1]];
+    for (const [dc, dr] of dirs) {
+      const nc = String.fromCharCode(col + dc);
+      const nr = row + dr;
+      const next = nc + nr;
+      if (visited.has(next)) continue;
+      if (!waterSquares.has(next)) continue;
+      if (restrictedTransitions[pos] && !restrictedTransitions[pos].includes(next)) continue;
+      if ((pos === "G3" && next === "G4") || (pos === "G4" && next === "G3")) {
+        if (!gameData.suezOwner) continue;
+      }
+      if (next === goal) return dist + 1;
+      visited.add(next);
+      queue.push([next, dist + 1]);
+    }
+  }
+  return 999; // unreachable
+}
+
+function botChooseStrategicGoal(botId, bot, gameData, personality) {
+  const inv = bot.inventory || {};
+  const invCount = Object.keys(inv).length;
+
+  // GOAL 1: If carrying goods, head home to cash in
+  if (invCount > 0) {
+    // Check if we can manufacture something along the way
+    for (const sq in factoryZones) {
+      const goods = factoryZones[sq];
+      for (const good of goods) {
+        const recipe = manufacturingRecipes[good];
+        if (recipe && recipe.inputs.every(r => (inv[r] || 0) >= 1)) {
+          const distFactory = bfsDist(bot.shipPosition, sq, gameData);
+          const distHome = bfsDist(bot.shipPosition, bot.homePort, gameData);
+          if (distFactory < distHome) return sq;
+        }
+      }
+    }
+    return bot.homePort;
+  }
+
+  // GOAL 2: If empty, find best harvest zone
+  let bestTarget = null;
+  let bestScore = -1;
+
+  for (const sq in harvestZones) {
+    const region = harvestZones[sq].region;
+    const resources = regionResources[region] || [];
+    const dist = bfsDist(bot.shipPosition, sq, gameData);
+    if (dist >= 999) continue;
+
+    let value = 0;
+    for (const r of resources) {
+      const base = baseResourceValues[r] || 0;
+      const mult = bot.multipliers?.[r] || 1;
+      value = Math.max(value, base * mult);
+    }
+
+    const score = (value * personality.economyPriority) / (dist + 1);
+    if (score > bestScore) {
+      bestScore = score;
+      bestTarget = sq;
+    }
+  }
+
+  return bestTarget || bot.homePort;
+}
+
+function botChooseMove(botId, bot, gameData, personality, difficulty) {
+  const currentPos = bot.shipPosition;
+  const currentCol = currentPos.charCodeAt(0);
+  const currentRow = parseInt(currentPos.slice(1));
+
+  // Get valid adjacent squares
+  const adjacent = [];
+  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+
+  for (const [dc, dr] of directions) {
+    const newCol = String.fromCharCode(currentCol + dc);
+    const newRow = currentRow + dr;
+    const target = newCol + newRow;
+
+    if (!waterSquares.has(target)) continue;
+
+    if (restrictedTransitions[currentPos]) {
+      if (!restrictedTransitions[currentPos].includes(target)) continue;
+    }
+
+    if ((currentPos === "G3" && target === "G4") || (currentPos === "G4" && target === "G3")) {
+      if (!gameData.suezOwner) continue;
+    }
+
+    adjacent.push(target);
+  }
+
+  if (adjacent.length === 0) return null;
+
+  // Determine strategic goal
+  const goal = botChooseStrategicGoal(botId, bot, gameData, personality);
+  const goalDist = bfsDist(currentPos, goal, gameData);
+
+  const scored = adjacent.map(target => {
+    let score = Math.random() * 0.5; // small random tiebreaker
+
+    // Primary: move toward strategic goal
+    const targetDist = bfsDist(target, goal, gameData);
+    if (targetDist < goalDist) score += 20;
+    else if (targetDist === goalDist) score += 5;
+
+    // Bonus: harvest zone along the way
+    if (harvestZones[target] && Object.keys(bot.inventory || {}).length === 0) {
+      score += personality.economyPriority * 8;
+    }
+
+    // Bonus: factory where we can manufacture
+    if (factoryZones[target]) {
+      const recipes = factoryZones[target];
+      for (const good of recipes) {
+        const recipe = manufacturingRecipes[good];
+        if (recipe && recipe.inputs.every(r => (bot.inventory?.[r] || 0) >= 1)) {
+          score += 15;
+        }
+      }
+    }
+
+    // Bonus: home port with cargo
+    if (target === bot.homePort && bot.inventory && Object.keys(bot.inventory).length > 0) {
+      score += 25;
+    }
+
+    // Aggression: approach or avoid other players
+    for (let id in gameData.players) {
+      if (id !== botId && gameData.players[id].shipPosition) {
+        const otherPos = gameData.players[id].shipPosition;
+        const dist = Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
+                     Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
+        if (personality.aggression > 0.5) score += (10 - dist) * personality.aggression * 0.2;
+        else score += dist * 0.1;
+      }
+    }
+
+    // Apply difficulty quality
+    score *= difficulty.decisionQuality;
+    score += Math.random() * (1 - difficulty.decisionQuality) * 3;
+
+    return { target, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.target || null;
+}
 
 async function botHarvest(botId, square, gameData, personality) {
   if (!harvestZones[square]) return;
