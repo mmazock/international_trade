@@ -1,3 +1,12 @@
+// At top of main.js, add helper:
+async function addGameLog(message) {
+  const logRef = gamesRef.child(currentGameCode).child("gameLog");
+  await logRef.push({
+    text: message,
+    timestamp: Date.now()
+  });
+}
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const database = firebase.database();
