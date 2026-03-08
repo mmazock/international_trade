@@ -4106,7 +4106,8 @@ if (logEntries.length > 0) {
   const recentLogs = logEntries.slice(-10); // show last 10 entries
   recentLogs.forEach(entry => {
     html += `<div style="font-size:0.85em; color:#ccc; margin:2px 0;">
-      <span style="color:#888;">R${entry.round || "?"}:</span> ${entry.message}
+      <span style="color:#888;">R${entry.round || "?"}:</span> ${entry.message || entry.text || ""}
+
     </div>`;
   });
   html += `</div>`;
