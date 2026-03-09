@@ -3555,6 +3555,8 @@ checkVictoryConditions(updatedSnap.val());
      ============================= */
 
   mapImage.addEventListener("click", async function(event) {
+    if (event.target.id === "rollDiceBtn") return;
+if (event.target.id === "harvestBtn") return;
 
   const gameSnap = await gamesRef.child(currentGameCode).once("value");
   const gameData = gameSnap.val();
