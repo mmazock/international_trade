@@ -95,10 +95,7 @@
 
 </div>
 
-<div id="referencePanel">
-  <div id="countryReference" class="referenceColumn"></div>
-  <div id="resourceReference" class="referenceColumn"></div>
-</div>
+
 
       <hr>
 
@@ -155,8 +152,14 @@
   font-family: Arial, sans-serif;
 ">
 </div>
+
+    <div id="referencePanel">
+  <div id="countryReference" class="referenceColumn"></div>
+  <div id="resourceReference" class="referenceColumn"></div>
+</div>
 <!-- ===== HOW TO PLAY ===== -->
-<div id="instructionsPanel" style="
+<div id="instructionsPanel" hidden
+  style="
   max-width: 1160px;
   margin: 20px auto;
   padding: 30px;
@@ -367,12 +370,12 @@
   toggleLink.addEventListener("click", function(e) {
     e.preventDefault();
 
-    if (instructionsPanel.style.display === "none") {
-      instructionsPanel.style.display = "block";
+    if (instructionsPanel.hasAttribute("hidden")) {
+      instructionsPanel.removeAttribute("hidden");
       toggleLink.textContent = "❌ Hide Game Instructions";
       window.scrollTo({ top: instructionsPanel.offsetTop - 20, behavior: "smooth" });
     } else {
-      instructionsPanel.style.display = "none";
+      instructionsPanel.setAttribute("hidden", "");
       toggleLink.textContent = "📖 View Game Instructions";
     }
   });
