@@ -3572,6 +3572,10 @@ checkVictoryConditions(updatedSnap.val());
      ============================= */
 
   mapImage.addEventListener("click", async function(event) {
+    // 🔥 Do not process map clicks during battle resolution
+if (latestGameData?.battle && latestGameData.battle.stage !== "displacement") {
+  return;
+}
     if (event.target.id === "rollDiceBtn") return;
 if (event.target.id === "harvestBtn") return;
 
@@ -4413,6 +4417,21 @@ html += `<br>🏗️ <strong>Suez Owner</strong>`;
 if (player.bounty && player.bounty > 0) {
   html += `<br>⚠️ Bounty: $${player.bounty}`;
 }
+    // 🔥 Show country multipliers including manufactured goods
+const multipliers = player.multipliers || {};
+const manufactured = ["Clothes", "Steel", "Technology", "Automobiles"];
+
+html += `<br><em>Bonuses:</em><br>`;
+
+Object.keys(multipliers).forEach(res => {
+  html += `${res} ×${multipliers[res]}<br>`;
+});
+
+manufactured.forEach(good => {
+  if (!multipliers[good]) {
+    html += `${good} ×1<br>`;
+  }
+});
     html += `<br>Inventory:<br>`;
 
     if (!player.inventory || Object.keys(player.inventory).length === 0) {
