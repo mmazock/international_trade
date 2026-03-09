@@ -3584,7 +3584,7 @@ if (
   return;
 }
 
-// 🚫 Prevent movement if player hasn't rolled
+// 🚫 Prevent movement if player hasn't rolled (unless displacing)
 if (
   !player.rollValue &&
   !(gameData.battle && gameData.battle.stage === "displacement")
