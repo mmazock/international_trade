@@ -3585,7 +3585,10 @@ if (
 }
 
 // 🚫 Prevent movement if player hasn't rolled
-if (!player.rollValue) {
+if (
+  !player.rollValue &&
+  !(gameData.battle && gameData.battle.stage === "displacement")
+) {
   alert("You must roll before moving.");
   return;
 }
@@ -3611,7 +3614,44 @@ const rowObj = rowPixels.reduce((a, b) =>
 );
 
 const target = colObj.letter + rowObj.row;
+// === DISPLACEMENT MODE ===
+if (
+  gameData.battle &&
+  gameData.battle.stage === "displacement" &&
+  gameData.battle.displacedPlayerId === currentPlayerId
+) {
+  const origin = gameData.battle.originSquare;
 
+  const colDiff = target.charCodeAt(0) - origin.charCodeAt(0);
+  const rowDiff = parseInt(target.slice(1)) - parseInt(origin.slice(1));
+
+  const isAdjacent =
+    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
+    (Math.abs(rowDiff) === 1 && colDiff === 0);
+
+  if (!isAdjacent) return;
+  if (!waterSquares.has(target)) return;
+
+  for (let pid in gameData.players) {
+    if (
+      pid !== currentPlayerId &&
+      gameData.players[pid].shipPosition === target
+    ) {
+      alert("That square is already occupied.");
+      return;
+    }
+  }
+
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(currentPlayerId)
+    .update({ shipPosition: target });
+
+  await gamesRef.child(currentGameCode).update({ battle: null });
+
+  await advanceTurn();
+  return;
+}
   // --- NORMAL MOVEMENT CONTINUES BELOW ---
 // === CHECK FOR BATTLE ===
 
