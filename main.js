@@ -899,9 +899,9 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
           ((d.promiserId === botId && d.recipientId === defenderId) ||
            (d.recipientId === botId && d.promiserId === defenderId))
         );
-        if (!ceasefireDeal.willBetray || Math.random() > personality.deception) {
-          // Honor the ceasefire — skip this target
-          break;
+        if (!ceasefireDeal?.willBetray || Math.random() > personality.deception) {
+          // Honor the ceasefire — skip this move and try different direction
+          continue;
         } else {
           // Betray!
           addGameLog(`🗡️ ${freshBot.name} BROKE their ceasefire with ${defender.name}!`);
@@ -909,6 +909,7 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
           ceasefireDeal.fulfilled = true;
         }
       }
+
 
       // Check for target_player deals — boost aggression toward targeted players
       const hasTargetDeal = pendingDeals.some(d =>
