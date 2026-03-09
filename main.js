@@ -1227,36 +1227,39 @@ function botChooseMove(botId, bot, gameData, personality, difficulty, avoidSquar
       score += 25;
     }
 
-    // Aggression: approach or avoid other players
+// Aggression: approach or avoid other players
 for (let id in gameData.players) {
- 
 
-    const pairKey = [botId, id].sort().join("_");
+  if (id === botId) continue;
 
-    // 🔥 Avoid recently fought opponent for 10 seconds
-    if (recentBattles[pairKey] && Date.now() - recentBattles[pairKey] < 10000) {
-      score -= 40;
-      continue; 
-      if (id !== botId && gameData.players[id].shipPosition) {
-    const otherPos = gameData.players[id].shipPosition;
-    }
+  const otherPos = gameData.players[id].shipPosition;
+  if (!otherPos) continue;
 
-    if (target === otherPos) {
-      if (personality.aggression < 0.7) {
-        score -= 50;
-        continue;
-      }
-    }
+  const pairKey = [botId, id].sort().join("_");
 
-    const dist =
-      Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
-      Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
-
-    if (personality.aggression > 0.5)
-      score += (10 - dist) * personality.aggression * 0.2;
-    else
-      score += dist * 0.1;
+  // Avoid recently fought opponent for 10 seconds
+  if (recentBattles[pairKey] && Date.now() - recentBattles[pairKey] < 10000) {
+    score -= 40;
+    continue;
   }
+
+  // If moving directly into them
+  if (target === otherPos) {
+    if (personality.aggression < 0.7) {
+      score -= 50;
+      continue;
+    }
+  }
+
+  const dist =
+    Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
+    Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
+
+  if (personality.aggression > 0.5)
+    score += (10 - dist) * personality.aggression * 0.2;
+  else
+    score += dist * 0.1;
+}
 }}
 
     // Apply difficulty quality
