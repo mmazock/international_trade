@@ -1260,7 +1260,6 @@ for (let id in gameData.players) {
   else
     score += dist * 0.1;
 }
-}}
 
     // Apply difficulty quality
     score *= difficulty.decisionQuality;
