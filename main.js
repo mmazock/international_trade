@@ -4011,7 +4011,7 @@ function showUpgradeOptions() {
 
   const gameData = latestGameData;
   const player = gameData.players[currentPlayerId];
-
+const currentPos = player.shipPosition;
   const transportLevel = player.upgrades?.transport || 0;
   const navigationLevel = player.upgrades?.navigation || 0;
   const weaponsLevel = player.upgrades?.weapons || 0;
