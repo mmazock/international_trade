@@ -1410,10 +1410,6 @@ const botVsBot = attackerIsBot && defenderIsBot;
 if (!botVsBot) {
   await new Promise(r => setTimeout(r, 1500));
 }
-await gamesRef.child(currentGameCode)
-  .child("players")
-  .child(botId)
-  .update({ movesRemaining: 0 });
   // 🔥 FORCE END OF WINNER MOVEMENT
   await gamesRef.child(currentGameCode)
     .child("players")
