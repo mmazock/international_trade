@@ -1296,12 +1296,6 @@ async function botHarvest(botId, square, gameData, personality) {
 }
 
 
-  await gamesRef.child(currentGameCode).child("players").child(botId)
-    .update({ inventory: botInv });
-
-  await advanceTurn();
-}
-
 async function botManufacture(botId, square, gameData, personality) {
   const goods = factoryZones[square];
   if (!goods) return;
