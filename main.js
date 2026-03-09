@@ -979,8 +979,8 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
           },
           lastActive: Date.now()
         });
-        const attackerIsBot = gameData.players[battle.attackerId]?.isBot;
-const defenderIsBot = gameData.players[battle.defenderId]?.isBot;
+        const attackerIsBot = freshData.players[botId]?.isBot;
+const defenderIsBot = freshData.players[defenderId]?.isBot;
 const botVsBot = attackerIsBot && defenderIsBot;
 
 if (!botVsBot) {
@@ -1370,6 +1370,9 @@ async function botRollAttack(botId, gameData) {
 async function botRollDefense(botId, gameData) {
   const bot = gameData.players[botId];
   const battle = gameData.battle;
+  const attackerIsBot = gameData.players[battle.attackerId]?.isBot;
+const defenderIsBot = gameData.players[battle.defenderId]?.isBot;
+const botVsBot = attackerIsBot && defenderIsBot;
   const baseMax = 5;
   const maxRoll = baseMax + ((bot.upgrades?.weapons || 0) * 3);
   const roll = Math.floor(Math.random() * maxRoll) + 1;
