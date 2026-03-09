@@ -13,9 +13,16 @@
 
   <div id="game">
 
-    <div id="map-container">
-      <img id="map-image" src="map.png" alt="International Trade Map">
-    </div>
+<div id="map-container">
+  <img id="map-image" src="map.png" alt="International Trade Map">
+
+  <!-- Instructions Toggle Link -->
+  <div style="text-align:center; margin-top:10px;">
+    <a href="#" id="toggleInstructionsLink" style="color:#4fc3f7; font-weight:bold; text-decoration:none;">
+      📖 View Game Instructions
+    </a>
+  </div>
+</div>
 <div id="ledger">
 
   <div id="setupSection">
@@ -148,7 +155,228 @@
   font-family: Arial, sans-serif;
 ">
 </div>
+<!-- ===== HOW TO PLAY ===== -->
+<div id="instructionsPanel" style="
+  max-width: 1160px;
+  margin: 20px auto;
+  padding: 30px;
+  border: 2px solid #555;
+  background: #1a1a2e;
+  color: #e0e0e0;
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.7;
+  font-size: 0.95em;
+">
 
+  <h2 style="text-align:center; color:#f0c040; font-size:1.8em; margin-bottom:20px;">
+    📜 How to Play: The Trade Route Game
+  </h2>
+
+  <p style="text-align:center; font-style:italic; color:#aaa; margin-bottom:25px;">
+    Sail the seas. Harvest riches. Manufacture goods. Outsmart your rivals. Become the wealthiest empire in the world.
+  </p>
+
+  <!-- SECTION 1: INTERFACE & MOVEMENT -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    🧭 1. The Interface & Moving Around
+  </h3>
+  <ul>
+    <li><strong>The Map</strong> is a grid of squares labeled by column letter (A–S) and row number (0–13). Your ship appears as a colored circle with your initials.</li>
+    <li><strong>Blue squares</strong> are water — you can sail on these. Land squares are impassable.</li>
+    <li><strong>Each turn has three phases:</strong>
+      <ol>
+        <li><strong>Phase 0 — Give Phase:</strong> You may gift money, resources, or transfer ownership of the Suez Canal or dictatorships to other players.</li>
+        <li><strong>Phase 1 — Upgrade Phase:</strong> Spend money to improve your ship (see Upgrades below).</li>
+        <li><strong>Phase 2 — Move Phase:</strong> Roll the dice, then click adjacent water squares to move your ship. You can harvest, manufacture, or battle during this phase.</li>
+      </ol>
+    </li>
+    <li><strong>To move:</strong> After rolling, click any adjacent water tile. You move one square per click, spending one move each time. Diagonal movement is not allowed — only up, down, left, and right.</li>
+    <li><strong>Restricted passages</strong> (narrow straits like the Strait of Malacca) limit which directions you can travel. You may need to find alternate routes.</li>
+    <li><strong>Home Port:</strong> Each country has a home port (marked on the map). Returning here with cargo automatically <strong>cashes in</strong> your inventory for money.</li>
+  </ul>
+
+  <!-- SECTION 2: HOW TO WIN -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    🏆 2. How to Win
+  </h3>
+  <p>When creating a game, the host selects one or more victory conditions. Any player who meets <strong>any</strong> of the active conditions wins immediately:</p>
+  <ul>
+    <li><strong>Money Target</strong> — Accumulate a set amount of money (e.g., $10,000).</li>
+    <li><strong>Round Limit</strong> — After a set number of rounds, the richest player wins.</li>
+    <li><strong>Automobile Target</strong> — Cash in a set number of Automobiles at your home port.</li>
+  </ul>
+  <p>💡 <em>Money is earned by cashing in resources and manufactured goods at your home port. Country multipliers boost certain resources — choose your country wisely!</em></p>
+
+  <!-- SECTION 3: HARVESTING -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    ⛏️ 3. Harvesting Resources
+  </h3>
+  <ul>
+    <li>Certain water squares are <strong>harvest zones</strong> — when you land on one during the Move Phase, a <strong>"Harvest"</strong> button appears.</li>
+    <li>To harvest, you must <strong>correctly name a country</strong> in that region (a geography quiz!). Get it wrong and your turn ends immediately.</li>
+    <li>If correct, you choose which resources to pick up from that region's pool. The number of resources you can carry per harvest depends on your <strong>Transport upgrade level</strong> (base = 1).</li>
+    <li>Resources stay in your inventory until you return to your home port to cash them in, or use them in manufacturing.</li>
+  </ul>
+  <p><strong>Regional resources include:</strong> Gold, Ivory, Copper, Iron, Diamonds, Oil, Spices, Cotton, Rice, Coal, Silk, and Porcelain — each found in specific parts of the world.</p>
+
+  <!-- SECTION 4: MANUFACTURED GOODS -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    🏭 4. Manufacturing
+  </h3>
+  <p>Certain squares contain <strong>factories</strong>. If you're on a factory square (not your home port) and have the right raw materials, a <strong>"Manufacture"</strong> button appears. Manufacturing consumes the input resources and produces a finished good worth far more money.</p>
+
+  <table style="width:100%; border-collapse:collapse; margin:10px 0;">
+    <tr style="background:#2a2a4a; color:#f0c040;">
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Product</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Ingredients</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Value</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Factory Locations</th>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #555;"><strong>Clothes</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Cotton + Silk</td>
+      <td style="padding:8px; border:1px solid #555;">$250</td>
+      <td style="padding:8px; border:1px solid #555;">K6, L4, L5, M4, M5, N5</td>
+    </tr>
+    <tr style="background:#1e1e3a;">
+      <td style="padding:8px; border:1px solid #555;"><strong>Steel</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Iron + Coal</td>
+      <td style="padding:8px; border:1px solid #555;">$150</td>
+      <td style="padding:8px; border:1px solid #555;">K5, L5, O4, P3, P4</td>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #555;"><strong>Technology</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Copper + Oil</td>
+      <td style="padding:8px; border:1px solid #555;">$200</td>
+      <td style="padding:8px; border:1px solid #555;">L4, P3, Q3, R3</td>
+    </tr>
+    <tr style="background:#1e1e3a;">
+      <td style="padding:8px; border:1px solid #555;"><strong>Automobile</strong> 🚗</td>
+      <td style="padding:8px; border:1px solid #555;">Steel + Clothes + Oil + Copper</td>
+      <td style="padding:8px; border:1px solid #555;">$1,500</td>
+      <td style="padding:8px; border:1px solid #555;">O4, P3, Q3, R3</td>
+    </tr>
+  </table>
+  <p>💡 <em>Automobiles are the most valuable item in the game. Building them requires a supply chain: first manufacture Steel and Clothes from raw materials, then combine them with Oil and Copper at an Automobile factory.</em></p>
+
+  <!-- SECTION 5: UPGRADES -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    ⬆️ 5. The Upgrade System
+  </h3>
+  <p>During <strong>Phase 1 (Upgrade Phase)</strong>, you can invest money to improve your ship. Each upgrade has a <strong>75% success rate</strong> — if it fails, you lose the money but don't get the upgrade. Upgrades cost more at higher levels.</p>
+
+  <table style="width:100%; border-collapse:collapse; margin:10px 0;">
+    <tr style="background:#2a2a4a; color:#f0c040;">
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Upgrade</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Effect</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Cost</th>
+      <th style="padding:8px; border:1px solid #555; text-align:left;">Max Level</th>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #555;"><strong>🚢 Transport</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Carry +1 resource per harvest per level</td>
+      <td style="padding:8px; border:1px solid #555;">$150 × (current level + 1)</td>
+      <td style="padding:8px; border:1px solid #555;">Unlimited</td>
+    </tr>
+    <tr style="background:#1e1e3a;">
+      <td style="padding:8px; border:1px solid #555;"><strong>🧭 Navigation</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Roll higher dice (+3 max per level)</td>
+      <td style="padding:8px; border:1px solid #555;">$100 × (current level + 1)</td>
+      <td style="padding:8px; border:1px solid #555;">3</td>
+    </tr>
+    <tr>
+      <td style="padding:8px; border:1px solid #555;"><strong>⚔️ Weapons</strong></td>
+      <td style="padding:8px; border:1px solid #555;">Roll higher in battle (+3 max per level)</td>
+      <td style="padding:8px; border:1px solid #555;">$100 × (current level + 1)</td>
+      <td style="padding:8px; border:1px solid #555;">Unlimited</td>
+    </tr>
+  </table>
+
+  <p>You can also purchase <strong>special upgrades</strong> during this phase:</p>
+  <ul>
+    <li><strong>🚢 Construct Suez Canal ($150):</strong> Only one player can build it. The owner controls passage through the canal — other players must request permission to pass through. You can also transfer ownership.</li>
+    <li><strong>👑 Fund Dictatorship ($300 × level, 60% success):</strong> Place a dictatorship on any water or harvest square. Ships on that square when you place it get displaced. Other players entering your dictatorship trigger a battle. You can own multiple dictatorships (cost increases with each one).</li>
+  </ul>
+
+  <!-- SECTION 6: COMBAT -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    ⚔️ 6. Combat & Battles
+  </h3>
+  <ul>
+    <li>If you move onto a square occupied by another player, a <strong>battle</strong> is triggered.</li>
+    <li>Both players roll dice — base range is 1–5, increased by Weapons upgrades (+3 per level).</li>
+    <li>The <strong>higher roll wins</strong>. Ties go to the defender.</li>
+    <li>The winner can choose to <strong>displace</strong> or <strong>plunder</strong> the loser:
+      <ul>
+        <li><strong>Displace:</strong> Push them to an adjacent water tile.</li>
+        <li><strong>Plunder:</strong> Steal their inventory and send them back to their home port.</li>
+      </ul>
+    </li>
+    <li>⚠️ You <strong>cannot attack a player in their home port</strong> — it's protected waters.</li>
+    <li><strong>Bounties:</strong> Defeated players accumulate a bounty. Plundering a player with a high bounty can be very rewarding.</li>
+  </ul>
+
+  <!-- SECTION 7: DIPLOMACY & BOTS -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    🤝 7. Diplomacy & AI Opponents
+  </h3>
+  <ul>
+    <li>During your turn, you can <strong>negotiate with AI bots</strong> using the chat system. Propose trades, ceasefires, alliances, or threats.</li>
+    <li>Each bot has a unique <strong>personality</strong> (e.g., Putin is cunning and deceptive; Gandhi is peaceful and loyal; Genghis Khan is aggressive). Their personality affects how they respond to deals.</li>
+    <li>Bots have a <strong>trust score</strong> toward you — honoring deals raises it; breaking them lowers it. Trust affects future negotiations.</li>
+    <li>Bots may also <strong>proactively message you</strong> with trade proposals or warnings based on the game state.</li>
+    <li>⚠️ <em>Bots can and will betray you</em> — especially deceptive personalities. Don't trust a deal just because it was "accepted."</li>
+  </ul>
+
+  <!-- SECTION 8: STRATEGIES -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    🧠 8. Sample Strategies
+  </h3>
+
+  <p><strong>🏭 The Industrialist:</strong> Focus on building an Automobile supply chain. Harvest Cotton + Silk → make Clothes. Harvest Iron + Coal → make Steel. Then grab Oil + Copper and manufacture Automobiles at $1,500 each. Choose Italy or England for their high-value multipliers to maximize cash-in.</p>
+
+  <p><strong>⚔️ The Pirate:</strong> Invest early in Weapons upgrades. Patrol busy trade routes and plunder loaded cargo ships heading home. Target players carrying Automobiles or expensive manufactured goods. Genghis Khan or Iron Maiden energy.</p>
+
+  <p><strong>💰 The Trader:</strong> Pick a country with strong multipliers (e.g., Italy with ×2 Spices, ×1.5 Gold/Silk/Rice). Run quick loops: harvest high-value resources close to home and cash in frequently. Upgrade Navigation for faster movement.</p>
+
+  <p><strong>👑 The Dictator:</strong> Accumulate money early, then invest in Dictatorships on key harvest zones or narrow passages. Collect "tolls" through forced battles and control the map. Build the Suez Canal to choke a major trade route.</p>
+
+  <p><strong>🤝 The Diplomat:</strong> Build trust with AI bots early. Negotiate ceasefires and mutual defense pacts. Use alliances to protect your trade routes while quietly building an economic empire. Betray when you're close to winning.</p>
+
+  <!-- SECTION 9: KEY TIPS -->
+  <h3 style="color:#4fc3f7; border-bottom:1px solid #4fc3f7; padding-bottom:5px;">
+    💡 9. Key Tips for New Players
+  </h3>
+  <ul>
+    <li><strong>Country choice matters.</strong> Your multipliers determine which resources are most profitable for you. Check the Country Bonuses panel below before choosing.</li>
+    <li><strong>Cash in often.</strong> Resources in your inventory are worth nothing until you return home. A loaded ship is also a juicy target for pirates.</li>
+    <li><strong>Know your geography.</strong> Harvesting requires naming a real country in the region. Brush up on your Africa, Asia, and Middle East geography!</li>
+    <li><strong>Upgrades can fail.</strong> There's a 25% chance any upgrade fails and you lose the money. Plan accordingly.</li>
+    <li><strong>The Suez Canal</strong> is a powerful strategic asset. Whoever controls it controls the fastest route between Europe and Asia.</li>
+    <li><strong>Manufactured goods apply multipliers too.</strong> If your country has a multiplier on a manufactured good's base resource, the multiplied value applies at cash-in.</li>
+    <li><strong>Watch the scoreboard.</strong> If someone is close to winning, it might be time to shift from trading to attacking.</li>
+    <li><strong>Bots get smarter at higher difficulties.</strong> Easy bots make frequent mistakes; Very Hard bots play near-optimally with no errors.</li>
+  </ul>
+
+</div>
+<!-- ===== END HOW TO PLAY ===== -->
+<script>
+  const toggleLink = document.getElementById("toggleInstructionsLink");
+  const instructionsPanel = document.getElementById("instructionsPanel");
+
+  toggleLink.addEventListener("click", function(e) {
+    e.preventDefault();
+
+    if (instructionsPanel.style.display === "none") {
+      instructionsPanel.style.display = "block";
+      toggleLink.textContent = "❌ Hide Game Instructions";
+      window.scrollTo({ top: instructionsPanel.offsetTop - 20, behavior: "smooth" });
+    } else {
+      instructionsPanel.style.display = "none";
+      toggleLink.textContent = "📖 View Game Instructions";
+    }
+  });
+</script>
   <script src="main.js"></script>
 
 </body>
