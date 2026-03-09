@@ -270,8 +270,8 @@ const manufacturingRecipes = {
 const BOT_PERSONALITIES = {
   putin: {
     name: "Putin",
-    emoji: "🇷🇺",
-    traits: "Cunning, deceptive, ruthless strategist",
+    emoji: "VP",
+    traits: "Cunning, deceptive, ruthless strategist who uses manipulation to WIN",
     aggression: 0.9, deception: 0.85, riskTolerance: 0.7, loyalty: 0.1,
     expansionPriority: 0.9, economyPriority: 0.5,
     dealResponses: {
@@ -282,8 +282,8 @@ const BOT_PERSONALITIES = {
   },
   gandhi: {
     name: "Gandhi",
-    emoji: "🇮🇳",
-    traits: "Non-violent, tactical, principled pacifist",
+    emoji: "MG",
+    traits: "Non-violent, tactical, principled pacifist who wins through economic dominance and trade supremacy",
     aggression: 0.1, deception: 0.1, riskTolerance: 0.3, loyalty: 0.95,
     expansionPriority: 0.3, economyPriority: 0.9,
     dealResponses: {
@@ -295,7 +295,7 @@ const BOT_PERSONALITIES = {
   napoleon: {
     name: "Napoleon",
     emoji: "🇫🇷",
-    traits: "Ambitious, brilliant tactician, egotistical conqueror",
+    traits: "Ambitious, brilliant tactician who fights to WIN through military conquest and economic control",
     aggression: 0.85, deception: 0.6, riskTolerance: 0.8, loyalty: 0.3,
     expansionPriority: 0.95, economyPriority: 0.6,
     dealResponses: {
@@ -307,7 +307,7 @@ const BOT_PERSONALITIES = {
   elizabeth: {
     name: "Elizabeth I",
     emoji: "👑",
-    traits: "Shrewd diplomat, patient, calculating queen",
+    traits: "Shrewd diplomat, calculating queen focused on WINNING through trade wealth and strategic alliances",
     aggression: 0.4, deception: 0.7, riskTolerance: 0.4, loyalty: 0.5,
     expansionPriority: 0.6, economyPriority: 0.85,
     dealResponses: {
@@ -332,7 +332,7 @@ const BOT_PERSONALITIES = {
   cleopatra: {
     name: "Cleopatra",
     emoji: "🐍",
-    traits: "Seductive diplomat, cunning, politically brilliant",
+    traits: "Diplomat, cunning, politically brilliant — always scheming to WIN through wealth and manipulation",
     aggression: 0.3, deception: 0.8, riskTolerance: 0.5, loyalty: 0.35,
     expansionPriority: 0.5, economyPriority: 0.9,
     dealResponses: {
@@ -344,7 +344,7 @@ const BOT_PERSONALITIES = {
   bismarck: {
     name: "Bismarck",
     emoji: "🇩🇪",
-    traits: "Iron-willed realpolitik master, calculated, disciplined",
+    traits: "Iron-willed realpolitik master focused on WINNING through balanced military and economic strategy",
     aggression: 0.6, deception: 0.5, riskTolerance: 0.5, loyalty: 0.6,
     expansionPriority: 0.7, economyPriority: 0.8,
     dealResponses: {
@@ -356,7 +356,7 @@ const BOT_PERSONALITIES = {
   sunTzu: {
     name: "Sun Tzu",
     emoji: "☯️",
-    traits: "Wise strategist, patient, deceptively calm",
+    traits: "Wise strategist who wins by outmaneuvering opponents — every move calculated toward VICTORY",
     aggression: 0.3, deception: 0.9, riskTolerance: 0.4, loyalty: 0.5,
     expansionPriority: 0.5, economyPriority: 0.7,
     dealResponses: {
@@ -368,7 +368,7 @@ const BOT_PERSONALITIES = {
   victoria: {
     name: "Queen Victoria",
     emoji: "🏰",
-    traits: "Imperial, stubborn, morally rigid empire-builder",
+    traits: "Imperial empire-builder laser-focused on WINNING through expansion and economic supremacy",
     aggression: 0.5, deception: 0.3, riskTolerance: 0.3, loyalty: 0.7,
     expansionPriority: 0.8, economyPriority: 0.85,
     dealResponses: {
@@ -380,7 +380,7 @@ const BOT_PERSONALITIES = {
   hardBot1: {
     name: "Admiral Steele",
     emoji: "⚓",
-    traits: "Ruthlessly efficient, no-nonsense military strategist",
+    traits: "Ruthlessly efficient military strategist driven to WIN through tactical superiority",
     aggression: 0.75, deception: 0.4, riskTolerance: 0.6, loyalty: 0.5,
     expansionPriority: 0.7, economyPriority: 0.75,
     dealResponses: {
@@ -392,7 +392,7 @@ const BOT_PERSONALITIES = {
   hardBot2: {
     name: "The Merchant",
     emoji: "💰",
-    traits: "Greedy, calculating, profit-obsessed trader",
+    traits: "Greedy, calculating trader obsessed with WINNING through maximum profit and resource control",
     aggression: 0.2, deception: 0.6, riskTolerance: 0.3, loyalty: 0.2,
     expansionPriority: 0.3, economyPriority: 1.0,
     dealResponses: {
@@ -404,7 +404,7 @@ const BOT_PERSONALITIES = {
   hardBot3: {
     name: "Iron Maiden",
     emoji: "⚔️",
-    traits: "Aggressive raider, fearless, loves combat",
+    traits: "Aggressive raider who lives to WIN through combat dominance and intimidation",
     aggression: 0.95, deception: 0.2, riskTolerance: 0.9, loyalty: 0.4,
     expansionPriority: 0.85, economyPriority: 0.4,
     dealResponses: {
