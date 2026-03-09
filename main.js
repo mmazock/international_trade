@@ -979,7 +979,13 @@ async function botMovementPhase(botId, bot, gameData, personality, difficulty) {
           },
           lastActive: Date.now()
         });
-        await new Promise(r => setTimeout(r, 1500));
+        const attackerIsBot = gameData.players[battle.attackerId]?.isBot;
+const defenderIsBot = gameData.players[battle.defenderId]?.isBot;
+const botVsBot = attackerIsBot && defenderIsBot;
+
+if (!botVsBot) {
+  await new Promise(r => setTimeout(r, 1500));
+}
         await botRollAttack(botId, freshData);
         return;
       } else {
@@ -1442,7 +1448,9 @@ await gamesRef.child(currentGameCode)
       }
     });
 
-    await new Promise(r => setTimeout(r, 800));
+    if (!botVsBot) {
+  await new Promise(r => setTimeout(r, 800));
+}
     await botDisplaceLoser(botId, loserId, gameData);
   }
 }
@@ -1876,9 +1884,21 @@ function listenToGameData() {
             if (!isBotVsBot) await new Promise(r => setTimeout(r, 1500));
             await runBotStepWithTimeout("battle_attacker_roll", () => botRollAttack(battle.attackerId, data), 6000);
 
-          } else if ((battle.stage === "result" || battle.stage === "decision") && data.players?.[battle.winnerId]?.isBot) {
-            await runBotStepWithTimeout("battle_winner_decision", () => botHandleBattleDecision(battle.winnerId, data), 10000);
-          } else {
+          } else if ((battle.stage === "result" || battle.stage === "decision") 
+         && data.players?.[battle.winnerId]?.isBot) {
+
+  if (isBotVsBot) {
+    // Instant resolution for bot vs bot
+    await botHandleBattleDecision(battle.winnerId, data);
+  } else {
+    // Dramatic timing for human-involved battles
+    await runBotStepWithTimeout(
+      "battle_winner_decision",
+      () => botHandleBattleDecision(battle.winnerId, data),
+      6000
+    );
+  }
+} else {
             return;
           }
 
