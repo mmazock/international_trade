@@ -1388,11 +1388,8 @@ const botVsBot = attackerIsBot && defenderIsBot;
     winnerId: winnerId,
     stage: "result"
   });
-  // ===== AUTO-RESOLVE BOT VS BOT BATTLES =====
-const attackerIsBot = gameData.players[battle.attackerId]?.isBot;
-const defenderIsBot = gameData.players[battle.defenderId]?.isBot;
-
-if (attackerIsBot && defenderIsBot) {
+// ===== AUTO-RESOLVE BOT VS BOT BATTLES =====
+if (botVsBot) {
   await botHandleBattleDecision(winnerId, gameData);
 }
 }
