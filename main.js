@@ -4203,20 +4203,14 @@ async function startHarvestSelection(region) {
             }
           });
 
-        remaining--;
-if (remaining <= 0) {
+remaining--;
 
+if (remaining <= 0) {
   messageBox.innerHTML = "";
   await advanceTurn();
-
+} else {
+  renderSelection();
 }
-
-
-}
-
- else {
-          renderSelection();
-        }
       };
 
       messageBox.appendChild(btn);
