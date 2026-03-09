@@ -3576,7 +3576,13 @@ if (
     const player = gameData.players[currentPlayerId];
     
 // 🚫 Prevent movement if not in Movement Phase
-if (gameData.currentPhase !== 2) return;
+// Allow displacement even if not in movement phase
+if (
+  gameData.currentPhase !== 2 &&
+  !(gameData.battle && gameData.battle.stage === "displacement")
+) {
+  return;
+}
 
 // 🚫 Prevent movement if player hasn't rolled
 if (!player.rollValue) {
@@ -3590,57 +3596,22 @@ if ((player.movesRemaining || 0) <= 0) {
   return;
 }
   const rect = mapImage.getBoundingClientRect();
-// === DISPLACEMENT MODE ===
-if (
-  gameData.battle &&
-  gameData.battle.stage === "displacement" &&
-  gameData.battle.displacedPlayerId === currentPlayerId
-) {
-  const battle = gameData.battle;
-  const origin = battle.originSquare;
+    // === DETERMINE CLICKED GRID SQUARE ===
+const xPercent = (event.clientX - rect.left) / rect.width;
+const yPercent = (event.clientY - rect.top) / rect.height;
 
-  const colDiff = target.charCodeAt(0) - origin.charCodeAt(0);
-  const rowDiff = parseInt(target.slice(1)) - parseInt(origin.slice(1));
+const colObj = columnPixels.reduce((a, b) =>
+  Math.abs((b.x / originalWidth) - xPercent) <
+  Math.abs((a.x / originalWidth) - xPercent) ? b : a
+);
 
-  const isAdjacent =
-    (Math.abs(colDiff) === 1 && rowDiff === 0) ||
-    (Math.abs(rowDiff) === 1 && colDiff === 0);
+const rowObj = rowPixels.reduce((a, b) =>
+  Math.abs((b.y / originalHeight) - yPercent) <
+  Math.abs((a.y / originalHeight) - yPercent) ? b : a
+);
 
-  if (!isAdjacent) return;
-  if (!waterSquares.has(target)) return;
+const target = colObj.letter + rowObj.row;
 
-  // Suez restriction
-  if (
-    (origin === "G3" && target === "G4") ||
-    (origin === "G4" && target === "G3")
-  ) {
-    if (!gameData.suezOwner) {
-      alert("The Suez Canal has not been constructed.");
-      return;
-    }
-  }
-
-  // Occupancy check
-  for (let pid in gameData.players) {
-    if (
-      pid !== currentPlayerId &&
-      gameData.players[pid].shipPosition === target
-    ) {
-      alert("That square is already occupied. Choose a different one.");
-      return;
-    }
-  }
-
-  await gamesRef.child(currentGameCode)
-    .child("players")
-    .child(currentPlayerId)
-    .update({ shipPosition: target });
-
-  await gamesRef.child(currentGameCode).update({ battle: null });
-
-  await advanceTurn();
-  return;
-}
   // --- NORMAL MOVEMENT CONTINUES BELOW ---
 // === CHECK FOR BATTLE ===
 
