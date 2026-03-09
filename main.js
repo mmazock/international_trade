@@ -4694,14 +4694,26 @@ window.addEventListener("resize", () => {
       <h3>Country Bonuses</h3>
   `;
 
-  for (let country in countryData) {
-    html += `<strong>${country}</strong><br>`;
-    const multipliers = countryData[country].multipliers;
-    for (let resource in multipliers) {
-      html += `${resource}: ×${multipliers[resource]}<br>`;
-    }
-    html += `<br>`;
+for (let country in countryData) {
+  html += `<strong>${country}</strong><br>`;
+  const multipliers = countryData[country].multipliers;
+
+  // Raw resource bonuses
+  for (let resource in multipliers) {
+    html += `${resource}: ×${multipliers[resource]}<br>`;
   }
+
+  // Manufactured goods bonuses (derived)
+  const manufactured = ["Clothes", "Steel", "Technology", "Automobiles"];
+
+  manufactured.forEach(good => {
+    if (multipliers[good]) {
+      html += `${good}: ×${multipliers[good]}<br>`;
+    }
+  });
+
+  html += `<br>`;
+}
 
   html += `</div>`;
 
