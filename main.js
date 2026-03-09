@@ -1365,12 +1365,23 @@ async function botHandleBattleDecision(botId, gameData) {
 
   await new Promise(r => setTimeout(r, 1500));
 
+  // 🔥 FORCE END OF WINNER MOVEMENT
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(botId)
+    .update({ movesRemaining: 0 });
+
   if (personality.aggression > 0.7 && Math.random() < personality.aggression) {
+
     await gamesRef.child(currentGameCode).child("players").child(loserId)
       .update({ shipPosition: loser.homePort, inventory: {}, movesRemaining: 0 });
+
     await gamesRef.child(currentGameCode).update({ battle: null });
+
     await advanceTurn();
+
   } else {
+
     const winner = gameData.players[botId];
     const winnerInv = { ...(winner.inventory || {}) };
     const loserInv = loser.inventory || {};
@@ -1381,6 +1392,7 @@ async function botHandleBattleDecision(botId, gameData) {
 
     await gamesRef.child(currentGameCode).child("players").child(botId)
       .update({ inventory: winnerInv });
+
     await gamesRef.child(currentGameCode).child("players").child(loserId)
       .update({ inventory: {} });
 
@@ -1397,37 +1409,6 @@ async function botHandleBattleDecision(botId, gameData) {
     await botDisplaceLoser(botId, loserId, gameData);
   }
 }
-
-async function botDisplaceLoser(botId, loserId, gameData) {
-  const origin = gameData.players[botId].shipPosition;
-  const originCol = origin.charCodeAt(0);
-  const originRow = parseInt(origin.slice(1));
-
-  const occupiedSquares = new Set();
-  for (let id in gameData.players) {
-    if (id !== loserId && gameData.players[id].shipPosition) {
-      occupiedSquares.add(gameData.players[id].shipPosition);
-    }
-  }
-
-  const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
-  for (const [dc, dr] of directions) {
-    const target = String.fromCharCode(originCol + dc) + (originRow + dr);
-    if (waterSquares.has(target) && !occupiedSquares.has(target)) {
-      await gamesRef.child(currentGameCode).child("players").child(loserId)
-        .update({ shipPosition: target });
-      await gamesRef.child(currentGameCode).update({ battle: null });
-      await advanceTurn();
-      return;
-    }
-  }
-  // Fallback: send to home port
-  await gamesRef.child(currentGameCode).child("players").child(loserId)
-    .update({ shipPosition: gameData.players[loserId].homePort });
-  await gamesRef.child(currentGameCode).update({ battle: null });
-  await advanceTurn();
-}
-
 
 
 const countryData = {
