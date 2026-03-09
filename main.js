@@ -319,9 +319,10 @@ const BOT_PERSONALITIES = {
   genghis: {
     name: "Genghis Khan",
     emoji: "🏹",
-    traits: "Brutal, fearless, unstoppable warlord",
-    aggression: 0.95, deception: 0.3, riskTolerance: 0.95, loyalty: 0.4,
-    expansionPriority: 1.0, economyPriority: 0.3,
+    traits: "Brutal, fearless, conquest-driven warlord who fights to WIN the game through domination and wealth",
+    aggression: 0.85, deception: 0.3, riskTolerance: 0.9, loyalty: 0.4,
+    expansionPriority: 0.85, economyPriority: 0.65,
+
     dealResponses: {
       accept: ["The Khan accepts. Do not disappoint me.", "Your tribute is noted. We ride together.", "Strength recognizes strength. Agreed."],
       reject: ["Submit or be trampled.", "The horde does not negotiate with the weak.", "I take what I want. I need no deal."],
@@ -424,6 +425,7 @@ const DIFFICULTY_LEVELS = {
 let botTrustScores = {};
 let pendingDeals = [];
 let dealHistory = [];
+let botConversationHistories = {}; // Persist conversation history per bot
 
 function initBotTrust(gameData) {
   const players = gameData.players || {};
@@ -640,6 +642,45 @@ async function botToBotNegotiate(botId, bot, gameData, personality) {
     addGameLog(`💬 ${bot.name} tried to negotiate with ${targetBot.name} but was refused.`);
   }
 }
+// === BOT PROACTIVE MESSAGING TO PLAYER ===
+let botProposalCooldown = {};
+
+async function botProposeToPlayer(botId, bot, gameData, personality) {
+  const currentRound = gameData.round || 1;
+  const cooldownKey = `${botId}_${currentRound}`;
+  if (botProposalCooldown[cooldownKey]) return;
+  
+  if (Math.random() > (personality.economyPriority * 0.3 + personality.deception * 0.1)) return;
+  
+  const humanPlayers = Object.keys(gameData.players).filter(id => !gameData.players[id].isBot);
+  if (humanPlayers.length === 0) return;
+  
+  const targetPlayerId = humanPlayers[Math.floor(Math.random() * humanPlayers.length)];
+  const targetPlayer = gameData.players[targetPlayerId];
+  const trust = botTrustScores[botId]?.[targetPlayerId] || 50;
+  
+  let proposal = null;
+  
+  if (personality.economyPriority > 0.6 && Object.keys(bot.inventory || {}).length > 0) {
+    const resource = Object.keys(bot.inventory)[0];
+    proposal = `I have ${resource} to trade. Would you be interested in a resource swap?`;
+  } else if (personality.aggression < 0.4 && trust > 30) {
+    proposal = `I propose a ceasefire between us for ${3 + Math.floor(Math.random() * 4)} rounds. What say you?`;
+  } else if (personality.aggression > 0.7 && trust < 30) {
+    proposal = `Stay out of my waters or face the consequences. Consider this a warning.`;
+  } else if (trust > 60) {
+    proposal = `Perhaps we should form a mutual defense pact? Together we would be formidable.`;
+  }
+  
+  if (!proposal) return;
+  
+  botProposalCooldown[cooldownKey] = true;
+  
+  addGameLog(`💬 ${bot.name} sends a message to ${targetPlayer.name}: "${proposal}"`);
+  
+  if (!botConversationHistories[botId]) botConversationHistories[botId] = [];
+  botConversationHistories[botId].push({ role: "assistant", content: proposal });
+}
 
 
 /* =============================
@@ -697,7 +738,8 @@ async function executeBotTurn(botId, gameData) {
 
   if (phase === 0) {
     // Bot-to-bot behind-the-scenes negotiation
-    await runBotStepWithTimeout("bot_negotiate", () => botToBotNegotiate(botId, bot, gameData, personality), 8000);
+       await runBotStepWithTimeout("bot_negotiate", () => botToBotNegotiate(botId, bot, gameData, personality), 8000);
+    await runBotStepWithTimeout("bot_propose_player", () => botProposeToPlayer(botId, bot, gameData, personality), 5000);
     await runBotStepWithTimeout("give_phase", () => botGivePhase(botId, bot, gameData, personality, difficulty), 5000);
 
     await runBotStepWithTimeout("set_phase_1", () => gamesRef.child(currentGameCode).update({
@@ -1120,7 +1162,8 @@ function botChooseStrategicGoal(botId, bot, gameData, personality) {
 }
 
 
-function botChooseMove(botId, bot, gameData, personality, difficulty) {
+function botChooseMove(botId, bot, gameData, personality, difficulty, avoidSquares = new Set()) {
+
   const currentPos = bot.shipPosition;
   const currentCol = currentPos.charCodeAt(0);
   const currentRow = parseInt(currentPos.slice(1));
@@ -1135,6 +1178,7 @@ function botChooseMove(botId, bot, gameData, personality, difficulty) {
     const target = newCol + newRow;
 
     if (!waterSquares.has(target)) continue;
+    if (avoidSquares.has(target)) continue;
 
     if (restrictedTransitions[currentPos]) {
       if (!restrictedTransitions[currentPos].includes(target)) continue;
@@ -1213,20 +1257,44 @@ async function botHarvest(botId, square, gameData, personality) {
 
   const botInv = { ...(bot.inventory || {}) };
 
+  const neededResources = new Set();
+  for (const good in manufacturingRecipes) {
+    const recipe = manufacturingRecipes[good];
+    for (const input of recipe.inputs) {
+      if (!(botInv[input] >= 1) && resources.includes(input)) {
+        neededResources.add(input);
+      }
+    }
+  }
+
+  const picked = new Set();
   for (let i = 0; i < harvestCapacity && i < resources.length; i++) {
-    let bestResource = resources[0];
-    let bestValue = 0;
+    let bestResource = null;
+    let bestValue = -1;
 
     for (const r of resources) {
-      const val = (baseResourceValues[r] || 0) * (bot.multipliers?.[r] || 1);
+      let val = (baseResourceValues[r] || 0) * (bot.multipliers?.[r] || 1);
+      if (neededResources.has(r) && !picked.has(r)) val += 500;
+      if (picked.has(r) && neededResources.size > 0) val -= 200;
       if (val > bestValue) {
         bestValue = val;
         bestResource = r;
       }
     }
 
-    botInv[bestResource] = (botInv[bestResource] || 0) + 1;
+    if (bestResource) {
+      botInv[bestResource] = (botInv[bestResource] || 0) + 1;
+      picked.add(bestResource);
+      neededResources.delete(bestResource);
+    }
   }
+
+  await gamesRef.child(currentGameCode).child("players").child(botId)
+    .update({ inventory: botInv });
+
+  await advanceTurn();
+}
+
 
   await gamesRef.child(currentGameCode).child("players").child(botId)
     .update({ inventory: botInv });
@@ -1341,10 +1409,17 @@ async function botDisplaceLoser(botId, loserId, gameData) {
   const originCol = origin.charCodeAt(0);
   const originRow = parseInt(origin.slice(1));
 
+  const occupiedSquares = new Set();
+  for (let id in gameData.players) {
+    if (id !== loserId && gameData.players[id].shipPosition) {
+      occupiedSquares.add(gameData.players[id].shipPosition);
+    }
+  }
+
   const directions = [[-1, 0], [1, 0], [0, -1], [0, 1]];
   for (const [dc, dr] of directions) {
     const target = String.fromCharCode(originCol + dc) + (originRow + dr);
-    if (waterSquares.has(target)) {
+    if (waterSquares.has(target) && !occupiedSquares.has(target)) {
       await gamesRef.child(currentGameCode).child("players").child(loserId)
         .update({ shipPosition: target });
       await gamesRef.child(currentGameCode).update({ battle: null });
@@ -1352,7 +1427,13 @@ async function botDisplaceLoser(botId, loserId, gameData) {
       return;
     }
   }
+  // Fallback: send to home port
+  await gamesRef.child(currentGameCode).child("players").child(loserId)
+    .update({ shipPosition: gameData.players[loserId].homePort });
+  await gamesRef.child(currentGameCode).update({ battle: null });
+  await advanceTurn();
 }
+
 
 
 const countryData = {
@@ -1772,12 +1853,17 @@ function listenToGameData() {
           if (!data.battle) return;
           const battle = data.battle;
 
+          const attackerIsBot = data.players?.[battle.attackerId]?.isBot;
+          const defenderIsBot = data.players?.[battle.defenderId]?.isBot;
+          const isBotVsBot = attackerIsBot && defenderIsBot;
+
           if (battle.stage === "awaitingDefenderRoll" && data.players?.[battle.defenderId]?.isBot) {
-            await new Promise(r => setTimeout(r, 1500));
+            if (!isBotVsBot) await new Promise(r => setTimeout(r, 1500));
             await runBotStepWithTimeout("battle_defender_roll", () => botRollDefense(battle.defenderId, data), 6000);
           } else if (battle.stage === "awaitingAttackerRoll" && data.players?.[battle.attackerId]?.isBot) {
-            await new Promise(r => setTimeout(r, 1500));
+            if (!isBotVsBot) await new Promise(r => setTimeout(r, 1500));
             await runBotStepWithTimeout("battle_attacker_roll", () => botRollAttack(battle.attackerId, data), 6000);
+
           } else if ((battle.stage === "result" || battle.stage === "decision") && data.players?.[battle.winnerId]?.isBot) {
             await runBotStepWithTimeout("battle_winner_decision", () => botHandleBattleDecision(battle.winnerId, data), 10000);
           } else {
@@ -3136,7 +3222,9 @@ if (event.target && event.target.classList.contains("negotiateBotBtn")) {
   else trustLabel = "Hostile";
 
     overlay._botId = botId;
-  overlay._conversationHistory = []; // Reset conversation for new negotiation session
+    if (!botConversationHistories[botId]) botConversationHistories[botId] = [];
+  overlay._conversationHistory = botConversationHistories[botId];
+
 
 
   const me = gameData.players[currentPlayerId];
@@ -3204,9 +3292,11 @@ if (event.target && event.target.id === "negotiateSendBtn") {
   sendBtn.disabled = true;
   sendBtn.textContent = "...";
 
-  // Track conversation history
+  // Track conversation history (persisted per bot)
   if (!overlay._conversationHistory) overlay._conversationHistory = [];
   overlay._conversationHistory.push({ role: "user", content: message });
+  botConversationHistories[overlay._botId] = overlay._conversationHistory;
+
 
   chatLog.innerHTML += `<p id="typingIndicator" style="color:#888; font-style:italic;">${overlay._botName} is thinking...</p>`;
   chatLog.scrollTop = chatLog.scrollHeight;
@@ -3514,6 +3604,14 @@ if (
 // Adjacency check
     if (!isAdjacent) return;
     if (!waterSquares.has(target)) return;
+    // Check if another player already occupies this square
+    const players2 = gameData.players || {};
+    for (let pid in players2) {
+      if (pid !== battle.displacedPlayerId && players2[pid].shipPosition === target) {
+        alert("That square is already occupied. Choose a different one.");
+        return;
+      }
+    }
 
     await gamesRef.child(currentGameCode)
       .child("players")
@@ -4112,22 +4210,13 @@ async function startHarvestSelection(region) {
           });
 
         remaining--;
-
 if (remaining <= 0) {
 
   messageBox.innerHTML = "";
+  await advanceTurn();
 
-  const gameSnap = await gamesRef.child(currentGameCode).once("value");
-  const gameData = gameSnap.val();
+}
 
-  let nextTurn = gameData.currentTurnIndex + 1;
-  if (nextTurn >= gameData.turnOrder.length) nextTurn = 0;
-
-  await gamesRef.child(currentGameCode).update({
-  currentTurnIndex: nextTurn,
-  currentPhase: 0,
-  lastActive: Date.now()
-});
 
 }
 
