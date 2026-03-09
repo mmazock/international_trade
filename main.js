@@ -1983,7 +1983,14 @@ await gamesRef.child(currentGameCode).child("gameLog").push({
 
 
     } else {
-
+// 🔥 Clear current player's remaining movement
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(currentPlayerId)
+  .update({
+    movesRemaining: 0,
+    rollValue: null
+  });
       let nextTurn = currentTurnIndex + 1;
       if (nextTurn >= turnOrder.length) nextTurn = 0;
 
