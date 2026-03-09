@@ -2732,12 +2732,22 @@ if (event.target && event.target.id === "battleMoveOn") {
     ? battle.defenderId
     : battle.attackerId;
 
+  const winner = gameData.players[winnerId];
+
+  // 🔥 ENSURE winner remains in square
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(winnerId)
+    .update({
+      shipPosition: winner.shipPosition
+    });
+
   await gamesRef.child(currentGameCode).update({
     battle: {
-      ...battle,
       stage: "displacement",
+      winnerId: winnerId,
       displacedPlayerId: loserId,
-      originSquare: gameData.players[winnerId].shipPosition
+      originSquare: winner.shipPosition
     }
   });
 }
