@@ -3789,7 +3789,6 @@ if (gameData.dictatorships && gameData.dictatorships[target]) {
   }
 }
 //Adjacency check
-if (!isAdjacent) return;
 
 // Malacca restriction
 if (restrictedTransitions[currentPos]) {
