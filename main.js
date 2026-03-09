@@ -425,6 +425,7 @@ const DIFFICULTY_LEVELS = {
 let botTrustScores = {};
 let pendingDeals = [];
 let dealHistory = [];
+  let recentBattles = {};
 let botConversationHistories = {}; // Persist conversation history per bot
 
 function initBotTrust(gameData) {
@@ -1227,15 +1228,36 @@ function botChooseMove(botId, bot, gameData, personality, difficulty, avoidSquar
     }
 
     // Aggression: approach or avoid other players
-    for (let id in gameData.players) {
+for (let id in gameData.players) {
+ 
+
+    const pairKey = [botId, id].sort().join("_");
+
+    // 🔥 Avoid recently fought opponent for 10 seconds
+    if (recentBattles[pairKey] && Date.now() - recentBattles[pairKey] < 10000) {
+      score -= 40;
+      continue; 
       if (id !== botId && gameData.players[id].shipPosition) {
-        const otherPos = gameData.players[id].shipPosition;
-        const dist = Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
-                     Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
-        if (personality.aggression > 0.5) score += (10 - dist) * personality.aggression * 0.2;
-        else score += dist * 0.1;
+    const otherPos = gameData.players[id].shipPosition;
+    }
+
+    if (target === otherPos) {
+      if (personality.aggression < 0.7) {
+        score -= 50;
+        continue;
       }
     }
+
+    const dist =
+      Math.abs(target.charCodeAt(0) - otherPos.charCodeAt(0)) +
+      Math.abs(parseInt(target.slice(1)) - parseInt(otherPos.slice(1)));
+
+    if (personality.aggression > 0.5)
+      score += (10 - dist) * personality.aggression * 0.2;
+    else
+      score += dist * 0.1;
+  }
+}}
 
     // Apply difficulty quality
     score *= difficulty.decisionQuality;
@@ -1355,16 +1377,29 @@ async function botRollDefense(botId, gameData) {
     winnerId: winnerId,
     stage: "result"
   });
+  // ===== AUTO-RESOLVE BOT VS BOT BATTLES =====
+const attackerIsBot = gameData.players[battle.attackerId]?.isBot;
+const defenderIsBot = gameData.players[battle.defenderId]?.isBot;
+
+if (attackerIsBot && defenderIsBot) {
+  await botHandleBattleDecision(winnerId, gameData);
+}
 }
 
 async function botHandleBattleDecision(botId, gameData) {
   const personality = BOT_PERSONALITIES[gameData.players[botId].personality];
   const battle = gameData.battle;
+  // Record recent battle
+const pairKey = [battle.attackerId, battle.defenderId].sort().join("_");
+recentBattles[pairKey] = Date.now();
   const loserId = battle.winnerId === battle.attackerId ? battle.defenderId : battle.attackerId;
   const loser = gameData.players[loserId];
 
   await new Promise(r => setTimeout(r, 1500));
-
+await gamesRef.child(currentGameCode)
+  .child("players")
+  .child(botId)
+  .update({ movesRemaining: 0 });
   // 🔥 FORCE END OF WINNER MOVEMENT
   await gamesRef.child(currentGameCode)
     .child("players")
