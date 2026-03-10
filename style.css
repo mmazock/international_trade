@@ -5,10 +5,18 @@ body {
 
 #game {
   display: flex;
-  flex-wrap: wrap;   /* allows items to wrap to next line */
+  flex-direction: column;
   gap: 20px;
-  align-items: flex-start;
-  width: 100%;
+}
+#topRow {
+  display: flex;
+  gap: 20px;
+}
+
+#referencePanel {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
 }
 /* Map container */
 #map-container {
