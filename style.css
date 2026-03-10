@@ -14,10 +14,31 @@ body {
   gap: 20px;
 }
 
+#map-container {
+  flex: 1;
+  max-width: 75%;
+  position: relative;
+}
+
+#ledger {
+  width: 300px;
+  border: 2px solid black;
+  padding: 10px;
+  flex-shrink: 0;
+}
+
 #referencePanel {
   display: flex;
   gap: 20px;
   width: 100%;
+}
+
+.referenceColumn {
+  flex: 1;
+  border: 2px solid #333;
+  padding: 10px;
+  background-color: #f4f4f4;
+  font-size: 14px;
 }
 
 .referenceColumn {
@@ -64,30 +85,5 @@ body {
 .ship {
   pointer-events: none;
   user-select: none;
-}
-#map-container,
-#ledger {
-  flex: 0 0 auto;
-}
-
-
-.referenceColumn {
-  flex: 1;
-  border: 2px solid #333;
-  padding: 10px;
-  background-color: #f4f4f4;
-  font-size: 14px;
-}
-
-#map-container {
-  flex: 1;
-  max-width: 75%;
-}
-
-#ledger {
-  width: 300px;
-  border: 2px solid black;
-  padding: 10px;
-  flex-shrink: 0;   /* prevents it from wrapping */
 }
 
