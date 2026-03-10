@@ -4419,8 +4419,15 @@ const currentPhase = gameData.currentPhase || 0;
 const roundNumber = gameData.round || 1;
 
 const phaseNames = ["Give Phase", "Upgrade Phase", "Movement Phase"];
-phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
-
+if (gameData.gameState === "active") {
+  phaseDisplay.textContent = `Round ${roundNumber} — ${phaseNames[currentPhase]}`;
+  endPhaseBtn.style.display = "inline-block";
+  leaveGameBtn.style.display = "inline-block";
+} else {
+  phaseDisplay.textContent = "";
+  endPhaseBtn.style.display = "none";
+  leaveGameBtn.style.display = "none";
+}
   // === PLAYER HEADER RESTORE ===
   if (players[currentPlayerId]) {
     const me = players[currentPlayerId];
