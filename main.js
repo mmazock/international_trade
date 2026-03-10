@@ -1630,7 +1630,11 @@ const countryData = {
 createGameBtn.addEventListener("click", () => {
 
   createGameBtn.style.display = "none";
+
   document.getElementById("hostSetup").style.display = "block";
+
+  // 🔥 Hide join inputs when hosting
+  document.getElementById("joinSection").style.display = "none";
 
 });
 document.getElementById("confirmHostBtn").addEventListener("click", async () => {
