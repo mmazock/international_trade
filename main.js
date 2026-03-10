@@ -1456,6 +1456,61 @@ if (!botVsBot) {
     await botDisplaceLoser(botId, loserId, gameData);
   }
 }
+  async function botDisplaceLoser(botId, loserId, gameData) {
+
+  // Always use fresh state
+  const freshSnap = await gamesRef.child(currentGameCode).once("value");
+  const freshData = freshSnap.val();
+  if (!freshData) return;
+
+  const winner = freshData.players[botId];
+  const loser = freshData.players[loserId];
+  if (!winner || !loser) return;
+
+  const origin = winner.shipPosition;
+
+  const originCol = origin.charCodeAt(0);
+  const originRow = parseInt(origin.slice(1));
+
+  const directions = [[-1,0],[1,0],[0,-1],[0,1]];
+
+  const occupied = new Set();
+  for (let id in freshData.players) {
+    if (id !== loserId && freshData.players[id].shipPosition) {
+      occupied.add(freshData.players[id].shipPosition);
+    }
+  }
+
+  // Try adjacent water squares
+  for (const [dc, dr] of directions) {
+    const newCol = String.fromCharCode(originCol + dc);
+    const newRow = originRow + dr;
+    const target = newCol + newRow;
+
+    if (!waterSquares.has(target)) continue;
+    if (occupied.has(target)) continue;
+
+    await gamesRef.child(currentGameCode)
+      .child("players")
+      .child(loserId)
+      .update({ shipPosition: target });
+
+    await gamesRef.child(currentGameCode).update({ battle: null });
+
+    await advanceTurn();
+    return;
+  }
+
+  // Fallback: send loser home
+  await gamesRef.child(currentGameCode)
+    .child("players")
+    .child(loserId)
+    .update({ shipPosition: loser.homePort });
+
+  await gamesRef.child(currentGameCode).update({ battle: null });
+
+  await advanceTurn();
+}
 
 
 const countryData = {
