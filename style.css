@@ -8,6 +8,7 @@ body {
   flex-direction: column;
   gap: 20px;
 }
+
 #topRow {
   display: flex;
   gap: 20px;
@@ -15,8 +16,16 @@ body {
 
 #referencePanel {
   display: flex;
-  justify-content: space-between;
   gap: 20px;
+  width: 100%;
+}
+
+.referenceColumn {
+  flex: 1;
+  border: 2px solid #333;
+  padding: 10px;
+  background-color: #f4f4f4;
+  font-size: 14px;
 }
 /* Map container */
 #map-container {
@@ -60,14 +69,7 @@ body {
 #ledger {
   flex: 0 0 auto;
 }
-#referencePanel {
-  flex: 0 0 100%;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  gap: 20px;
-  margin-top: 20px;
-}
+
 
 .referenceColumn {
   flex: 1;
@@ -89,6 +91,3 @@ body {
   flex-shrink: 0;   /* prevents it from wrapping */
 }
 
-#referencePanel {
-  flex: 1 1 100%;   /* forces it to take full width under map */
-}
