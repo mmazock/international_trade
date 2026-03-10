@@ -4375,7 +4375,7 @@ function renderLedger(gameData) {
   inventoryHeader.style.display = "block";
   inventoryListEl.style.display = "block";
   messageBox.style.display = "block";
-  }
+  
 
   // 🏁 GAME OVER SCREEN
   if (gameData.gameState === "gameOver") {
