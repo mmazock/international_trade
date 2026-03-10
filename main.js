@@ -1817,6 +1817,13 @@ function listenToGameData() {
     if (!gameData) return;
 
     latestGameData = gameData;
+    const gameUI = document.getElementById("gameUI");
+
+if (gameData.gameState === "active") {
+  gameUI.style.display = "block";
+} else {
+  gameUI.style.display = "none";
+}
 const ledgerDiv = document.getElementById("ledger");
 
 if (gameData.gameState === "lobby") {
