@@ -4359,14 +4359,15 @@ function renderLedger(gameData) {
     inventoryListEl.style.display = "none";
     messageBox.style.display = "none";
     return;
-  } else {
-    ledgerTitle.style.display = "block";
-    phaseBlock.style.display = "block";
-    endBtn.style.display = "inline-block";
-    leaveBtn.style.display = "inline-block";
-    inventoryHeader.style.display = "block";
-    inventoryListEl.style.display = "block";
-    messageBox.style.display = "block";
+  }
+
+  ledgerTitle.style.display = "block";
+  phaseBlock.style.display = "block";
+  endBtn.style.display = "inline-block";
+  leaveBtn.style.display = "inline-block";
+  inventoryHeader.style.display = "block";
+  inventoryListEl.style.display = "block";
+  messageBox.style.display = "block";
   }
 
   // 🏁 GAME OVER SCREEN
