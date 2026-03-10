@@ -4330,16 +4330,36 @@ if (remaining <= 0) {
 }
 
 function renderLedger(gameData) {
-  const ledgerSection = document.getElementById("ledgerSection");
 
-if (!gameData || gameData.gameState !== "active") {
-  if (ledgerSection) ledgerSection.style.display = "none";
-  return;
-} else {
-  if (ledgerSection) ledgerSection.style.display = "block";
-}
-// 🏁 GAME OVER SCREEN
-if (gameData.gameState === "gameOver") {
+  const phaseBlock = document.getElementById("phaseDisplay").parentElement;
+  const endBtn = document.getElementById("endPhaseBtn");
+  const leaveBtn = document.getElementById("leaveGameBtn");
+  const inventoryHeader = document.querySelector("#ledger h3");
+  const inventoryListEl = document.getElementById("inventoryList");
+  const messageBox = document.getElementById("messageBox");
+  const ledgerTitle = document.querySelector("#ledger h2");
+
+  if (!gameData || gameData.gameState !== "active") {
+    ledgerTitle.style.display = "none";
+    phaseBlock.style.display = "none";
+    endBtn.style.display = "none";
+    leaveBtn.style.display = "none";
+    inventoryHeader.style.display = "none";
+    inventoryListEl.style.display = "none";
+    messageBox.style.display = "none";
+    return;
+  } else {
+    ledgerTitle.style.display = "block";
+    phaseBlock.style.display = "block";
+    endBtn.style.display = "inline-block";
+    leaveBtn.style.display = "inline-block";
+    inventoryHeader.style.display = "block";
+    inventoryListEl.style.display = "block";
+    messageBox.style.display = "block";
+  }
+
+  // 🏁 GAME OVER SCREEN
+  if (gameData.gameState === "gameOver") {
 
   const winner = gameData.players[gameData.winnerId];
 
