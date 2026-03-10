@@ -4330,6 +4330,14 @@ if (remaining <= 0) {
 }
 
 function renderLedger(gameData) {
+  const ledgerSection = document.getElementById("ledgerSection");
+
+if (!gameData || gameData.gameState !== "active") {
+  if (ledgerSection) ledgerSection.style.display = "none";
+  return;
+} else {
+  if (ledgerSection) ledgerSection.style.display = "block";
+}
 // 🏁 GAME OVER SCREEN
 if (gameData.gameState === "gameOver") {
 
