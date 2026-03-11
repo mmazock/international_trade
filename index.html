@@ -9,197 +9,99 @@
   <h1>International Trade</h1>
 <h3 id="playerHeader" style="margin-top:5px;"></h3>
 
-  <div id="game">
-<div id="topRow">
-<div id="map-container">
-  <img id="map-image" src="map.png" alt="International Trade Map">
+<div id="game">
 
-  <!-- Instructions Toggle Link -->
-  <div style="text-align:center; margin-top:10px;">
-    <a href="#" id="toggleInstructionsLink" style="color:#4fc3f7; font-weight:bold; text-decoration:none;">
-      📖 View Game Instructions
-    </a>
-  </div>
-</div>
-<div id="ledger">
+  <div id="topRow">
 
-  <div id="setupSection">
+    <div id="map-container">
+      <img id="map-image" src="map.png" alt="International Trade Map">
 
-    <h2>Game Setup</h2>
+      <div style="text-align:center; margin-top:10px;">
+        <a href="#" id="toggleInstructionsLink" style="color:#4fc3f7; font-weight:bold; text-decoration:none;">
+          📖 View Game Instructions
+        </a>
+      </div>
+    </div>
 
- <button id="createGameBtn">Create Game (Host)</button>
+    <div id="ledger">
 
-<div id="hostSetup" style="display:none; margin-top:15px;">
-  <input type="text" id="hostNameInput" placeholder="Enter Your Name"><br><br>
+      <div id="setupSection">
+        <h2>Game Setup</h2>
 
-  <select id="hostCountrySelect">
-    <option value="">Select Country</option>
-    <option value="Spain">Spain</option>
-    <option value="Portugal">Portugal</option>
-    <option value="England">England</option>
-    <option value="France">France</option>
-    <option value="Italy">Italy</option>
-    <option value="Germany">Germany</option>
-  </select><br><br>
+        <button id="createGameBtn">Create Game (Host)</button>
 
-  <button id="confirmHostBtn">Host Game</button>
-</div>
-    <br><br>
+        <div id="hostSetup" style="display:none; margin-top:15px;">
+          <input type="text" id="hostNameInput" placeholder="Enter Your Name"><br><br>
 
-  <div id="joinSection">
+          <select id="hostCountrySelect">
+            <option value="">Select Country</option>
+            <option value="Spain">Spain</option>
+            <option value="Portugal">Portugal</option>
+            <option value="England">England</option>
+            <option value="France">France</option>
+            <option value="Italy">Italy</option>
+            <option value="Germany">Germany</option>
+          </select><br><br>
 
-  <input type="text" id="joinCodeInput" placeholder="Enter Join Code">
-  <br><br>
+          <button id="confirmHostBtn">Host Game</button>
+        </div>
 
-  <input type="text" id="playerNameInput" placeholder="Enter Your Name">
-  <br><br>
+        <br><br>
 
-  <select id="countrySelect">
-    <option value="">Select Country</option>
-    <option value="Spain">Spain</option>
-    <option value="Portugal">Portugal</option>
-    <option value="England">England</option>
-    <option value="France">France</option>
-    <option value="Italy">Italy</option>
-    <option value="Germany">Germany</option>
-  </select>
+        <div id="joinSection">
+          <input type="text" id="joinCodeInput" placeholder="Enter Join Code"><br><br>
+          <input type="text" id="playerNameInput" placeholder="Enter Your Name"><br><br>
 
-  <br><br>
+          <select id="countrySelect">
+            <option value="">Select Country</option>
+            <option value="Spain">Spain</option>
+            <option value="Portugal">Portugal</option>
+            <option value="England">England</option>
+            <option value="France">France</option>
+            <option value="Italy">Italy</option>
+            <option value="Germany">Germany</option>
+          </select>
 
-  <button id="joinGameBtn">Join Game</button>
+          <br><br>
 
-  <p id="joinStatus"></p>
+          <button id="joinGameBtn">Join Game</button>
+          <p id="joinStatus"></p>
+        </div>
+      </div>
 
-</div>
+      <div id="gameUI" style="display:none;">
+        <p><strong>Current Phase:</strong> <span id="phaseDisplay"></span></p>
+        <button id="endPhaseBtn">End Phase</button><br><br>
+        <button id="leaveGameBtn">Leave Game</button><br><br>
 
-<div id="gameUI" style="display:none;">
+        <h3>Inventory</h3>
+        <div id="inventoryList"></div>
 
-  <h2>Ledger</h2>
+        <hr>
 
-  <p><strong>Current Phase:</strong> <span id="phaseDisplay"></span></p>
-  <button id="endPhaseBtn">End Phase</button>
-  <br><br>
+        <div id="messageBox"
+             style="margin-top:20px; padding:10px; border:1px solid #333; min-height:150px;">
+        </div>
+      </div>
 
-  <button id="leaveGameBtn">Leave Game</button>
-  <br><br>
-
-  <h3>Inventory</h3>
-  <div id="inventoryList"></div>
-
-  <hr>
-
-  <div id="messageBox"
-       style="margin-top:20px; padding:10px; border:1px solid #333; min-height:150px;">
-  </div>
-
-</div>
-
-</div>
-
-  
-</div>
- <div id="referencePanel">
-
-  <!-- LEFT COLUMN -->
-  <div id="countryReference" class="referenceColumn">
-
-    <h3>Country Bonuses</h3>
-
-    <strong>I. Spain</strong>
-    <ul>
-      <li>x1.5 Gold</li>
-      <li>x1.5 Textiles</li>
-      <li>x0.5 Spices</li>
-      <li>x1.5 Automobiles</li>
-      <li>x2 Copper</li>
-    </ul>
-
-    <strong>II. Portugal</strong>
-    <ul>
-      <li>x2 Rice</li>
-      <li>x1.5 Silk</li>
-      <li>x1.5 Technology</li>
-      <li>x0.5 Ivory</li>
-      <li>x1.5 Steel</li>
-    </ul>
-
-    <strong>III. England (United Kingdom)</strong>
-    <ul>
-      <li>x2 Porcelain</li>
-      <li>x2 Silk</li>
-      <li>x0.5 Gold</li>
-      <li>x0.5 Copper</li>
-    </ul>
-
-    <strong>IV. France</strong>
-    <ul>
-      <li>x1.5 Textiles</li>
-      <li>x1.5 Rice</li>
-      <li>x1.5 Spices</li>
-      <li>x0.5 Ivory</li>
-    </ul>
-
-    <strong>V. Italy</strong>
-    <ul>
-      <li>x1.5 Gold</li>
-      <li>x1.5 Textiles</li>
-      <li>x2 Spices</li>
-      <li>x1.5 Technology</li>
-      <li>x1.5 Rice</li>
-      <li>x1.5 Copper</li>
-    </ul>
-
-    <strong>VI. Germany</strong>
-    <ul>
-      <li>x1.5 Oil</li>
-      <li>x2 Technology</li>
-      <li>x1.5 Rice</li>
-      <li>x1.5 Ivory</li>
-      <li>x1.5 Diamonds</li>
-      <li>x0.5 Automobiles</li>
-    </ul>
+    </div>
 
   </div>
 
+  <div id="referencePanel">
 
-  <!-- RIGHT COLUMN -->
-  <div id="resourceReference" class="referenceColumn">
+    <div class="referenceColumn">
+      <h3>Country Bonuses</h3>
+      <!-- your bonuses list here -->
+    </div>
 
-    <h3>Resource Base Values</h3>
-
-    <p><em>To locate resources, move to a shaded harvest space.</em></p>
-
-    <ul>
-      <li>Gold – 20</li>
-      <li>Ivory – 20</li>
-      <li>Diamonds – 70</li>
-      <li>Oil – 70</li>
-      <li>Spices – 50</li>
-      <li>Cotton – 40</li>
-      <li>Rice – 60</li>
-      <li>Coal – 40</li>
-      <li>Iron – 20</li>
-      <li>Copper – 20</li>
-      <li>Silk – 80</li>
-      <li>Porcelain – 80</li>
-    </ul>
-
-    <hr>
-
-    <h3>Manufactured Goods</h3>
-
-    <p><strong>Note:</strong> Production requires one full turn and must be done at a factory location.</p>
-
-    <ul>
-      <li><strong>Clothes</strong> = Cotton + Silk → 250</li>
-      <li><strong>Steel</strong> = Iron + Coal → 150</li>
-      <li><strong>Technology</strong> = Oil + Copper → 200</li>
-      <li><strong>Automobile</strong> = Steel + Oil + Copper + Clothes → 1500</li>
-    </ul>
+    <div class="referenceColumn">
+      <h3>Resource Base Values</h3>
+      <!-- your resource list here -->
+    </div>
 
   </div>
 
-  
 </div>
       <hr>
     
