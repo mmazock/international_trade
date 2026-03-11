@@ -1518,32 +1518,33 @@ const countryData = {
   Spain: {
     home: "C2",
     multipliers: {
-      "Gold": 1.5,
-      "Clothes": 1.5,
       "Automobiles": 1.5,
-      "Spices": 0.5,
-      "Copper": 2
+      "Clothes": 1.5,
+      "Copper": 2,
+      "Gold": 1.5,
+      "Spices": 0.5
+  
     }
   },
 
   Portugal: {
     home: "C3",
     multipliers: {
+      "Ivory": 0.5,
       "Rice": 2,
       "Silk": 1.5,
-      "Technology": 1.5,
       "Steel": 1.5,
-      "Ivory": 0.5
+     "Technology": 1.5
     }
   },
 
   England: {
     home: "C1",
     multipliers: {
-      "Porcelain": 2,
-      "Silk": 2,
+      "Copper": 0.5,
       "Gold": 0.5,
-      "Copper": 0.5
+      "Porcelain": 2,
+      "Silk": 2
     }
   },
 
@@ -1551,33 +1552,33 @@ const countryData = {
     home: "D2",
     multipliers: {
       "Cotton": 1.5,
+      "Ivory": 0.5,
       "Rice": 1.5,
-      "Spices": 0.5,
-      "Ivory": 0.5
+      "Spices": 0.5
     }
   },
 
   Italy: {
     home: "E2",
     multipliers: {
+     "Copper": 1.5,
       "Gold": 1.5,
-      "Spices": 2,
+     "Rice": 1.5,
       "Silk": 1.5,
-      "Technology": 1.5,
-      "Copper": 1.5,
-      "Rice": 1.5
+     "Spices": 2,
+      "Technology": 1.5
     }
   },
 
   Germany: {
     home: "D1",
     multipliers: {
-      "Oil": 1.5,
-      "Coal": 1.5,
-      "Technology": 2,
-      "Rice": 1.5,
       "Automobiles": .5,
-      "Diamonds": 1.5
+     "Coal": 1.5,
+      "Diamonds": 1.5,
+      "Oil": 1.5,
+      "Rice": 1.5,
+      "Technology": 2
     }
   }
 
