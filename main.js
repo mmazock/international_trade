@@ -4816,7 +4816,7 @@ window.addEventListener("resize", () => {
     renderShips(latestGameData);
   }
 });
-  function renderReferencePanel() {
+function renderReferencePanel() {
 
   const panel = document.getElementById("referencePanel");
   if (!panel) return;
@@ -4826,42 +4826,45 @@ window.addEventListener("resize", () => {
       <h3>Country Bonuses</h3>
   `;
 
-for (let country in countryData) {
-  html += `<strong>${country}</strong><br>`;
-  const multipliers = countryData[country].multipliers;
+  for (let country in countryData) {
 
-  // Raw resource bonuses
-  for (let resource in multipliers) {
-    html += `${resource}: ×${multipliers[resource]}<br>`;
-  }
+    html += `<strong>${country}</strong><ul>`;
 
-  // Manufactured goods bonuses (derived)
-  const manufactured = ["Clothes", "Steel", "Technology", "Automobiles"];
+    const multipliers = countryData[country].multipliers;
 
-  manufactured.forEach(good => {
-    if (multipliers[good]) {
-      html += `${good}: ×${multipliers[good]}<br>`;
+    for (let resource in multipliers) {
+      const mult = multipliers[resource];
+
+      // 🔥 Hide x1 bonuses
+      if (mult !== 1) {
+        html += `<li>x${mult} ${resource}</li>`;
+      }
     }
-  });
 
-  html += `<br>`;
-}
+    html += `</ul>`;
+  }
 
   html += `</div>`;
 
   html += `
     <div class="referenceColumn">
-      <h3>Resource Values</h3>
+      <h3>Resource Base Values</h3>
+      <ul>
   `;
 
   for (let resource in baseResourceValues) {
-    html += `${resource}: $${baseResourceValues[resource]}<br>`;
+    html += `<li>${resource} – $${baseResourceValues[resource]}</li>`;
   }
 
-  html += `</div>`;
+  html += `
+      </ul>
+    </div>
+  `;
 
   panel.innerHTML = html;
 }
+
+renderReferencePanel();
   renderReferencePanel();
 }); // closes DOMContentLoaded
 // Enter key support for negotiate chat
