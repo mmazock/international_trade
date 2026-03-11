@@ -1519,9 +1519,10 @@ const countryData = {
     home: "C2",
     multipliers: {
       "Gold": 1.5,
-      "Ivory": 1,
+      "Clothes": 1.5,
+      "Automobiles": 1.5,
       "Spices": 0.5,
-      "Copper": 1
+      "Copper": 2
     }
   },
 
@@ -1530,6 +1531,8 @@ const countryData = {
     multipliers: {
       "Rice": 2,
       "Silk": 1.5,
+      "Technology": 1.5,
+      "Steel": 1.5,
       "Ivory": 0.5
     }
   },
@@ -1560,6 +1563,8 @@ const countryData = {
       "Gold": 1.5,
       "Spices": 2,
       "Silk": 1.5,
+      "Technology": 1.5,
+      "Copper": 1.5,
       "Rice": 1.5
     }
   },
@@ -1569,6 +1574,9 @@ const countryData = {
     multipliers: {
       "Oil": 1.5,
       "Coal": 1.5,
+      "Technology": 2,
+      "Rice": 1.5,
+      "Automobiles": .5,
       "Diamonds": 1.5
     }
   }
