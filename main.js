@@ -221,22 +221,22 @@ const regionResources = {
    ============================= */
 
 const baseResourceValues = {
-  "Automobiles": 1500
+  "Automobiles": 1500,
+  "Clothes": 250,
+  "Coal": 40,
+  "Copper": 20,
+  "Cotton": 40,
   "Diamonds": 70,
   "Gold": 20,
+  "Iron": 20,
   "Ivory": 20,
   "Oil": 70,
-  "Spices": 50,
-  "Cotton": 40,
-  "Rice": 60,
-  "Coal": 40,
-  "Iron": 20,
-  "Copper": 20,
-  "Silk": 80,
   "Porcelain": 80,
-  "Clothes": 250,
+  "Rice": 60,
+  "Silk": 80,
+  "Spices": 50,
   "Steel": 150,
-  "Technology": 200,
+  "Technology": 200
  
 };
 /* =============================
