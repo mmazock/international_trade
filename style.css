@@ -32,21 +32,22 @@ body {
   gap: 20px;
   width: 100%;
 }
-
 .referenceColumn {
   flex: 1;
   border: 2px solid #333;
-  padding: 10px;
+  padding: 15px;
   background-color: #f4f4f4;
   font-size: 14px;
+  min-height: 250px;
 }
 
-.referenceColumn {
-  flex: 1;
-  border: 2px solid #333;
-  padding: 10px;
-  background-color: #f4f4f4;
-  font-size: 14px;
+.referenceColumn h3 {
+  margin-top: 0;
+}
+
+.referenceColumn ul {
+  margin-top: 5px;
+  padding-left: 18px;
 }
 /* Map container */
 #map-container {
