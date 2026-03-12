@@ -1839,15 +1839,6 @@ if (gameData.gameState === "active") {
 }
 const ledgerDiv = document.getElementById("ledger");
 
-if (gameData.gameState === "lobby") {
-  ledgerDiv.style.display = "block";
-  renderLobby(gameData);
-  return;
-}
-
-if (gameData.gameState === "active") {
-  ledgerDiv.style.display = "block";
-}
     if (gameData.gameState === "lobby") {
       
       renderLobby(gameData);
