@@ -4648,7 +4648,17 @@ if (
 const gameLog = gameData.gameLog || {};
 const logEntries = Object.values(gameLog);
 if (logEntries.length > 0) {
-  html += `<div style="border-top:2px solid #555; margin-top:15px; padding-top:10px;">`;
+html += `
+  <div style="
+    border-top:2px solid #555;
+    margin-top:15px;
+    padding-top:10px;
+    max-height:200px;
+    overflow-y:auto;
+    background:#f9f9f9;
+    padding:10px;
+  ">
+`;
   html += `<strong>📜 Game Log:</strong><br>`;
   const recentLogs = logEntries.slice(-10); // show last 10 entries
   recentLogs.forEach(entry => {
