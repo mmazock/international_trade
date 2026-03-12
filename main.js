@@ -4873,7 +4873,7 @@ function renderReferencePanel() {
   panel.innerHTML = html;
 }
 
-renderReferencePanel();
+
   renderReferencePanel();
 }); // closes DOMContentLoaded
 // Enter key support for negotiate chat
