@@ -1618,19 +1618,35 @@ const countryData = {
     };
   }
 
-  /* =============================
-     SESSION LOAD
-     ============================= */
+/* =============================
+   SESSION LOAD
+   ============================= */
 
-  const savedGameCode = localStorage.getItem("gameCode");
-  const savedPlayerId = localStorage.getItem("playerId");
+const savedGameCode = localStorage.getItem("gameCode");
+const savedPlayerId = localStorage.getItem("playerId");
 
-  if (savedGameCode && savedPlayerId) {
-    currentGameCode = savedGameCode;
-    currentPlayerId = savedPlayerId;
-    hideSetupUI();
-    listenToGameData();
-  }
+if (savedGameCode && savedPlayerId) {
+
+  gamesRef.child(savedGameCode).once("value").then(snapshot => {
+
+    if (snapshot.exists()) {
+
+      currentGameCode = savedGameCode;
+      currentPlayerId = savedPlayerId;
+
+      hideSetupUI();
+      listenToGameData();
+
+    } else {
+
+      // Game no longer exists → clear bad session
+      localStorage.clear();
+
+    }
+
+  });
+
+}
 
   /* =============================
      CREATE GAME
