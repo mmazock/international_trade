@@ -1627,24 +1627,26 @@ const savedPlayerId = localStorage.getItem("playerId");
 
 if (savedGameCode && savedPlayerId) {
 
-  gamesRef.child(savedGameCode).once("value").then(snapshot => {
+  gamesRef.child(savedGameCode).once("value")
+    .then(snapshot => {
 
-    if (snapshot.exists()) {
+      if (snapshot.exists()) {
 
-      currentGameCode = savedGameCode;
-      currentPlayerId = savedPlayerId;
+        currentGameCode = savedGameCode;
+        currentPlayerId = savedPlayerId;
 
-      hideSetupUI();
-      listenToGameData();
+        hideSetupUI();
+        listenToGameData();
 
-    } else {
+      } else {
+        localStorage.clear();
+      }
 
-      // Game no longer exists → clear bad session
+    })
+    .catch(() => {
+      // If Firebase read fails, reset session
       localStorage.clear();
-
-    }
-
-  });
+    });
 
 }
 
