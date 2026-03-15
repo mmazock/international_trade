@@ -1644,7 +1644,6 @@ if (savedGameCode && savedPlayerId) {
 
     })
     .catch(() => {
-      // If Firebase read fails, reset session
       localStorage.clear();
     });
 
